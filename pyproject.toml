@@ -3,7 +3,7 @@ requires = ["pdm-backend"]
 build-backend = "pdm.backend"
 
 [project]
-name = "llmwhisperer-client"
+name = "llmwhisperer"
 dynamic = ["version"]
 description = "Client library for LLM Whisperer"
 dependencies = [
