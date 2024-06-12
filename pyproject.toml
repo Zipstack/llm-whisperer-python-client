@@ -1,0 +1,63 @@
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+[project]
+name = "llmwhisperer"
+dynamic = ["version"]
+description = "Client library for LLM Whisperer"
+dependencies = [
+    "requests~=2.32.3",
+]
+readme = "README.md"
+urls = { Homepage = "https://llmwhisperer.unstract.com" }
+license = {text = "AGPL v3"}
+authors = [
+    {name = "Zipstack Inc", email = "devsupport@zipstack.com"},
+]
+keywords = ["llmwhisperer tools-development-kit apps development-kit sdk"]
+requires-python = ">=3.8.1"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: GNU Affero General Public License v3",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+[tool.pdm.dev-dependencies]
+lint = [
+    "autopep8~=2.0.2",
+    "black~=23.3.0",
+    "docutils~=0.20.1",
+    "flake8~=6.0.0",
+    "flake8-pyproject~=1.2.2",
+    "isort~=5.12.0",
+    "pre-commit~=3.3.1",
+    "yamllint>=1.35.1",
+    "mypy~=1.10.0"
+]
+
+[tool.isort]
+line_length = 120
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+profile = "black"
+
+[tool.flake8]
+max-line-length = 120
+
+[tool.pdm.build]
+includes = ["src"]
+package-dir = "src"
+
+[tool.pdm.version]
+source = "file"
+path = "src/llmwhisperer/__init__.py"
+
