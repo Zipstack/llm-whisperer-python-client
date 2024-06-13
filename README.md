@@ -105,7 +105,7 @@ try:
         pages_to_extract="1,2",
         timeout=2,
     )
-    if result["statusCode"] == 202:
+    if result["status_code"] == 202:
         print("Timeout occured. Whisper request accepted.")
         print(f"Whisper hash: {result['whisper-hash']}")
         while True:

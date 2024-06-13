@@ -1,0 +1,25 @@
+
+
+Name STEPHEN     YOUNG 
+
+Address 123 MAIN   ST. 
+
+Are you: [ ] Married [X] Single 
+
+How did you hear about us? 
+
+[ ] Search Ad 
+[ ] Facebook 
+[ ] X (formerly Twitter) 
+[ ] This mailer 
+[X] Other (Explain) SAW THE SIGN WHEN THE LOCATION 
+
+            WAS    BEING BUILT 
+
+By signing, I agree to receive all communications from acme, inc. 
+
+Signature 
+
+ 10/15/23 
+Date 
+<<<

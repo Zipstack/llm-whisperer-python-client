@@ -141,7 +141,7 @@ class LLMWhispererClient:
         response = s.send(prepared, timeout=self.api_timeout)
         if response.status_code != 200:
             err = json.loads(response.text)
-            err["statusCode"] = response.status_code
+            err["status_code"] = response.status_code
             raise LLMWhispererClientException(err)
         return json.loads(response.text)
 
@@ -213,7 +213,7 @@ class LLMWhispererClient:
         if url == "" and file_path == "":
             raise LLMWhispererClientException(
                 {
-                    "statusCode": -1,
+                    "status_code": -1,
                     "message": "Either url or file_path must be provided",
                 }
             )
@@ -221,7 +221,7 @@ class LLMWhispererClient:
         if timeout < 0 or timeout > 200:
             raise LLMWhispererClientException(
                 {
-                    "statusCode": -1,
+                    "status_code": -1,
                     "message": "timeout must be between 0 and 200",
                 }
             )
@@ -243,14 +243,14 @@ class LLMWhispererClient:
         response = s.send(prepared, timeout=self.api_timeout)
         if response.status_code != 200 and response.status_code != 202:
             message = json.loads(response.text)
-            message["statusCode"] = response.status_code
+            message["status_code"] = response.status_code
             raise LLMWhispererClientException(message)
         if response.status_code == 202:
             message = json.loads(response.text)
-            message["statusCode"] = response.status_code
+            message["status_code"] = response.status_code
             return message
         return {
-            "statusCode": response.status_code,
+            "status_code": response.status_code,
             "extracted_text": response.text,
             "whisper_hash": response.headers["whisper-hash"],
         }
@@ -269,7 +269,7 @@ class LLMWhispererClient:
 
         Returns:
             dict: A dictionary containing the status of the whisper operation. The keys in the
-                  dictionary include 'statusCode' and the status details.
+                  dictionary include 'status_code' and the status details.
 
         Raises:
             LLMWhispererClientException: If the API request fails, it raises an exception with
@@ -285,10 +285,10 @@ class LLMWhispererClient:
         response = s.send(prepared, timeout=self.api_timeout)
         if response.status_code != 200:
             err = json.loads(response.text)
-            err["statusCode"] = response.status_code
+            err["status_code"] = response.status_code
             raise LLMWhispererClientException(err)
         message = json.loads(response.text)
-        message["statusCode"] = response.status_code
+        message["status_code"] = response.status_code
         return message
 
     def whisper_retrieve(self, whisper_hash: str) -> dict:
@@ -320,11 +320,11 @@ class LLMWhispererClient:
         response = s.send(prepared, timeout=self.api_timeout)
         if response.status_code != 200:
             err = json.loads(response.text)
-            err["statusCode"] = response.status_code
+            err["status_code"] = response.status_code
             raise LLMWhispererClientException(err)
 
         return {
-            "statusCode": response.status_code,
+            "status_code": response.status_code,
             "extracted_text": response.text,
         }
 
@@ -366,8 +366,8 @@ class LLMWhispererClient:
         response = s.send(prepared, timeout=self.api_timeout)
         if response.status_code != 200:
             err = json.loads(response.text)
-            err["statusCode"] = response.status_code
+            err["status_code"] = response.status_code
             raise LLMWhispererClientException(err)
         result = json.loads(response.text)
-        result["statusCode"] = response.status_code
+        result["status_code"] = response.status_code
         return result

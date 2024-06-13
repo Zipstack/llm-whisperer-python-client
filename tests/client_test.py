@@ -1,5 +1,7 @@
 import logging
+import os
 import unittest
+from pathlib import Path
 
 import pytest
 
@@ -8,15 +10,8 @@ from llmwhisperer.client import LLMWhispererClient
 logger = logging.getLogger(__name__)
 
 
-@pytest.fixture
-def llm_whisperer_client():
-    # Create an instance of the client
-    client = LLMWhispererClient()
-    return client
-
-
-def test_get_usage_info(llm_whisperer_client):
-    usage_info = llm_whisperer_client.get_usage_info()
+def test_get_usage_info(client):
+    usage_info = client.get_usage_info()
     logger.info(usage_info)
     assert isinstance(usage_info, dict), "usage_info should be a dictionary"
     expected_keys = [
@@ -30,6 +25,38 @@ def test_get_usage_info(llm_whisperer_client):
     assert set(usage_info.keys()) == set(expected_keys), f"usage_info {usage_info} does not contain the expected keys"
 
 
+@pytest.mark.parametrize(
+    "processing_mode, output_mode, input_file",
+    [
+        ("ocr", "line-printer", "restaurant_invoice_photo.pdf"),
+        ("ocr", "line-printer", "credit_card.pdf"),
+        ("ocr", "line-printer", "handwritten-form.pdf"),
+        ("ocr", "text", "restaurant_invoice_photo.pdf"),
+        ("text", "line-printer", "restaurant_invoice_photo.pdf"),
+        ("text", "text", "handwritten-form.pdf"),
+    ],
+)
+def test_whisper(client, data_dir, processing_mode, output_mode, input_file):
+    file_path = os.path.join(data_dir, input_file)
+    response = client.whisper(
+        processing_mode=processing_mode,
+        output_mode=output_mode,
+        file_path=file_path,
+        timeout=200,
+    )
+    logger.debug(response)
+
+    exp_basename = f"{Path(input_file).stem}.{processing_mode}.{output_mode}.txt"
+    exp_file = os.path.join(data_dir, "expected", exp_basename)
+    with open(exp_file, encoding="utf-8") as f:
+        exp = f.read()
+
+    assert isinstance(response, dict)
+    assert response["status_code"] == 200
+    assert response["extracted_text"] == exp
+
+
+# TODO: Review and port to pytest based tests
 class TestLLMWhispererClient(unittest.TestCase):
     @unittest.skip("Skipping test_whisper")
     def test_whisper(self):
