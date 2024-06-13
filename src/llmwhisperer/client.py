@@ -22,6 +22,8 @@ import os
 
 import requests
 
+from llmwhisperer.utils import LLMWhispererUtils
+
 BASE_URL = "https://llmwhisperer-api.unstract.com/v1"
 
 
@@ -110,6 +112,9 @@ class LLMWhispererClient:
 
         if api_key == "":
             self.api_key = os.getenv("LLMWHISPERER_API_KEY", "")
+        else:
+            self.api_key = api_key
+        self.logger.debug("api_key set to %s", LLMWhispererUtils.redact_key(self.api_key))
 
         self.api_timeout = api_timeout
 
