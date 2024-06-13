@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from unstract.llmwhisperer.client import LLMWhispererClient
+from unstract.llmwhisperer import LLMWhispererClient
 
 logger = logging.getLogger(__name__)
 
