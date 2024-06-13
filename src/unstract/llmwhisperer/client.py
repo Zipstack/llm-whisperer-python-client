@@ -22,7 +22,7 @@ import os
 
 import requests
 
-from llmwhisperer.utils import LLMWhispererUtils
+from unstract.llmwhisperer.utils import LLMWhispererUtils
 
 BASE_URL = "https://llmwhisperer-api.unstract.com/v1"
 

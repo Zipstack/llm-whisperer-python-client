@@ -50,7 +50,7 @@ lint = [
 
 [tool.pdm.version]
 source = "file"
-path = "src/llmwhisperer/__init__.py"
+path = "src/unstract/llmwhisperer/__init__.py"
 
 [tool.isort]
 line_length = 120

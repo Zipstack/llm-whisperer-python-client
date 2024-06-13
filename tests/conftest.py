@@ -2,7 +2,7 @@ import os
 
 import pytest
 
-from llmwhisperer.client import LLMWhispererClient
+from unstract.llmwhisperer.client import LLMWhispererClient
 
 
 @pytest.fixture(name="client")

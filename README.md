@@ -23,7 +23,7 @@ pip install llmwhisperer-client
 First, import the `LLMWhispererClient` from the `client` module:
 
 ```python
-from llmwhisperer.client import LLMWhispererClient
+from unstract.llmwhisperer.client import LLMWhispererClient
 ```
 
 Then, create an instance of the `LLMWhispererClient`:

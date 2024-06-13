@@ -1,6 +1,6 @@
 import pytest
 
-from llmwhisperer.utils import LLMWhispererUtils
+from unstract.llmwhisperer.utils import LLMWhispererUtils
 
 
 def test_redact_key_normal():
