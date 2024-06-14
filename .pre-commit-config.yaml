@@ -12,6 +12,8 @@ repos:
     rev: v4.5.0
     hooks:
       - id: trailing-whitespace
+      # TODO: Exclude tests/test_data directory
+        exclude: ^tests/test_data/
         exclude_types:
           - "markdown"
       - id: end-of-file-fixer

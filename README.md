@@ -23,7 +23,7 @@ pip install llmwhisperer-client
 First, import the `LLMWhispererClient` from the `client` module:
 
 ```python
-from llmwhisperer.client import LLMWhispererClient
+from unstract.llmwhisperer.client import LLMWhispererClient
 ```
 
 Then, create an instance of the `LLMWhispererClient`:
@@ -105,7 +105,7 @@ try:
         pages_to_extract="1,2",
         timeout=2,
     )
-    if result["statusCode"] == 202:
+    if result["status_code"] == 202:
         print("Timeout occured. Whisper request accepted.")
         print(f"Whisper hash: {result['whisper-hash']}")
         while True:

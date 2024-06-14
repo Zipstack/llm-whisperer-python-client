@@ -1,0 +1,33 @@
+BURGER SEIGNEUR No. 35, 80 feet road, HAL 3rd Stage, Indiranagar, Bangalore GST: 29AAHFL9534H1ZV
+Order Number : T2- 57 Type : Table Table Number: 2
+Bill No .: T2 -- 126653 Date:2023-05-31 23:16:50 Kots:63
+Item
+Qty
+Amt
+Jack The
+Ripper
+1
+400.00
+Plain Fries +
+Coke 300 ML
+1
+130.00
+Total Qty:
+2
+SubTotal :
+530.00
+GST@5%
+26.50
+CGST @2.5%
+13.25
+SGST @2.5%
+13.25
+Round Off:
+0.50
+Total Invoice Value:
+557
+PAY: 557 Thank you, visit again! :selected:
+Powered by - POSIST
+
+
+<<<

@@ -50,7 +50,7 @@ lint = [
 
 [tool.pdm.version]
 source = "file"
-path = "src/llmwhisperer/__init__.py"
+path = "src/unstract/llmwhisperer/__init__.py"
 
 [tool.isort]
 line_length = 120
@@ -75,6 +75,6 @@ log_level = "INFO"
 log_cli = true
 
 [tool.pdm.scripts]
-test.cmd = "pytest"
+test.cmd = "pytest -s -v"
 test.env_file = "tests/.env"
 test.help = "Runs pytests for LLM Whisperer client"
