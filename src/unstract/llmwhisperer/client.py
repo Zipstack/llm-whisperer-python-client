@@ -118,6 +118,8 @@ class LLMWhispererClient:
 
         self.api_timeout = api_timeout
 
+        self.headers = {"unstract-key": self.api_key}
+
     def get_usage_info(self) -> dict:
         """Retrieves the usage information of the LLMWhisperer API.
 
@@ -135,7 +137,7 @@ class LLMWhispererClient:
         self.logger.debug("get_usage_info called")
         url = f"{self.base_url}/get-usage-info"
         self.logger.debug("url: %s", url)
-        req = requests.Request("GET", url, headers={"unstract-key": self.api_key})
+        req = requests.Request("GET", url, headers=self.headers)
         prepared = req.prepare()
         s = requests.Session()
         response = s.send(prepared, timeout=self.api_timeout)
@@ -233,11 +235,11 @@ class LLMWhispererClient:
                 "POST",
                 api_url,
                 params=params,
-                headers={"unstract-key": self.api_key},
+                headers=self.headers,
                 data=data,
             )
         else:
-            req = requests.Request("POST", api_url, params=params, headers={"unstract-key": self.api_key})
+            req = requests.Request("POST", api_url, params=params, headers=self.headers)
         prepared = req.prepare()
         s = requests.Session()
         response = s.send(prepared, timeout=self.api_timeout)
@@ -279,7 +281,7 @@ class LLMWhispererClient:
         url = f"{self.base_url}/whisper-status"
         params = {"whisper-hash": whisper_hash}
         self.logger.debug("url: %s", url)
-        req = requests.Request("GET", url, headers={"unstract-key": self.api_key}, params=params)
+        req = requests.Request("GET", url, headers=self.headers, params=params)
         prepared = req.prepare()
         s = requests.Session()
         response = s.send(prepared, timeout=self.api_timeout)
@@ -314,7 +316,7 @@ class LLMWhispererClient:
         url = f"{self.base_url}/whisper-retrieve"
         params = {"whisper-hash": whisper_hash}
         self.logger.debug("url: %s", url)
-        req = requests.Request("GET", url, headers={"unstract-key": self.api_key}, params=params)
+        req = requests.Request("GET", url, headers=self.headers, params=params)
         prepared = req.prepare()
         s = requests.Session()
         response = s.send(prepared, timeout=self.api_timeout)
@@ -357,7 +359,7 @@ class LLMWhispererClient:
         req = requests.Request(
             "POST",
             url,
-            headers={"unstract-key": self.api_key},
+            headers=self.headers,
             params=params,
             data=search_text,
         )
