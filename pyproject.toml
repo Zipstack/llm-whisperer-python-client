@@ -7,7 +7,7 @@ name = "llmwhisperer-client"
 dynamic = ["version"]
 description = "Client library for LLM Whisperer"
 dependencies = [
-    "requests~=2.32.3",
+    "requests>=2",
 ]
 readme = "README.md"
 urls = { Homepage = "https://llmwhisperer.unstract.com", Source = "https://github.com/Zipstack/llm-whisperer-python-client" }
