@@ -4,6 +4,7 @@ import unittest
 from pathlib import Path
 
 import pytest
+import requests
 
 from unstract.llmwhisperer import LLMWhispererClient
 
@@ -22,7 +23,9 @@ def test_get_usage_info(client):
         "subscription_plan",
         "today_page_count",
     ]
-    assert set(usage_info.keys()) == set(expected_keys), f"usage_info {usage_info} does not contain the expected keys"
+    assert set(usage_info.keys()) == set(
+        expected_keys
+    ), f"usage_info {usage_info} does not contain the expected keys"
 
 
 @pytest.mark.parametrize(
@@ -65,24 +68,45 @@ class TestLLMWhispererClient(unittest.TestCase):
         #     url="https://storage.googleapis.com/pandora-static/samples/bill.jpg.pdf"
         # )
         response = client.whisper(
-            file_path="test_files/restaurant_invoice_photo.pdf",
+            file_path="test_data/restaurant_invoice_photo.pdf",
             timeout=200,
             store_metadata_for_highlighting=True,
         )
-        logger.info(response)
+        print(response)
+        # self.assertIsInstance(response, dict)
+
+    # @unittest.skip("Skipping test_whisper")
+    def test_whisper_stream(self):
+        client = LLMWhispererClient()
+        download_url = (
+            "https://storage.googleapis.com/pandora-static/samples/bill.jpg.pdf"
+        )
+        # Create a stream of download_url and pass it to whisper
+        response_download = requests.get(download_url, stream=True)
+        response_download.raise_for_status()
+        response = client.whisper(
+            stream=response_download.iter_content(chunk_size=1024),
+            timeout=200,
+            store_metadata_for_highlighting=True,
+        )
+        print(response)
         # self.assertIsInstance(response, dict)
 
     @unittest.skip("Skipping test_whisper_status")
     def test_whisper_status(self):
         client = LLMWhispererClient()
-        response = client.whisper_status(whisper_hash="7cfa5cbb|5f1d285a7cf18d203de7af1a1abb0a3a")
+        response = client.whisper_status(
+            whisper_hash="7cfa5cbb|5f1d285a7cf18d203de7af1a1abb0a3a"
+        )
         logger.info(response)
         self.assertIsInstance(response, dict)
 
     @unittest.skip("Skipping test_whisper_retrieve")
     def test_whisper_retrieve(self):
         client = LLMWhispererClient()
-        response = client.whisper_retrieve(whisper_hash="7cfa5cbb|5f1d285a7cf18d203de7af1a1abb0a3a")
+        response = client.whisper_retrieve(
+            whisper_hash="7cfa5cbb|5f1d285a7cf18d203de7af1a1abb0a3a"
+        )
         logger.info(response)
         self.assertIsInstance(response, dict)
 
