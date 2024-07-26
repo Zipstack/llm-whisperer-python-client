@@ -19,6 +19,7 @@ Classes:
 import json
 import logging
 import os
+from typing import IO
 
 import requests
 
@@ -57,7 +58,9 @@ class LLMWhispererClient:
     client's activities and errors.
     """
 
-    formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    formatter = logging.Formatter(
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    )
     logger = logging.getLogger(__name__)
     log_stream_handler = logging.StreamHandler()
     log_stream_handler.setFormatter(formatter)
@@ -114,7 +117,9 @@ class LLMWhispererClient:
             self.api_key = os.getenv("LLMWHISPERER_API_KEY", "")
         else:
             self.api_key = api_key
-        self.logger.debug("api_key set to %s", LLMWhispererUtils.redact_key(self.api_key))
+        self.logger.debug(
+            "api_key set to %s", LLMWhispererUtils.redact_key(self.api_key)
+        )
 
         self.api_timeout = api_timeout
 
@@ -150,6 +155,7 @@ class LLMWhispererClient:
     def whisper(
         self,
         file_path: str = "",
+        stream: IO[bytes] = None,
         url: str = "",
         processing_mode: str = "ocr",
         output_mode: str = "line-printer",
@@ -170,6 +176,7 @@ class LLMWhispererClient:
 
         Args:
             file_path (str, optional): The path to the file to be processed. Defaults to "".
+            stream (IO[bytes], optional): A stream of bytes to be processed. Defaults to None.
             url (str, optional): The URL of the file to be processed. Defaults to "".
             processing_mode (str, optional): The processing mode. Can be "ocr" or "text". Defaults to "ocr".
             output_mode (str, optional): The output mode. Can be "line-printer" or "text". Defaults to "line-printer".
@@ -212,11 +219,11 @@ class LLMWhispererClient:
         self.logger.debug("api_url: %s", api_url)
         self.logger.debug("params: %s", params)
 
-        if url == "" and file_path == "":
+        if url == "" and file_path == "" and stream is None:
             raise LLMWhispererClientException(
                 {
                     "status_code": -1,
-                    "message": "Either url or file_path must be provided",
+                    "message": "Either url, stream or file_path must be provided",
                 }
             )
 
@@ -228,21 +235,39 @@ class LLMWhispererClient:
                 }
             )
 
+        should_stream = False
         if url == "":
-            with open(file_path, "rb") as f:
-                data = f.read()
-            req = requests.Request(
-                "POST",
-                api_url,
-                params=params,
-                headers=self.headers,
-                data=data,
-            )
+            if stream is not None:
+
+                should_stream = True
+
+                def generate():
+                    for chunk in stream:
+                        yield chunk
+
+                req = requests.Request(
+                    "POST",
+                    api_url,
+                    params=params,
+                    headers=self.headers,
+                    data=generate(),
+                )
+
+            else:
+                with open(file_path, "rb") as f:
+                    data = f.read()
+                req = requests.Request(
+                    "POST",
+                    api_url,
+                    params=params,
+                    headers=self.headers,
+                    data=data,
+                )
         else:
             req = requests.Request("POST", api_url, params=params, headers=self.headers)
         prepared = req.prepare()
         s = requests.Session()
-        response = s.send(prepared, timeout=self.api_timeout)
+        response = s.send(prepared, timeout=self.api_timeout, stream=should_stream)
         if response.status_code != 200 and response.status_code != 202:
             message = json.loads(response.text)
             message["status_code"] = response.status_code
