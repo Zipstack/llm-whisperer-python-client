@@ -1,6 +1,7 @@
 import logging
 import os
 import unittest
+from difflib import SequenceMatcher, unified_diff
 from pathlib import Path
 
 import pytest
@@ -23,9 +24,7 @@ def test_get_usage_info(client):
         "subscription_plan",
         "today_page_count",
     ]
-    assert set(usage_info.keys()) == set(
-        expected_keys
-    ), f"usage_info {usage_info} does not contain the expected keys"
+    assert set(usage_info.keys()) == set(expected_keys), f"usage_info {usage_info} does not contain the expected keys"
 
 
 @pytest.mark.parametrize(
@@ -56,7 +55,21 @@ def test_whisper(client, data_dir, processing_mode, output_mode, input_file):
 
     assert isinstance(response, dict)
     assert response["status_code"] == 200
-    assert response["extracted_text"] == exp
+
+    # For text based processing, perform a strict match
+    if processing_mode == "text" and output_mode == "text":
+        assert response["extracted_text"] == exp
+    # For OCR based processing, perform a fuzzy match
+    else:
+        extracted_text = response["extracted_text"]
+        similarity = SequenceMatcher(None, extracted_text, exp).ratio()
+        threshold = 0.97
+
+        if similarity < threshold:
+            diff = "\n".join(
+                unified_diff(exp.splitlines(), extracted_text.splitlines(), fromfile="Expected", tofile="Extracted")
+            )
+            pytest.fail(f"Texts are not similar enough: {similarity * 100:.2f}% similarity. Diff:\n{diff}")
 
 
 # TODO: Review and port to pytest based tests
@@ -78,9 +91,7 @@ class TestLLMWhispererClient(unittest.TestCase):
     # @unittest.skip("Skipping test_whisper")
     def test_whisper_stream(self):
         client = LLMWhispererClient()
-        download_url = (
-            "https://storage.googleapis.com/pandora-static/samples/bill.jpg.pdf"
-        )
+        download_url = "https://storage.googleapis.com/pandora-static/samples/bill.jpg.pdf"
         # Create a stream of download_url and pass it to whisper
         response_download = requests.get(download_url, stream=True)
         response_download.raise_for_status()
@@ -95,18 +106,14 @@ class TestLLMWhispererClient(unittest.TestCase):
     @unittest.skip("Skipping test_whisper_status")
     def test_whisper_status(self):
         client = LLMWhispererClient()
-        response = client.whisper_status(
-            whisper_hash="7cfa5cbb|5f1d285a7cf18d203de7af1a1abb0a3a"
-        )
+        response = client.whisper_status(whisper_hash="7cfa5cbb|5f1d285a7cf18d203de7af1a1abb0a3a")
         logger.info(response)
         self.assertIsInstance(response, dict)
 
     @unittest.skip("Skipping test_whisper_retrieve")
     def test_whisper_retrieve(self):
         client = LLMWhispererClient()
-        response = client.whisper_retrieve(
-            whisper_hash="7cfa5cbb|5f1d285a7cf18d203de7af1a1abb0a3a"
-        )
+        response = client.whisper_retrieve(whisper_hash="7cfa5cbb|5f1d285a7cf18d203de7af1a1abb0a3a")
         logger.info(response)
         self.assertIsInstance(response, dict)
 
