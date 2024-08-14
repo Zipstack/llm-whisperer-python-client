@@ -169,6 +169,7 @@ class LLMWhispererClient:
         ocr_provider: str = "advanced",
         line_splitter_tolerance: float = 0.4,
         horizontal_stretch_factor: float = 1.0,
+        encoder = "ISO-8859-1"
     ) -> dict:
         """
         Sends a request to the LLMWhisperer API to process a document.
@@ -190,6 +191,7 @@ class LLMWhispererClient:
             ocr_provider (str, optional): The OCR provider. Can be "advanced" or "basic". Defaults to "advanced".
             line_splitter_tolerance (float, optional): The line splitter tolerance. Defaults to 0.4.
             horizontal_stretch_factor (float, optional): The horizontal stretch factor. Defaults to 1.0.
+            encoder (str): The character encoding to use for processing the text. Defaults to "ISO-8859-1".
 
         Returns:
             dict: The response from the API as a dictionary.
@@ -268,6 +270,7 @@ class LLMWhispererClient:
         prepared = req.prepare()
         s = requests.Session()
         response = s.send(prepared, timeout=self.api_timeout, stream=should_stream)
+        response.encoding = encoder
         if response.status_code != 200 and response.status_code != 202:
             message = json.loads(response.text)
             message["status_code"] = response.status_code
