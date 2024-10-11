@@ -296,6 +296,11 @@ class LLMWhispererClientV2:
             start_time = time.time()
             while time.time() - start_time < wait_timeout:
                 status = self.whisper_status(whisper_hash=whisper_hash)
+                if status["status_code"] != 200:
+                    message["status_code"] = -1
+                    message["message"] = "Whisper client operation failed"
+                    message["extraction"] = {}
+                    return message
                 if status["status"] == "processing":
                     self.logger.debug(
                         f"Whisper-hash:{whisper_hash} | STATUS: processing..."
@@ -320,6 +325,14 @@ class LLMWhispererClientV2:
                             "message": "Whisper operation status unknown",
                         }
                     )
+                elif status["status"] == "failed":
+                    self.logger.debug(
+                        f"Whisper-hash:{whisper_hash} | STATUS: failed..."
+                    )
+                    message["status_code"] = -1
+                    message["message"] = "Whisper operation failed"
+                    message["extraction"] = {}
+                    return message
                 elif status["status"] == "processed":
                     self.logger.debug(
                         f"Whisper-hash:{whisper_hash} | STATUS: processed!"
