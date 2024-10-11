@@ -122,15 +122,6 @@ class LLMWhispererClientV2:
 
         self.headers = {"unstract-key": self.api_key}
 
-        ### TODO: REMOVE THIS!!!!!!!!!!
-        ### This is for testing in local machine
-        self.headers = {
-            "unstract-key": self.api_key,
-            "Subscription-Id": "test",
-            "Start-Date": "9-07-2024",
-        }
-        ### ------------------------------------
-
     def get_usage_info(self) -> dict:
         """Retrieves the usage information of the LLMWhisperer API.
 
