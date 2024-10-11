@@ -343,6 +343,10 @@ class LLMWhispererClientV2:
                         message["message"] = "Whisper operation completed"
                         message["status"] = "processed"
                         message["extraction"] = resultx["extraction"]
+                    else:
+                        message["status_code"] = -1
+                        message["message"] = "Whisper client operation failed"
+                        message["extraction"] = {}
                     return message
                 time.sleep(5)
             message["status_code"] = -1
