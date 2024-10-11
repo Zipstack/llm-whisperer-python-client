@@ -23,6 +23,7 @@ import logging
 import os
 from typing import IO
 import copy
+import time
 
 import requests
 
@@ -178,6 +179,8 @@ class LLMWhispererClientV2:
         filename="",
         webhook_metadata="",
         use_webhook="",
+        wait_for_completion=False,
+        wait_timeout=180,
     ) -> dict:
         """
         Sends a request to the LLMWhisperer API to process a document.
@@ -203,6 +206,8 @@ class LLMWhispererClientV2:
             filename (str, optional): The name of the file to store in reports. Defaults to "".
             webhook_metadata (str, optional): The webhook metadata. This data will be passed to the webhook if webhooks are used Defaults to "".
             use_webhook (str, optional): Webhook name to call. Defaults to "". If not provided, the no webhook will be called.
+            wait_for_completion (bool, optional): Whether to wait for the whisper operation to complete. Defaults to False.
+            wait_timeout (int, optional): The number of seconds to wait for the whisper operation to complete. Defaults to 180.
 
         Returns:
             dict: The response from the API as a dictionary.
@@ -235,6 +240,14 @@ class LLMWhispererClientV2:
 
         self.logger.debug("api_url: %s", api_url)
         self.logger.debug("params: %s", params)
+
+        if use_webhook != "" and wait_for_completion:
+            raise LLMWhispererClientException(
+                {
+                    "status_code": -1,
+                    "message": "Cannot wait for completion when using webhook",
+                }
+            )
 
         if url == "" and file_path == "" and stream is None:
             raise LLMWhispererClientException(
@@ -280,10 +293,57 @@ class LLMWhispererClientV2:
         if response.status_code != 200 and response.status_code != 202:
             message = json.loads(response.text)
             message["status_code"] = response.status_code
+            message["extraction"] = {}
             raise LLMWhispererClientException(message)
         if response.status_code == 202:
             message = json.loads(response.text)
             message["status_code"] = response.status_code
+            message["extraction"] = {}
+            if not wait_for_completion:
+                return message
+            whisper_hash = message["whisper_hash"]
+            start_time = time.time()
+            while time.time() - start_time < wait_timeout:
+                status = self.whisper_status(whisper_hash=whisper_hash)
+                if status["status"] == "processing":
+                    self.logger.debug(
+                        f"Whisper-hash:{whisper_hash} | STATUS: processing..."
+                    )
+                elif status["status"] == "delivered":
+                    self.logger.debug(
+                        f"Whisper-hash:{whisper_hash} | STATUS: Already delivered!"
+                    )
+                    raise LLMWhispererClientException(
+                        {
+                            "status_code": -1,
+                            "message": "Whisper operation already delivered",
+                        }
+                    )
+                elif status["status"] == "unknown":
+                    self.logger.debug(
+                        f"Whisper-hash:{whisper_hash} | STATUS: unknown..."
+                    )
+                    raise LLMWhispererClientException(
+                        {
+                            "status_code": -1,
+                            "message": "Whisper operation status unknown",
+                        }
+                    )
+                elif status["status"] == "processed":
+                    self.logger.debug(
+                        f"Whisper-hash:{whisper_hash} | STATUS: processed!"
+                    )
+                    resultx = self.whisper_retrieve(whisper_hash=whisper_hash)
+                    if resultx["status_code"] == 200:
+                        message["status_code"] = 200
+                        message["message"] = "Whisper operation completed"
+                        message["status"] = "processed"
+                        message["extraction"] = resultx["extraction"]
+                    return message
+                time.sleep(5)
+            message["status_code"] = -1
+            message["message"] = "Whisper client operation timed out"
+            message["extraction"] = {}
             return message
 
         # Will not reach here if status code is 202

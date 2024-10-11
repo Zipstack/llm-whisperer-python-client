@@ -35,13 +35,22 @@ if __name__ == "__main__":
         # result = client.get_webhook_details(webhook_name="wb3")
         # print(result)
 
+        # result = client.whisper(
+        #     mode="high_quality",
+        #     output_mode="layout_preserving",
+        #     file_path="../../../tests/test_data/credit_card.pdf",
+        #     use_webhook="wb3",
+        #     webhook_metadata="Dummy metadata for webhook",
+        # )
+
         result = client.whisper(
             mode="high_quality",
             output_mode="layout_preserving",
             file_path="../../../tests/test_data/credit_card.pdf",
-            use_webhook="wb3",
-            webhook_metadata="Dummy metadata for webhook",
+            # wait_for_completion=True,
+            # wait_timeout=200,
         )
+        print(json.dumps(result))
 
         # result = client.whisper(
         #     mode="form",
