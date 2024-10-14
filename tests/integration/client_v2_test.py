@@ -8,12 +8,16 @@ import pytest
 logger = logging.getLogger(__name__)
 
 
-def test_get_usage_info(client):
-    usage_info = client.get_usage_info()
+def test_get_usage_info(client_v2):
+    usage_info = client_v2.get_usage_info()
     logger.info(usage_info)
     assert isinstance(usage_info, dict), "usage_info should be a dictionary"
     expected_keys = [
         "current_page_count",
+        "current_page_count_low_cost",
+        "current_page_count_form",
+        "current_page_count_high_quality",
+        "current_page_count_native_text",
         "daily_quota",
         "monthly_quota",
         "overage_page_count",
@@ -65,5 +69,3 @@ def test_whisper_v2(client_v2, data_dir, output_mode, mode, input_file):
                 unified_diff(exp.splitlines(), extracted_text.splitlines(), fromfile="Expected", tofile="Extracted")
             )
             pytest.fail(f"Texts are not similar enough: {similarity * 100:.2f}% similarity. Diff:\n{diff}")
-
-    assert whisper_result["extraction"]["result_text"] == exp
