@@ -18,15 +18,14 @@ Classes:
     LLMWhispererClientException: Exception raised for errors in the LLMWhispererClient.
 """
 
+import copy
 import json
 import logging
 import os
-from typing import IO
-import copy
 import time
+from typing import IO
 
 import requests
-
 
 BASE_URL = "https://llmwhisperer-api.unstract.com/api/v2"
 
@@ -63,9 +62,7 @@ class LLMWhispererClientV2:
     client's activities and errors.
     """
 
-    formatter = logging.Formatter(
-        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    )
+    formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
     logger = logging.getLogger(__name__)
     log_stream_handler = logging.StreamHandler()
     log_stream_handler.setFormatter(formatter)
@@ -251,12 +248,10 @@ class LLMWhispererClientV2:
         should_stream = False
         if url == "":
             if stream is not None:
-
                 should_stream = True
 
                 def generate():
-                    for chunk in stream:
-                        yield chunk
+                    yield from stream
 
                 req = requests.Request(
                     "POST",
@@ -302,13 +297,9 @@ class LLMWhispererClientV2:
                     message["extraction"] = {}
                     return message
                 if status["status"] == "processing":
-                    self.logger.debug(
-                        f"Whisper-hash:{whisper_hash} | STATUS: processing..."
-                    )
+                    self.logger.debug(f"Whisper-hash:{whisper_hash} | STATUS: processing...")
                 elif status["status"] == "delivered":
-                    self.logger.debug(
-                        f"Whisper-hash:{whisper_hash} | STATUS: Already delivered!"
-                    )
+                    self.logger.debug(f"Whisper-hash:{whisper_hash} | STATUS: Already delivered!")
                     raise LLMWhispererClientException(
                         {
                             "status_code": -1,
@@ -316,9 +307,7 @@ class LLMWhispererClientV2:
                         }
                     )
                 elif status["status"] == "unknown":
-                    self.logger.debug(
-                        f"Whisper-hash:{whisper_hash} | STATUS: unknown..."
-                    )
+                    self.logger.debug(f"Whisper-hash:{whisper_hash} | STATUS: unknown...")
                     raise LLMWhispererClientException(
                         {
                             "status_code": -1,
@@ -326,17 +315,13 @@ class LLMWhispererClientV2:
                         }
                     )
                 elif status["status"] == "failed":
-                    self.logger.debug(
-                        f"Whisper-hash:{whisper_hash} | STATUS: failed..."
-                    )
+                    self.logger.debug(f"Whisper-hash:{whisper_hash} | STATUS: failed...")
                     message["status_code"] = -1
                     message["message"] = "Whisper operation failed"
                     message["extraction"] = {}
                     return message
                 elif status["status"] == "processed":
-                    self.logger.debug(
-                        f"Whisper-hash:{whisper_hash} | STATUS: processed!"
-                    )
+                    self.logger.debug(f"Whisper-hash:{whisper_hash} | STATUS: processed!")
                     resultx = self.whisper_retrieve(whisper_hash=whisper_hash)
                     if resultx["status_code"] == 200:
                         message["status_code"] = 200
@@ -451,7 +436,6 @@ class LLMWhispererClientV2:
         Raises:
             LLMWhispererClientException: If the API request fails, it raises an exception with
                                             the error message and status code returned by the API.
-
         """
 
         data = {
@@ -489,7 +473,6 @@ class LLMWhispererClientV2:
         Raises:
             LLMWhispererClientException: If the API request fails, it raises an exception with
                                             the error message and status code returned by the API.
-
         """
 
         url = f"{self.base_url}/whisper-manage-callback"
