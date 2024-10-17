@@ -516,7 +516,6 @@ class LLMWhispererClientV2:
 
         Args:
             line_metadata (list[int]): The line metadata returned by the LLMWhisperer API.
-            line_no (int): The line number for which the bounding box is required.
             target_width (int): The width of your target image/page in UI.
             target_height (int): The height of your target image/page in UI.
 
