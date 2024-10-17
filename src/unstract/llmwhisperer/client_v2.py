@@ -503,3 +503,35 @@ class LLMWhispererClientV2:
             err["status_code"] = response.status_code
             raise LLMWhispererClientException(err)
         return json.loads(response.text)
+
+    def get_highlight_rect(
+        self,
+        line_metadata: list[int],
+        target_width: int,
+        target_height: int,
+    ) -> tuple[int, int, int, int, int]:
+        """
+        Given the line metadata and the line number, this function returns the bounding box of the line
+        in the format (page,x1,y1,x2,y2)
+
+        Args:
+            line_metadata (list[int]): The line metadata returned by the LLMWhisperer API.
+            line_no (int): The line number for which the bounding box is required.
+            target_width (int): The width of your target image/page in UI.
+            target_height (int): The height of your target image/page in UI.
+
+        Returns:
+            tuple: The bounding box of the line in the format (page,x1,y1,x2,y2)
+        """
+
+        page = line_metadata[0]
+        x1 = 0
+        y1 = line_metadata[1] - line_metadata[2]
+        x2 = target_width
+        y2 = line_metadata[1]
+        original_height = line_metadata[3]
+
+        y1 = int((float(y1) / float(original_height)) * float(target_height))
+        y2 = int((float(y2) / float(original_height)) * float(target_height))
+
+        return (page, x1, y1, x2, y2)
