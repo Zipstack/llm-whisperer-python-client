@@ -191,7 +191,7 @@ class LLMWhispererClient:
             ocr_provider (str, optional): The OCR provider. Can be "advanced" or "basic". Defaults to "advanced".
             line_splitter_tolerance (float, optional): The line splitter tolerance. Defaults to 0.4.
             horizontal_stretch_factor (float, optional): The horizontal stretch factor. Defaults to 1.0.
-            encoder (str): The character encoding to use for processing the text. Defaults to "ISO-8859-1".
+            encoding (str): The character encoding to use for processing the text. Defaults to "utf-8".
 
         Returns:
             dict: The response from the API as a dictionary.
@@ -296,6 +296,7 @@ class LLMWhispererClient:
 
         Args:
             whisper_hash (str): The hash of the whisper (returned by whisper method)
+            encoding (str): The character encoding to use for processing the text. Defaults to "utf-8".
 
         Returns:
             dict: A dictionary containing the status of the whisper operation. The keys in the
