@@ -169,7 +169,7 @@ class LLMWhispererClient:
         ocr_provider: str = "advanced",
         line_splitter_tolerance: float = 0.4,
         horizontal_stretch_factor: float = 1.0,
-        encoder = "ISO-8859-1"
+        encoding: str = "utf-8"
     ) -> dict:
         """
         Sends a request to the LLMWhisperer API to process a document.
@@ -270,7 +270,7 @@ class LLMWhispererClient:
         prepared = req.prepare()
         s = requests.Session()
         response = s.send(prepared, timeout=self.api_timeout, stream=should_stream)
-        response.encoding = encoder
+        response.encoding = encoding
         if response.status_code != 200 and response.status_code != 202:
             message = json.loads(response.text)
             message["status_code"] = response.status_code
@@ -285,7 +285,7 @@ class LLMWhispererClient:
             "whisper_hash": response.headers["whisper-hash"],
         }
 
-    def whisper_status(self, whisper_hash: str) -> dict:
+    def whisper_status(self, whisper_hash: str, encoding: str = "utf-8") -> dict:
         """Retrieves the status of the whisper operation from the LLMWhisperer
         API.
 
@@ -313,6 +313,7 @@ class LLMWhispererClient:
         prepared = req.prepare()
         s = requests.Session()
         response = s.send(prepared, timeout=self.api_timeout)
+        response.encoding = encoding
         if response.status_code != 200:
             err = json.loads(response.text)
             err["status_code"] = response.status_code
