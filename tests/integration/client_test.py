@@ -23,9 +23,7 @@ def test_get_usage_info(client):
         "subscription_plan",
         "today_page_count",
     ]
-    assert set(usage_info.keys()) == set(
-        expected_keys
-    ), f"usage_info {usage_info} does not contain the expected keys"
+    assert set(usage_info.keys()) == set(expected_keys), f"usage_info {usage_info} does not contain the expected keys"
 
 
 @pytest.mark.parametrize(
@@ -78,9 +76,7 @@ class TestLLMWhispererClient(unittest.TestCase):
     # @unittest.skip("Skipping test_whisper")
     def test_whisper_stream(self):
         client = LLMWhispererClient()
-        download_url = (
-            "https://storage.googleapis.com/pandora-static/samples/bill.jpg.pdf"
-        )
+        download_url = "https://storage.googleapis.com/pandora-static/samples/bill.jpg.pdf"
         # Create a stream of download_url and pass it to whisper
         response_download = requests.get(download_url, stream=True)
         response_download.raise_for_status()
@@ -95,18 +91,14 @@ class TestLLMWhispererClient(unittest.TestCase):
     @unittest.skip("Skipping test_whisper_status")
     def test_whisper_status(self):
         client = LLMWhispererClient()
-        response = client.whisper_status(
-            whisper_hash="7cfa5cbb|5f1d285a7cf18d203de7af1a1abb0a3a"
-        )
+        response = client.whisper_status(whisper_hash="7cfa5cbb|5f1d285a7cf18d203de7af1a1abb0a3a")
         logger.info(response)
         self.assertIsInstance(response, dict)
 
     @unittest.skip("Skipping test_whisper_retrieve")
     def test_whisper_retrieve(self):
         client = LLMWhispererClient()
-        response = client.whisper_retrieve(
-            whisper_hash="7cfa5cbb|5f1d285a7cf18d203de7af1a1abb0a3a"
-        )
+        response = client.whisper_retrieve(whisper_hash="7cfa5cbb|5f1d285a7cf18d203de7af1a1abb0a3a")
         logger.info(response)
         self.assertIsInstance(response, dict)
 
