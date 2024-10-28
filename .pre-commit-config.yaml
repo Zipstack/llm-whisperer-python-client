@@ -17,7 +17,7 @@ repos:
         exclude_types:
           - "markdown"
       - id: end-of-file-fixer
-        exclude: "tests/test_data/*"
+        exclude: "tests/test_data/.*"
       - id: check-yaml
         args: [--unsafe]
       - id: check-added-large-files
