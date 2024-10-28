@@ -49,26 +49,8 @@ def test_whisper_v2(client_v2, data_dir, output_mode, mode, input_file):
 
     exp_basename = f"{Path(input_file).stem}.{mode}.{output_mode}.txt"
     exp_file = os.path.join(data_dir, "expected", exp_basename)
-    with open(exp_file, encoding="utf-8") as f:
-        exp = f.read()
-
-    assert isinstance(whisper_result, dict)
-    assert whisper_result["status_code"] == 200
-
-    # For text based processing, perform a strict match
-    if mode == "native_text" and output_mode == "text":
-        assert whisper_result["extraction"]["result_text"] == exp
-    # For OCR based processing, perform a fuzzy match
-    else:
-        extracted_text = whisper_result["extraction"]["result_text"]
-        similarity = SequenceMatcher(None, extracted_text, exp).ratio()
-        threshold = 0.97
-
-        if similarity < threshold:
-            diff = "\n".join(
-                unified_diff(exp.splitlines(), extracted_text.splitlines(), fromfile="Expected", tofile="Extracted")
-            )
-            pytest.fail(f"Texts are not similar enough: {similarity * 100:.2f}% similarity. Diff:\n{diff}")
+    # verify extracted text
+    do_fuzzy_assertion_with_extracted_text(exp_file, whisper_result, mode, output_mode)
 
 
 @pytest.mark.parametrize(
@@ -95,15 +77,24 @@ def test_whisper_v2_url_in_post(client_v2, data_dir, output_mode, mode, url, inp
 
     exp_basename = f"{Path(input_file).stem}.{mode}.{output_mode}.txt"
     exp_file = os.path.join(data_dir, "expected", exp_basename)
-    with open(exp_file, encoding="utf-8") as f:
+    # verify extracted text
+    do_fuzzy_assertion_with_extracted_text(exp_file, whisper_result, mode, output_mode)
+    usage_after = client_v2.get_usage_info()
+    # Verify usage after extraction
+    verify_usage(usage_before, usage_after, page_count, mode)
+
+
+def do_fuzzy_assertion_with_extracted_text(file_path, whisper_result, mode=None, output_mode=None):
+    with open(file_path, encoding="utf-8") as f:
         exp = f.read()
 
     assert isinstance(whisper_result, dict)
     assert whisper_result["status_code"] == 200
 
-    # For text based processing, perform a strict match
-    if mode == "native_text" and output_mode == "text":
-        assert whisper_result["extraction"]["result_text"] == exp
+    if mode and output_mode:
+        # For text based processing, perform a strict match
+        if mode == "native_text" and output_mode == "text":
+            assert whisper_result["extraction"]["result_text"] == exp
     # For OCR based processing, perform a fuzzy match
     else:
         extracted_text = whisper_result["extraction"]["result_text"]
@@ -116,19 +107,14 @@ def test_whisper_v2_url_in_post(client_v2, data_dir, output_mode, mode, url, inp
             )
             pytest.fail(f"Texts are not similar enough: {similarity * 100:.2f}% similarity. Diff:\n{diff}")
 
-    usage_after = client_v2.get_usage_info()
-    # Verify usage after extraction
-    verify_usage(usage_before, usage_after, page_count, mode)
-
 
 def verify_usage(before_extract, after_extract, page_count, mode='form'):
     all_modes = ['form', 'high_quality', 'low_cost', 'native_text']
     all_modes.remove(mode)
     assert (after_extract['today_page_count'] == before_extract['today_page_count'] + page_count), \
         "today_page_count calculation is wrong"
-    if after_extract['current_page_count'] != -1:
-        assert (after_extract['current_page_count'] == before_extract['current_page_count'] + page_count), \
-            "current_page_count calculation is wrong"
+    assert (after_extract['current_page_count'] == before_extract['current_page_count'] + page_count), \
+        "current_page_count calculation is wrong"
     if after_extract['overage_page_count'] > 0:
         assert (after_extract['overage_page_count'] == before_extract['overage_page_count'] + page_count), \
             "overage_page_count calculation is wrong"
