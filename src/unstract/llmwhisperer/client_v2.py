@@ -151,13 +151,13 @@ class LLMWhispererClientV2:
         file_path: str = "",
         stream: IO[bytes] = None,
         url: str = "",
-        mode: str = "high_quality",
+        mode: str = "form",
         output_mode: str = "layout_preserving",
         page_seperator: str = "<<<",
         pages_to_extract: str = "",
         median_filter_size: int = 0,
         gaussian_blur_radius: int = 0,
-        line_splitter_tolerance: float = 0.75,
+        line_splitter_tolerance: float = 0.4,
         horizontal_stretch_factor: float = 1.0,
         mark_vertical_lines: bool = False,
         mark_horizontal_lines: bool = False,
@@ -178,7 +178,7 @@ class LLMWhispererClientV2:
             file_path (str, optional): The path to the file to be processed. Defaults to "".
             stream (IO[bytes], optional): A stream of bytes to be processed. Defaults to None.
             url (str, optional): The URL of the file to be processed. Defaults to "".
-            mode (str, optional): The processing mode. Can be "high_quality", "form", "low_cost" or "native_text". Defaults to "high_quality".
+            mode (str, optional): The processing mode. Can be "high_quality", "form", "low_cost" or "native_text". Defaults to "form".
             output_mode (str, optional): The output mode. Can be "layout_preserving" or "text". Defaults to "layout_preserving".
             page_seperator (str, optional): The page separator. Defaults to "<<<".
             pages_to_extract (str, optional): The pages to extract. Defaults to "".
@@ -207,7 +207,6 @@ class LLMWhispererClientV2:
         self.logger.debug("whisper called")
         api_url = f"{self.base_url}/whisper"
         params = {
-            "url": url,
             "mode": mode,
             "output_mode": output_mode,
             "page_seperator": page_seperator,
@@ -272,7 +271,8 @@ class LLMWhispererClientV2:
                     data=data,
                 )
         else:
-            req = requests.Request("POST", api_url, params=params, headers=self.headers)
+            params["url_in_post"] = True
+            req = requests.Request("POST", api_url, params=params, headers=self.headers, data=url)
         prepared = req.prepare()
         s = requests.Session()
         response = s.send(prepared, timeout=120, stream=should_stream)
@@ -340,7 +340,7 @@ class LLMWhispererClientV2:
             return message
 
         # Will not reach here if status code is 202
-        message = response.text
+        message = json.loads(response.text)
         message["status_code"] = response.status_code
         return message
 
