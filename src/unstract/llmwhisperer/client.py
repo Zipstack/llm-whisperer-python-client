@@ -285,7 +285,7 @@ class LLMWhispererClient:
             "whisper_hash": response.headers["whisper-hash"],
         }
 
-    def whisper_status(self, whisper_hash: str, encoding: str = "utf-8") -> dict:
+    def whisper_status(self, whisper_hash: str) -> dict:
         """Retrieves the status of the whisper operation from the LLMWhisperer
         API.
 
@@ -296,7 +296,6 @@ class LLMWhispererClient:
 
         Args:
             whisper_hash (str): The hash of the whisper (returned by whisper method)
-            encoding (str): The character encoding to use for processing the text. Defaults to "utf-8".
 
         Returns:
             dict: A dictionary containing the status of the whisper operation. The keys in the
@@ -314,7 +313,6 @@ class LLMWhispererClient:
         prepared = req.prepare()
         s = requests.Session()
         response = s.send(prepared, timeout=self.api_timeout)
-        response.encoding = encoding
         if response.status_code != 200:
             err = json.loads(response.text)
             err["status_code"] = response.status_code
@@ -323,7 +321,7 @@ class LLMWhispererClient:
         message["status_code"] = response.status_code
         return message
 
-    def whisper_retrieve(self, whisper_hash: str) -> dict:
+    def whisper_retrieve(self, whisper_hash: str, encoding: str = "utf-8") -> dict:
         """Retrieves the result of the whisper operation from the LLMWhisperer
         API.
 
@@ -334,6 +332,7 @@ class LLMWhispererClient:
 
         Args:
             whisper_hash (str): The hash of the whisper operation.
+            encoding (str): The character encoding to use for processing the text. Defaults to "utf-8".
 
         Returns:
             dict: A dictionary containing the status code and the extracted text from the whisper operation.
@@ -350,6 +349,7 @@ class LLMWhispererClient:
         prepared = req.prepare()
         s = requests.Session()
         response = s.send(prepared, timeout=self.api_timeout)
+        response.encoding = encoding
         if response.status_code != 200:
             err = json.loads(response.text)
             err["status_code"] = response.status_code
