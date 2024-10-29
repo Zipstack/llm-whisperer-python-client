@@ -169,6 +169,7 @@ class LLMWhispererClientV2:
         use_webhook="",
         wait_for_completion=False,
         wait_timeout=180,
+        encoding: str = "utf-8",
     ) -> dict:
         """
         Sends a request to the LLMWhisperer API to process a document.
@@ -196,6 +197,7 @@ class LLMWhispererClientV2:
             use_webhook (str, optional): Webhook name to call. Defaults to "". If not provided, the no webhook will be called.
             wait_for_completion (bool, optional): Whether to wait for the whisper operation to complete. Defaults to False.
             wait_timeout (int, optional): The number of seconds to wait for the whisper operation to complete. Defaults to 180.
+            encoding (str): The character encoding to use for processing the text. Defaults to "utf-8".
 
         Returns:
             dict: The response from the API as a dictionary.
@@ -276,6 +278,7 @@ class LLMWhispererClientV2:
         prepared = req.prepare()
         s = requests.Session()
         response = s.send(prepared, timeout=120, stream=should_stream)
+        response.encoding = encoding
         if response.status_code != 200 and response.status_code != 202:
             message = json.loads(response.text)
             message["status_code"] = response.status_code
@@ -380,7 +383,7 @@ class LLMWhispererClientV2:
         message["status_code"] = response.status_code
         return message
 
-    def whisper_retrieve(self, whisper_hash: str) -> dict:
+    def whisper_retrieve(self, whisper_hash: str, encoding: str = "utf-8") -> dict:
         """Retrieves the result of the whisper operation from the LLMWhisperer
         API.
 
@@ -391,6 +394,7 @@ class LLMWhispererClientV2:
 
         Args:
             whisper_hash (str): The hash of the whisper operation.
+            encoding (str): The character encoding to use for processing the text. Defaults to "utf-8".
 
         Returns:
             dict: A dictionary containing the status code and the extracted text from the whisper operation.
@@ -407,6 +411,7 @@ class LLMWhispererClientV2:
         prepared = req.prepare()
         s = requests.Session()
         response = s.send(prepared, timeout=120)
+        response.encoding = encoding
         if response.status_code != 200:
             err = json.loads(response.text)
             err["status_code"] = response.status_code
@@ -493,9 +498,8 @@ class LLMWhispererClientV2:
         target_width: int,
         target_height: int,
     ) -> tuple[int, int, int, int, int]:
-        """
-        Given the line metadata and the line number, this function returns the bounding box of the line
-        in the format (page,x1,y1,x2,y2)
+        """Given the line metadata and the line number, this function returns
+        the bounding box of the line in the format (page,x1,y1,x2,y2)
 
         Args:
             line_metadata (list[int]): The line metadata returned by the LLMWhisperer API.

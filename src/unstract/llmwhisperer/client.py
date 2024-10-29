@@ -58,9 +58,7 @@ class LLMWhispererClient:
     client's activities and errors.
     """
 
-    formatter = logging.Formatter(
-        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    )
+    formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
     logger = logging.getLogger(__name__)
     log_stream_handler = logging.StreamHandler()
     log_stream_handler.setFormatter(formatter)
@@ -117,9 +115,7 @@ class LLMWhispererClient:
             self.api_key = os.getenv("LLMWHISPERER_API_KEY", "")
         else:
             self.api_key = api_key
-        self.logger.debug(
-            "api_key set to %s", LLMWhispererUtils.redact_key(self.api_key)
-        )
+        self.logger.debug("api_key set to %s", LLMWhispererUtils.redact_key(self.api_key))
 
         self.api_timeout = api_timeout
 
@@ -169,6 +165,7 @@ class LLMWhispererClient:
         ocr_provider: str = "advanced",
         line_splitter_tolerance: float = 0.4,
         horizontal_stretch_factor: float = 1.0,
+        encoding: str = "utf-8",
     ) -> dict:
         """
         Sends a request to the LLMWhisperer API to process a document.
@@ -190,6 +187,7 @@ class LLMWhispererClient:
             ocr_provider (str, optional): The OCR provider. Can be "advanced" or "basic". Defaults to "advanced".
             line_splitter_tolerance (float, optional): The line splitter tolerance. Defaults to 0.4.
             horizontal_stretch_factor (float, optional): The horizontal stretch factor. Defaults to 1.0.
+            encoding (str): The character encoding to use for processing the text. Defaults to "utf-8".
 
         Returns:
             dict: The response from the API as a dictionary.
@@ -238,12 +236,10 @@ class LLMWhispererClient:
         should_stream = False
         if url == "":
             if stream is not None:
-
                 should_stream = True
 
                 def generate():
-                    for chunk in stream:
-                        yield chunk
+                    yield from stream
 
                 req = requests.Request(
                     "POST",
@@ -268,6 +264,7 @@ class LLMWhispererClient:
         prepared = req.prepare()
         s = requests.Session()
         response = s.send(prepared, timeout=self.api_timeout, stream=should_stream)
+        response.encoding = encoding
         if response.status_code != 200 and response.status_code != 202:
             message = json.loads(response.text)
             message["status_code"] = response.status_code
@@ -318,7 +315,7 @@ class LLMWhispererClient:
         message["status_code"] = response.status_code
         return message
 
-    def whisper_retrieve(self, whisper_hash: str) -> dict:
+    def whisper_retrieve(self, whisper_hash: str, encoding: str = "utf-8") -> dict:
         """Retrieves the result of the whisper operation from the LLMWhisperer
         API.
 
@@ -329,6 +326,7 @@ class LLMWhispererClient:
 
         Args:
             whisper_hash (str): The hash of the whisper operation.
+            encoding (str): The character encoding to use for processing the text. Defaults to "utf-8".
 
         Returns:
             dict: A dictionary containing the status code and the extracted text from the whisper operation.
@@ -345,6 +343,7 @@ class LLMWhispererClient:
         prepared = req.prepare()
         s = requests.Session()
         response = s.send(prepared, timeout=self.api_timeout)
+        response.encoding = encoding
         if response.status_code != 200:
             err = json.loads(response.text)
             err["status_code"] = response.status_code
