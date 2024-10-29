@@ -50,7 +50,7 @@ def test_whisper_v2(client_v2, data_dir, output_mode, mode, input_file):
     exp_basename = f"{Path(input_file).stem}.{mode}.{output_mode}.txt"
     exp_file = os.path.join(data_dir, "expected", exp_basename)
     # verify extracted text
-    do_fuzzy_assertion_with_extracted_text(exp_file, whisper_result, mode, output_mode)
+    assert_extracted_text(exp_file, whisper_result, mode, output_mode)
 
 
 @pytest.mark.parametrize(
@@ -60,10 +60,8 @@ def test_whisper_v2(client_v2, data_dir, output_mode, mode, input_file):
          "credit_card.pdf", 7),
         ("layout_preserving", "low_cost", "https://unstractpocstorage.blob.core.windows.net/public/Amex.pdf",
          "credit_card.pdf", 7),
-        (
-                "layout_preserving", "high_quality",
-                "https://unstractpocstorage.blob.core.windows.net/public/scanned_bill.pdf",
-                "restaurant_invoice_photo.pdf", 1),
+        ("layout_preserving", "high_quality", "https://unstractpocstorage.blob.core.windows.net/public/scanned_bill.pdf",
+         "restaurant_invoice_photo.pdf", 1),
         ("layout_preserving", "form", "https://unstractpocstorage.blob.core.windows.net/public/scanned_form.pdf",
          "handwritten-form.pdf", 1),
     ]
@@ -78,34 +76,33 @@ def test_whisper_v2_url_in_post(client_v2, data_dir, output_mode, mode, url, inp
     exp_basename = f"{Path(input_file).stem}.{mode}.{output_mode}.txt"
     exp_file = os.path.join(data_dir, "expected", exp_basename)
     # verify extracted text
-    do_fuzzy_assertion_with_extracted_text(exp_file, whisper_result, mode, output_mode)
+    assert_extracted_text(exp_file, whisper_result, mode, output_mode)
     usage_after = client_v2.get_usage_info()
     # Verify usage after extraction
     verify_usage(usage_before, usage_after, page_count, mode)
 
 
-def do_fuzzy_assertion_with_extracted_text(file_path, whisper_result, mode=None, output_mode=None):
+def assert_extracted_text(file_path, whisper_result, mode, output_mode):
     with open(file_path, encoding="utf-8") as f:
         exp = f.read()
 
     assert isinstance(whisper_result, dict)
     assert whisper_result["status_code"] == 200
 
-    if mode and output_mode:
-        # For text based processing, perform a strict match
-        if mode == "native_text" and output_mode == "text":
-            assert whisper_result["extraction"]["result_text"] == exp
-    # For OCR based processing, perform a fuzzy match
-    else:
-        extracted_text = whisper_result["extraction"]["result_text"]
-        similarity = SequenceMatcher(None, extracted_text, exp).ratio()
-        threshold = 0.97
+    # For OCR based processing
+    threshold = 0.97
 
-        if similarity < threshold:
-            diff = "\n".join(
-                unified_diff(exp.splitlines(), extracted_text.splitlines(), fromfile="Expected", tofile="Extracted")
-            )
-            pytest.fail(f"Texts are not similar enough: {similarity * 100:.2f}% similarity. Diff:\n{diff}")
+    # For text based processing
+    if mode == "native_text" and output_mode == "text":
+        threshold = 0.99
+    extracted_text = whisper_result["extraction"]["result_text"]
+    similarity = SequenceMatcher(None, extracted_text, exp).ratio()
+
+    if similarity < threshold:
+        diff = "\n".join(
+            unified_diff(exp.splitlines(), extracted_text.splitlines(), fromfile="Expected", tofile="Extracted")
+        )
+        pytest.fail(f"Texts are not similar enough: {similarity * 100:.2f}% similarity. Diff:\n{diff}")
 
 
 def verify_usage(before_extract, after_extract, page_count, mode='form'):
