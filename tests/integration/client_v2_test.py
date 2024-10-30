@@ -38,6 +38,7 @@ def test_get_usage_info(client_v2):
         ("text", "low_cost", "credit_card.pdf"),
         ("text", "high_quality", "restaurant_invoice_photo.pdf"),
         ("text", "form", "handwritten-form.pdf"),
+        ("layout_preserving", "high_quality", "utf_8_chars.pdf"),
     ],
 )
 def test_whisper_v2(client_v2, data_dir, output_mode, mode, input_file):
