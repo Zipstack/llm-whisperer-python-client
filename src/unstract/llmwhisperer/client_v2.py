@@ -70,6 +70,7 @@ class LLMWhispererClientV2:
 
     api_key = ""
     base_url = ""
+    api_timeout = 120
 
     def __init__(
         self,
@@ -139,7 +140,7 @@ class LLMWhispererClientV2:
         req = requests.Request("GET", url, headers=self.headers)
         prepared = req.prepare()
         s = requests.Session()
-        response = s.send(prepared, timeout=120)
+        response = s.send(prepared, timeout=self.api_timeout)
         if response.status_code != 200:
             err = json.loads(response.text)
             err["status_code"] = response.status_code
@@ -179,8 +180,10 @@ class LLMWhispererClientV2:
             file_path (str, optional): The path to the file to be processed. Defaults to "".
             stream (IO[bytes], optional): A stream of bytes to be processed. Defaults to None.
             url (str, optional): The URL of the file to be processed. Defaults to "".
-            mode (str, optional): The processing mode. Can be "high_quality", "form", "low_cost" or "native_text". Defaults to "high_quality".
-            output_mode (str, optional): The output mode. Can be "layout_preserving" or "text". Defaults to "layout_preserving".
+            mode (str, optional): The processing mode. Can be "high_quality", "form", "low_cost" or "native_text".
+                Defaults to "high_quality".
+            output_mode (str, optional): The output mode. Can be "layout_preserving" or "text".
+                Defaults to "layout_preserving".
             page_seperator (str, optional): The page separator. Defaults to "<<<".
             pages_to_extract (str, optional): The pages to extract. Defaults to "".
             median_filter_size (int, optional): The size of the median filter. Defaults to 0.
@@ -193,10 +196,14 @@ class LLMWhispererClientV2:
             lang (str, optional): The language of the document. Defaults to "eng".
             tag (str, optional): The tag for the document. Defaults to "default".
             filename (str, optional): The name of the file to store in reports. Defaults to "".
-            webhook_metadata (str, optional): The webhook metadata. This data will be passed to the webhook if webhooks are used Defaults to "".
-            use_webhook (str, optional): Webhook name to call. Defaults to "". If not provided, the no webhook will be called.
-            wait_for_completion (bool, optional): Whether to wait for the whisper operation to complete. Defaults to False.
-            wait_timeout (int, optional): The number of seconds to wait for the whisper operation to complete. Defaults to 180.
+            webhook_metadata (str, optional): The webhook metadata. This data will be passed to the webhook if
+                webhooks are used Defaults to "".
+            use_webhook (str, optional): Webhook name to call. Defaults to "". If not provided, then
+                no webhook will be called.
+            wait_for_completion (bool, optional): Whether to wait for the whisper operation to complete.
+                Defaults to False.
+            wait_timeout (int, optional): The number of seconds to wait for the whisper operation to complete.
+                Defaults to 180.
             encoding (str): The character encoding to use for processing the text. Defaults to "utf-8".
 
         Returns:
@@ -277,7 +284,7 @@ class LLMWhispererClientV2:
             req = requests.Request("POST", api_url, params=params, headers=self.headers)
         prepared = req.prepare()
         s = requests.Session()
-        response = s.send(prepared, timeout=120, stream=should_stream)
+        response = s.send(prepared, timeout=wait_timeout, stream=should_stream)
         response.encoding = encoding
         if response.status_code != 200 and response.status_code != 202:
             message = json.loads(response.text)
@@ -374,7 +381,7 @@ class LLMWhispererClientV2:
         req = requests.Request("GET", url, headers=self.headers, params=params)
         prepared = req.prepare()
         s = requests.Session()
-        response = s.send(prepared, timeout=120)
+        response = s.send(prepared, timeout=self.api_timeout)
         if response.status_code != 200:
             err = json.loads(response.text)
             err["status_code"] = response.status_code
@@ -410,7 +417,7 @@ class LLMWhispererClientV2:
         req = requests.Request("GET", url, headers=self.headers, params=params)
         prepared = req.prepare()
         s = requests.Session()
-        response = s.send(prepared, timeout=120)
+        response = s.send(prepared, timeout=self.api_timeout)
         response.encoding = encoding
         if response.status_code != 200:
             err = json.loads(response.text)
@@ -454,7 +461,7 @@ class LLMWhispererClientV2:
         req = requests.Request("POST", url, headers=headersx, json=data)
         prepared = req.prepare()
         s = requests.Session()
-        response = s.send(prepared, timeout=120)
+        response = s.send(prepared, timeout=self.api_timeout)
         if response.status_code != 200:
             err = json.loads(response.text)
             err["status_code"] = response.status_code
@@ -485,7 +492,7 @@ class LLMWhispererClientV2:
         req = requests.Request("GET", url, headers=self.headers, params=params)
         prepared = req.prepare()
         s = requests.Session()
-        response = s.send(prepared, timeout=120)
+        response = s.send(prepared, timeout=self.api_timeout)
         if response.status_code != 200:
             err = json.loads(response.text)
             err["status_code"] = response.status_code

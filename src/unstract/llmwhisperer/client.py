@@ -263,7 +263,7 @@ class LLMWhispererClient:
             req = requests.Request("POST", api_url, params=params, headers=self.headers)
         prepared = req.prepare()
         s = requests.Session()
-        response = s.send(prepared, timeout=self.api_timeout, stream=should_stream)
+        response = s.send(prepared, timeout=timeout, stream=should_stream)
         response.encoding = encoding
         if response.status_code != 200 and response.status_code != 202:
             message = json.loads(response.text)
