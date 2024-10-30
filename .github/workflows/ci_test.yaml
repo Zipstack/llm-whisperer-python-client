@@ -35,8 +35,8 @@ jobs:
     - name: Create test env
       shell: bash
       run: |
-        cp tests/sample.env tests/.env
-        sed -i "s|LLMWHISPERER_API_KEY=|LLMWHISPERER_API_KEY=${{ secrets.LLMWHISPERER_API_KEY }}|" tests/.env
+        cp sample.env .env
+        sed -i "s|LLMWHISPERER_API_KEY=|LLMWHISPERER_API_KEY=${{ secrets.LLMWHISPERER_API_KEY }}|" .env
 
     - name: Run tox
       id: tox

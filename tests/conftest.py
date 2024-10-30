@@ -1,12 +1,9 @@
 import os
 
 import pytest
-from dotenv import load_dotenv
 
 from unstract.llmwhisperer.client import LLMWhispererClient
 from unstract.llmwhisperer.client_v2 import LLMWhispererClientV2
-
-load_dotenv()
 
 
 @pytest.fixture(name="client")

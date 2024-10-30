@@ -69,7 +69,7 @@ includes = ["src"]
 package-dir = "src"
 
 [tool.pytest.ini_options]
-env_files = ["tests/.env"]
+env_files = [".env"]
 addopts = "-s"
 log_level = "INFO"
 log_cli = true
