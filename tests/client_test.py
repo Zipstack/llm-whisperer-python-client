@@ -46,6 +46,7 @@ def test_whisper(client, data_dir, processing_mode, output_mode, input_file):
 
     exp_basename = f"{Path(input_file).stem}.{processing_mode}.{output_mode}.txt"
     exp_file = os.path.join(data_dir, "expected", exp_basename)
+
     assert_extracted_text(exp_file, whisper_result, processing_mode, output_mode)
 
 
