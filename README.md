@@ -7,7 +7,7 @@
 
 LLMs are powerful, but their output is as good as the input you provide. LLMWhisperer is a technology that presents data from complex documents (different designs and formats) to LLMs in a way that they can best understand. LLMWhisperer features include Layout Preserving Mode, Auto-switching between native text and OCR modes, proper representation of radio buttons and checkboxes in PDF forms as raw text, among other features. You can now extract raw text from complex PDF documents or images without having to worry about whether the document is a native text document, a scanned image or just a picture clicked on a smartphone. Extraction of raw text from invoices, purchase orders, bank statements, etc works easily for structured data extraction with LLMs powered by LLMWhisperer's Layout Preserving mode. 
 
-Refer to the client documentation for more information: [LLMWhisperer Client Documentation](https://docs.unstract.com/llm_whisperer/python_client/llm_whisperer_python_client_intro)
+Refer to the client documentation for more information: [LLMWhisperer Client Documentation](https://docs.unstract.com/llmwhisperer/index.html)
 
 ## Features
 

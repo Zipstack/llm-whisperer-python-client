@@ -10,7 +10,7 @@ dependencies = [
     "requests>=2",
 ]
 readme = "README.md"
-urls = { Homepage = "https://llmwhisperer.unstract.com", Source = "https://github.com/Zipstack/llm-whisperer-python-client" }
+urls = { Homepage = "https://unstract.com/llmwhisperer/", Source = "https://github.com/Zipstack/llm-whisperer-python-client" }
 license = {text = "AGPL v3"}
 authors = [
     {name = "Zipstack Inc", email = "devsupport@zipstack.com"},
@@ -69,7 +69,7 @@ includes = ["src"]
 package-dir = "src"
 
 [tool.pytest.ini_options]
-env_files = ["tests/.env"]
+env_files = [".env"]
 addopts = "-s"
 log_level = "INFO"
 log_cli = true

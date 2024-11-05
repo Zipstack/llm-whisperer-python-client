@@ -32,6 +32,7 @@ def test_get_usage_info(client):
         ("ocr", "text", "restaurant_invoice_photo.pdf"),
         ("text", "line-printer", "restaurant_invoice_photo.pdf"),
         ("text", "text", "handwritten-form.pdf"),
+        ("ocr", "line-printer", "utf_8_chars.pdf"),
     ],
 )
 def test_whisper(client, data_dir, processing_mode, output_mode, input_file):
