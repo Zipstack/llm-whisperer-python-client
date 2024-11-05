@@ -27,7 +27,7 @@ from typing import IO
 
 import requests
 
-BASE_URL = "https://llmwhisperer-api.unstract.com/api/v2"
+BASE_URL_V2 = "https://llmwhisperer-api.us-central.unstract.com/api/v2"
 
 
 class LLMWhispererClientException(Exception):
@@ -62,7 +62,9 @@ class LLMWhispererClientV2:
     client's activities and errors.
     """
 
-    formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    formatter = logging.Formatter(
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    )
     logger = logging.getLogger(__name__)
     log_stream_handler = logging.StreamHandler()
     log_stream_handler.setFormatter(formatter)
@@ -108,7 +110,7 @@ class LLMWhispererClientV2:
         self.logger.debug("logging_level set to %s", logging_level)
 
         if base_url == "":
-            self.base_url = os.getenv("LLMWHISPERER_BASE_URL_V2", BASE_URL)
+            self.base_url = os.getenv("LLMWHISPERER_BASE_URL_V2", BASE_URL_V2)
         else:
             self.base_url = base_url
         self.logger.debug("base_url set to %s", self.base_url)
@@ -281,7 +283,9 @@ class LLMWhispererClientV2:
                 )
         else:
             params["url_in_post"] = True
-            req = requests.Request("POST", api_url, params=params, headers=self.headers, data=url)
+            req = requests.Request(
+                "POST", api_url, params=params, headers=self.headers, data=url
+            )
         prepared = req.prepare()
         s = requests.Session()
         response = s.send(prepared, timeout=wait_timeout, stream=should_stream)
@@ -307,9 +311,13 @@ class LLMWhispererClientV2:
                     message["extraction"] = {}
                     return message
                 if status["status"] == "processing":
-                    self.logger.debug(f"Whisper-hash:{whisper_hash} | STATUS: processing...")
+                    self.logger.debug(
+                        f"Whisper-hash:{whisper_hash} | STATUS: processing..."
+                    )
                 elif status["status"] == "delivered":
-                    self.logger.debug(f"Whisper-hash:{whisper_hash} | STATUS: Already delivered!")
+                    self.logger.debug(
+                        f"Whisper-hash:{whisper_hash} | STATUS: Already delivered!"
+                    )
                     raise LLMWhispererClientException(
                         {
                             "status_code": -1,
@@ -317,7 +325,9 @@ class LLMWhispererClientV2:
                         }
                     )
                 elif status["status"] == "unknown":
-                    self.logger.debug(f"Whisper-hash:{whisper_hash} | STATUS: unknown...")
+                    self.logger.debug(
+                        f"Whisper-hash:{whisper_hash} | STATUS: unknown..."
+                    )
                     raise LLMWhispererClientException(
                         {
                             "status_code": -1,
@@ -325,13 +335,17 @@ class LLMWhispererClientV2:
                         }
                     )
                 elif status["status"] == "failed":
-                    self.logger.debug(f"Whisper-hash:{whisper_hash} | STATUS: failed...")
+                    self.logger.debug(
+                        f"Whisper-hash:{whisper_hash} | STATUS: failed..."
+                    )
                     message["status_code"] = -1
                     message["message"] = "Whisper operation failed"
                     message["extraction"] = {}
                     return message
                 elif status["status"] == "processed":
-                    self.logger.debug(f"Whisper-hash:{whisper_hash} | STATUS: processed!")
+                    self.logger.debug(
+                        f"Whisper-hash:{whisper_hash} | STATUS: processed!"
+                    )
                     resultx = self.whisper_retrieve(whisper_hash=whisper_hash)
                     if resultx["status_code"] == 200:
                         message["status_code"] = 200
