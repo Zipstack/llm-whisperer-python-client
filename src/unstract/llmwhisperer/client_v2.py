@@ -118,6 +118,15 @@ class LLMWhispererClientV2:
             self.api_key = api_key
 
         self.headers = {"unstract-key": self.api_key}
+        # For test purpose
+        # self.headers = {
+        #     "Subscription-Id": "python-client",
+        #     "Subscription-Name": "python-client",
+        #     "User-Id": "python-client-user",
+        #     "Product-Id": "python-client-product",
+        #     "Product-Name": "python-client-product",
+        #     "Start-Date": "2024-07-09",
+        # }
 
     def get_usage_info(self) -> dict:
         """Retrieves the usage information of the LLMWhisperer API.
@@ -315,6 +324,15 @@ class LLMWhispererClientV2:
                     self.logger.error(f'Whisper-hash:{whisper_hash} | STATUS: failed with {status["message"]}')
                     message["status_code"] = -1
                     message["message"] = status["message"]
+                    message["status"] = "error"
+                    message["extraction"] = {}
+                    return message
+                elif "error" in status["status"]:
+                    # for backward compatabity
+                    self.logger.debug(f"Whisper-hash:{whisper_hash} | STATUS: failed...")
+                    self.logger.error(f'Whisper-hash:{whisper_hash} | STATUS: failed with {status["status"]}')
+                    message["status_code"] = -1
+                    message["message"] = status["status"]
                     message["status"] = "error"
                     message["extraction"] = {}
                     return message
