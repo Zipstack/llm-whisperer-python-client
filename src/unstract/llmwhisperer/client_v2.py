@@ -62,9 +62,7 @@ class LLMWhispererClientV2:
     client's activities and errors.
     """
 
-    formatter = logging.Formatter(
-        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    )
+    formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
     logger = logging.getLogger(__name__)
     log_stream_handler = logging.StreamHandler()
     log_stream_handler.setFormatter(formatter)
@@ -108,7 +106,6 @@ class LLMWhispererClientV2:
             self.logger.setLevel(logging.ERROR)
         self.logger.setLevel(logging_level)
         self.logger.debug("logging_level set to %s", logging_level)
-
         if base_url == "":
             self.base_url = os.getenv("LLMWHISPERER_BASE_URL_V2", BASE_URL_V2)
         else:
@@ -121,6 +118,15 @@ class LLMWhispererClientV2:
             self.api_key = api_key
 
         self.headers = {"unstract-key": self.api_key}
+        # For test purpose
+        # self.headers = {
+        #     "Subscription-Id": "python-client",
+        #     "Subscription-Name": "python-client",
+        #     "User-Id": "python-client-user",
+        #     "Product-Id": "python-client-product",
+        #     "Product-Name": "python-client-product",
+        #     "Start-Date": "2024-07-09",
+        # }
 
     def get_usage_info(self) -> dict:
         """Retrieves the usage information of the LLMWhisperer API.
@@ -283,9 +289,7 @@ class LLMWhispererClientV2:
                 )
         else:
             params["url_in_post"] = True
-            req = requests.Request(
-                "POST", api_url, params=params, headers=self.headers, data=url
-            )
+            req = requests.Request("POST", api_url, params=params, headers=self.headers, data=url)
         prepared = req.prepare()
         s = requests.Session()
         response = s.send(prepared, timeout=wait_timeout, stream=should_stream)
@@ -310,42 +314,30 @@ class LLMWhispererClientV2:
                     message["message"] = "Whisper client operation failed"
                     message["extraction"] = {}
                     return message
+                if status["status"] == "accepted":
+                    self.logger.debug(f'Whisper-hash:{whisper_hash} | STATUS: {status["status"]}...')
                 if status["status"] == "processing":
-                    self.logger.debug(
-                        f"Whisper-hash:{whisper_hash} | STATUS: processing..."
-                    )
-                elif status["status"] == "delivered":
-                    self.logger.debug(
-                        f"Whisper-hash:{whisper_hash} | STATUS: Already delivered!"
-                    )
-                    raise LLMWhispererClientException(
-                        {
-                            "status_code": -1,
-                            "message": "Whisper operation already delivered",
-                        }
-                    )
-                elif status["status"] == "unknown":
-                    self.logger.debug(
-                        f"Whisper-hash:{whisper_hash} | STATUS: unknown..."
-                    )
-                    raise LLMWhispererClientException(
-                        {
-                            "status_code": -1,
-                            "message": "Whisper operation status unknown",
-                        }
-                    )
-                elif status["status"] == "failed":
-                    self.logger.debug(
-                        f"Whisper-hash:{whisper_hash} | STATUS: failed..."
-                    )
+                    self.logger.debug(f"Whisper-hash:{whisper_hash} | STATUS: processing...")
+
+                elif status["status"] == "error":
+                    self.logger.debug(f"Whisper-hash:{whisper_hash} | STATUS: failed...")
+                    self.logger.error(f'Whisper-hash:{whisper_hash} | STATUS: failed with {status["message"]}')
                     message["status_code"] = -1
-                    message["message"] = "Whisper operation failed"
+                    message["message"] = status["message"]
+                    message["status"] = "error"
+                    message["extraction"] = {}
+                    return message
+                elif "error" in status["status"]:
+                    # for backward compatabity
+                    self.logger.debug(f"Whisper-hash:{whisper_hash} | STATUS: failed...")
+                    self.logger.error(f'Whisper-hash:{whisper_hash} | STATUS: failed with {status["status"]}')
+                    message["status_code"] = -1
+                    message["message"] = status["status"]
+                    message["status"] = "error"
                     message["extraction"] = {}
                     return message
                 elif status["status"] == "processed":
-                    self.logger.debug(
-                        f"Whisper-hash:{whisper_hash} | STATUS: processed!"
-                    )
+                    self.logger.debug(f"Whisper-hash:{whisper_hash} | STATUS: processed!")
                     resultx = self.whisper_retrieve(whisper_hash=whisper_hash)
                     if resultx["status_code"] == 200:
                         message["status_code"] = 200
