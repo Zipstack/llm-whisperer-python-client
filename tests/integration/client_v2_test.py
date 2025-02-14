@@ -79,6 +79,49 @@ def test_whisper_v2_error(client_v2, data_dir, output_mode, mode, input_file):
 
 
 @pytest.mark.parametrize(
+    "input_file",
+    [
+        ("credit_card.pdf"),
+    ],
+)
+def test_highlight(client_v2, data_dir, input_file):
+    file_path = os.path.join(data_dir, input_file)
+
+    whisper_result = client_v2.whisper(
+        add_line_nos=True,
+        file_path=file_path,
+        wait_for_completion=True,
+    )
+    whisper_hash = whisper_result["whisper_hash"]
+    highlight_data = client_v2.get_highlight_data(whisper_hash=whisper_hash, lines="1-2")
+
+    # Assert the structure and content of highlight_data
+    assert isinstance(highlight_data, dict)
+    assert len(highlight_data) == 2
+    assert "1" in highlight_data
+    assert "2" in highlight_data
+
+    # Assert line 1 data
+    line1 = highlight_data["1"]
+    assert line1["base_y"] == 0
+    assert line1["base_y_percent"] == 0
+    assert line1["height"] == 0
+    assert line1["height_percent"] == 0
+    assert line1["page"] == 0
+    assert line1["page_height"] == 0
+    assert line1["raw"] == [0, 0, 0, 0]
+
+    # Assert line 2 data
+    line2 = highlight_data["2"]
+    assert line2["base_y"] == 155
+    assert line2["base_y_percent"] == pytest.approx(4.8927)  # Using approx for float comparison
+    assert line2["height"] == 51
+    assert line2["height_percent"] == pytest.approx(1.6098)  # Using approx for float comparison
+    assert line2["page"] == 0
+    assert line2["page_height"] == 3168
+
+
+@pytest.mark.parametrize(
     "output_mode, mode, url, input_file, page_count",
     [
         (
