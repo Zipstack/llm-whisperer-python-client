@@ -155,6 +155,44 @@ class LLMWhispererClientV2:
             raise LLMWhispererClientException(err)
         return json.loads(response.text)
 
+    def get_highlight_data(self, whisper_hash: str, lines: str, extract_all_lines: bool = False) -> dict:
+        """Retrieves the highlight information of the LLMWhisperer API.
+
+        This method sends a GET request to the '/highlights' endpoint of the LLMWhisperer API.
+        The response is a JSON object containing the usage information.
+        Refer to https://docs.unstract.com/llm_whisperer/apis/llm_whisperer_usage_api
+
+        Args:
+            whisper_hash (str): The hash of the whisper operation.
+            lines (str): Define which lines metadata to retrieve.
+                You can specify which lines metadata to retrieve with this parameter.
+                Example 1-5,7,21- will retrieve lines metadata 1,2,3,4,5,7,21,22,23,24...
+                till the last line meta data.
+        Returns:
+            dict: A dictionary containing the highlight information.
+
+        Raises:
+            LLMWhispererClientException: If the API request fails, it raises an exception with
+                                          the error message and status code returned by the API.
+        """
+        self.logger.debug("highlight called")
+        url = f"{self.base_url}/highlights"
+        params = {
+            "whisper_hash": whisper_hash,
+            "lines": lines,
+            "extract_all_lines": extract_all_lines,
+        }
+        self.logger.debug("url: %s", url)
+        req = requests.Request("GET", url, headers=self.headers, params=params)
+        prepared = req.prepare()
+        s = requests.Session()
+        response = s.send(prepared, timeout=self.api_timeout)
+        if response.status_code != 200:
+            err = json.loads(response.text)
+            err["status_code"] = response.status_code
+            raise LLMWhispererClientException(err)
+        return json.loads(response.text)
+
     def whisper(
         self,
         file_path: str = "",
@@ -171,6 +209,7 @@ class LLMWhispererClientV2:
         mark_vertical_lines: bool = False,
         mark_horizontal_lines: bool = False,
         line_spitter_strategy: str = "left-priority",
+        add_line_nos: bool = False,
         lang="eng",
         tag="default",
         filename="",
@@ -201,6 +240,8 @@ class LLMWhispererClientV2:
             mark_vertical_lines (bool, optional): Whether to mark vertical lines. Defaults to False.
             mark_horizontal_lines (bool, optional): Whether to mark horizontal lines. Defaults to False.
             line_spitter_strategy (str, optional): The line splitter strategy. Defaults to "left-priority".
+            add_line_nos (bool, optional): Adds line numbers to the extracted text and saves line metadata,
+              which can be queried later using the highlights API.
             lang (str, optional): The language of the document. Defaults to "eng".
             tag (str, optional): The tag for the document. Defaults to "default".
             filename (str, optional): The name of the file to store in reports. Defaults to "".
@@ -235,6 +276,7 @@ class LLMWhispererClientV2:
             "mark_vertical_lines": mark_vertical_lines,
             "mark_horizontal_lines": mark_horizontal_lines,
             "line_spitter_strategy": line_spitter_strategy,
+            "add_line_nos": add_line_nos,
             "lang": lang,
             "tag": tag,
             "filename": filename,
