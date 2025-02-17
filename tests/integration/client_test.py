@@ -9,6 +9,7 @@ logger = logging.getLogger(__name__)
 
 
 def test_get_usage_info(client):
+    pytest.skip("Deprecated LLMWhisperer v1")
     usage_info = client.get_usage_info()
     logger.info(usage_info)
     assert isinstance(usage_info, dict), "usage_info should be a dictionary"
@@ -36,6 +37,7 @@ def test_get_usage_info(client):
     ],
 )
 def test_whisper(client, data_dir, processing_mode, output_mode, input_file):
+    pytest.skip("Deprecated LLMWhisperer v1")
     file_path = os.path.join(data_dir, input_file)
     whisper_result = client.whisper(
         processing_mode=processing_mode,
