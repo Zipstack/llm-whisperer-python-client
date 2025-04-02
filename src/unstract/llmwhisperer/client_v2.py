@@ -18,7 +18,6 @@ Classes:
     LLMWhispererClientException: Exception raised for errors in the LLMWhispererClient.
 """
 
-import copy
 import json
 import logging
 import os
@@ -504,9 +503,7 @@ class LLMWhispererClientV2:
             "webhook_name": webhook_name,
         }
         url = f"{self.base_url}/whisper-manage-callback"
-        headersx = copy.deepcopy(self.headers)
-        headersx["Content-Type"] = "application/json"
-        req = requests.Request("POST", url, headers=headersx, json=data)
+        req = requests.Request("POST", url, headers=self.headers, json=data)
         prepared = req.prepare()
         s = requests.Session()
         response = s.send(prepared, timeout=self.api_timeout)
@@ -543,9 +540,7 @@ class LLMWhispererClientV2:
             "webhook_name": webhook_name,
         }
         url = f"{self.base_url}/whisper-manage-callback"
-        headersx = copy.deepcopy(self.headers)
-        headersx["Content-Type"] = "application/json"
-        req = requests.Request("PUT", url, headers=headersx, json=data)
+        req = requests.Request("PUT", url, headers=self.headers, json=data)
         prepared = req.prepare()
         s = requests.Session()
         response = s.send(prepared, timeout=self.api_timeout)
