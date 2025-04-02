@@ -1,15 +1,15 @@
 WEBHOOK_URL = "http://test-webhook.com/callback"
 AUTH_TOKEN = "dummy-auth-token"
 WEBHOOK_NAME = "test_webhook"
-WEBHOOK_RESPONSE = {"status": "success", "message": "Webhook registered successfully"}
+WEBHOOK_RESPONSE = {"message": "Webhook registered successfully"}
 WHISPER_RESPONSE = {"status_code": 200, "extraction": {"result_text": "Test result"}}
 
 
 def test_register_webhook(mocker, client_v2):
     mock_send = mocker.patch("requests.Session.send")
     mock_response = mocker.MagicMock()
-    mock_response.status_code = 200
-    mock_response.text = '{"status": "success", "message": "Webhook registered successfully"}'  # noqa: E501
+    mock_response.status_code = 201
+    mock_response.text = '{"message": "Webhook registered successfully"}'  # noqa: E501
     mock_send.return_value = mock_response
 
     response = client_v2.register_webhook(WEBHOOK_URL, AUTH_TOKEN, WEBHOOK_NAME)
