@@ -510,6 +510,45 @@ class LLMWhispererClientV2:
         prepared = req.prepare()
         s = requests.Session()
         response = s.send(prepared, timeout=self.api_timeout)
+        if response.status_code != 201:
+            err = json.loads(response.text)
+            err["status_code"] = response.status_code
+            raise LLMWhispererClientException(err)
+        return json.loads(response.text)
+
+    def update_webhook_details(self, webhook_name: str, url: str, auth_token: str) -> dict:
+        """Updates the details of a webhook from the LLMWhisperer API.
+
+        This method sends a PUT request to the '/whisper-manage-callback' endpoint of the LLMWhisperer API.
+        The response is a JSON object containing the status of the webhook update.
+
+        Refer to https://docs.unstract.com/llm_whisperer/apis/
+
+        Args:
+            webhook_name (str): The name of the webhook.
+            url (str): The URL of the webhook.
+            auth_token (str): The authentication token for the webhook.
+
+        Returns:
+            dict: A dictionary containing the status code and the response from the API.
+
+        Raises:
+            LLMWhispererClientException: If the API request fails, it raises an exception with
+                                            the error message and status code returned by the API.
+        """
+
+        data = {
+            "url": url,
+            "auth_token": auth_token,
+            "webhook_name": webhook_name,
+        }
+        url = f"{self.base_url}/whisper-manage-callback"
+        headersx = copy.deepcopy(self.headers)
+        headersx["Content-Type"] = "application/json"
+        req = requests.Request("PUT", url, headers=headersx, json=data)
+        prepared = req.prepare()
+        s = requests.Session()
+        response = s.send(prepared, timeout=self.api_timeout)
         if response.status_code != 200:
             err = json.loads(response.text)
             err["status_code"] = response.status_code
@@ -538,6 +577,37 @@ class LLMWhispererClientV2:
         url = f"{self.base_url}/whisper-manage-callback"
         params = {"webhook_name": webhook_name}
         req = requests.Request("GET", url, headers=self.headers, params=params)
+        prepared = req.prepare()
+        s = requests.Session()
+        response = s.send(prepared, timeout=self.api_timeout)
+        if response.status_code != 200:
+            err = json.loads(response.text)
+            err["status_code"] = response.status_code
+            raise LLMWhispererClientException(err)
+        return json.loads(response.text)
+
+    def delete_webhook(self, webhook_name: str) -> dict:
+        """Deletes a webhook from the LLMWhisperer API.
+
+        This method sends a DELETE request to the '/whisper-manage-callback' endpoint of the LLMWhisperer API.
+        The response is a JSON object containing the status of the webhook deletion.
+
+        Refer to https://docs.unstract.com/llm_whisperer/apis/
+
+        Args:
+            webhook_name (str): The name of the webhook.
+
+        Returns:
+            dict: A dictionary containing the status code and the response from the API.
+
+        Raises:
+            LLMWhispererClientException: If the API request fails, it raises an exception with
+                                            the error message and status code returned by the API.
+        """
+
+        url = f"{self.base_url}/whisper-manage-callback"
+        params = {"webhook_name": webhook_name}
+        req = requests.Request("DELETE", url, headers=self.headers, params=params)
         prepared = req.prepare()
         s = requests.Session()
         response = s.send(prepared, timeout=self.api_timeout)
