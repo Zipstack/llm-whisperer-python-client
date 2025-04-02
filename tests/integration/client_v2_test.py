@@ -5,6 +5,8 @@ from pathlib import Path
 
 import pytest
 
+from unstract.llmwhisperer.client_v2 import LLMWhispererClientException
+
 logger = logging.getLogger(__name__)
 
 
@@ -166,6 +168,63 @@ def test_whisper_v2_url_in_post(client_v2, data_dir, output_mode, mode, url, inp
     usage_after = client_v2.get_usage_info()
     # Verify usage after extraction
     verify_usage(usage_before, usage_after, page_count, mode)
+
+
+@pytest.mark.parametrize(
+    "url,token,webhook_name",
+    [
+        (
+            "https://webhook.site/b76ecc5f-8320-4410-b24f-66525d2c92cb",
+            "",
+            "client_v2_test",
+        ),
+    ],
+)
+def test_webhook(client_v2, url, token, webhook_name):
+    """Tests the registration, retrieval, update, and deletion of a webhook.
+
+    This test method performs the following steps:
+    1. Registers a new webhook with the provided URL, token, and webhook name.
+    2. Retrieves the details of the registered webhook and verifies the URL, token, and webhook name.
+    3. Updates the webhook details with a new token.
+    4. Deletes the webhook and verifies the deletion.
+
+    Args:
+        client_v2 (LLMWhispererClientV2): The client instance for making API requests.
+        url (str): The URL of the webhook.
+        token (str): The authentication token for the webhook.
+        webhook_name (str): The name of the webhook.
+
+    Returns:
+        None
+    """
+    result = client_v2.register_webhook(url, token, webhook_name)
+    assert isinstance(result, dict)
+    assert result["message"] == "Webhook created successfully"
+
+    result = client_v2.get_webhook_details(webhook_name)
+    assert isinstance(result, dict)
+    assert result["url"] == url
+    assert result["auth_token"] == token
+    assert result["webhook_name"] == webhook_name
+
+    result = client_v2.update_webhook_details(webhook_name, url, "new_token")
+    assert isinstance(result, dict)
+    assert result["message"] == "Webhook updated successfully"
+
+    result = client_v2.get_webhook_details(webhook_name)
+    assert isinstance(result, dict)
+    assert result["auth_token"] == "new_token"
+
+    result = client_v2.delete_webhook(webhook_name)
+    assert isinstance(result, dict)
+    assert result["message"] == "Webhook deleted successfully"
+
+    try:
+        client_v2.get_webhook_details(webhook_name)
+    except LLMWhispererClientException as e:
+        assert e.error_message()["message"] == "Webhook details not found"
+        assert e.error_message()["status_code"] == 404
 
 
 def assert_error_message(whisper_result):
