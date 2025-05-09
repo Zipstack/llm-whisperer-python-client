@@ -174,7 +174,7 @@ def test_whisper_v2_url_in_post(client_v2, data_dir, output_mode, mode, url, inp
     "url,token,webhook_name",
     [
         (
-            "https://webhook.site/b76ecc5f-8320-4410-b24f-66525d2c92cb",
+            "https://webhook.site/62bb38ac-408c-4fcf-b8f1-cb22adbf3f96", #TODO need to find permanenet solution
             "",
             "client_v2_test",
         ),
