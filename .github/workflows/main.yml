@@ -20,7 +20,7 @@ jobs:
       - name: Setup PDM
         uses: pdm-project/setup-pdm@v4
         with:
-          python-version: 3.9.6
+          python-version: 3.9.22
           version: 2.10.0
 
       - name: Publish package distributions to PyPI
