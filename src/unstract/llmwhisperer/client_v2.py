@@ -25,6 +25,7 @@ import time
 from typing import IO
 
 import requests
+from typing import Optional, Dict
 
 BASE_URL_V2 = "https://llmwhisperer-api.us-central.unstract.com/api/v2"
 
@@ -76,6 +77,7 @@ class LLMWhispererClientV2:
         base_url: str = "",
         api_key: str = "",
         logging_level: str = "",
+        custom_headers: Optional[Dict[str, str]] = None,
     ):
         """Initializes the LLMWhispererClient with the given parameters.
 
@@ -92,6 +94,12 @@ class LLMWhispererClientV2:
                                            value of the LLMWHISPERER_LOGGING_LEVEL
                                            environment variable, or "DEBUG" if the
                                            environment variable is not set.
+            custom_headers (Optional[Dict[str, str]], optional): Custom headers to add to
+                                                                every request. These will
+                                                                be merged with default
+                                                                headers, with custom
+                                                                headers taking precedence.
+                                                                Defaults to None.
         """
         if logging_level == "":
             logging_level = os.getenv("LLMWHISPERER_LOGGING_LEVEL", "DEBUG")
@@ -117,6 +125,8 @@ class LLMWhispererClientV2:
             self.api_key = api_key
 
         self.headers = {"unstract-key": self.api_key}
+        if custom_headers:
+            self.headers.update(custom_headers)
         # For test purpose
         # self.headers = {
         #     "Subscription-Id": "python-client",
