@@ -52,7 +52,7 @@ build-backend = "hatchling.build"
 path = "src/unstract/llmwhisperer/__init__.py"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/unstract/llmwhisperer"]
+packages = ["src/unstract"]
 
 #Added pyright to detect vertual environment in IDE.
 [tool.pyright]
