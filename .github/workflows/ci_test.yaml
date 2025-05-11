@@ -33,7 +33,7 @@ jobs:
             ${{ runner.os }}-tox-uv-
 
       - name: Install tox with UV
-        run: uv pip install tox tox-uv
+        run: uv pip install tox
 
       - name: Create test env
         shell: bash
