@@ -25,7 +25,6 @@ import time
 from typing import IO
 
 import requests
-from typing import Optional, Dict
 
 BASE_URL_V2 = "https://llmwhisperer-api.us-central.unstract.com/api/v2"
 
@@ -77,7 +76,7 @@ class LLMWhispererClientV2:
         base_url: str = "",
         api_key: str = "",
         logging_level: str = "",
-        custom_headers: Optional[Dict[str, str]] = None,
+        custom_headers: dict[str, str] | None = None,
     ):
         """Initializes the LLMWhispererClient with the given parameters.
 
@@ -177,6 +176,7 @@ class LLMWhispererClientV2:
                 You can specify which lines metadata to retrieve with this parameter.
                 Example 1-5,7,21- will retrieve lines metadata 1,2,3,4,5,7,21,22,23,24...
                 till the last line meta data.
+
         Returns:
             dict: A dictionary containing the highlight information.
 
@@ -228,8 +228,7 @@ class LLMWhispererClientV2:
         wait_timeout=180,
         encoding: str = "utf-8",
     ) -> dict:
-        """
-        Sends a request to the LLMWhisperer API to process a document.
+        """Sends a request to the LLMWhisperer API to process a document.
         Refer to https://docs.unstract.com/llm_whisperer/apis/llm_whisperer_text_extraction_api
 
         Args:
@@ -506,7 +505,6 @@ class LLMWhispererClientV2:
             LLMWhispererClientException: If the API request fails, it raises an exception with
                                             the error message and status code returned by the API.
         """
-
         data = {
             "url": url,
             "auth_token": auth_token,
@@ -543,7 +541,6 @@ class LLMWhispererClientV2:
             LLMWhispererClientException: If the API request fails, it raises an exception with
                                             the error message and status code returned by the API.
         """
-
         data = {
             "url": url,
             "auth_token": auth_token,
@@ -578,7 +575,6 @@ class LLMWhispererClientV2:
             LLMWhispererClientException: If the API request fails, it raises an exception with
                                             the error message and status code returned by the API.
         """
-
         url = f"{self.base_url}/whisper-manage-callback"
         params = {"webhook_name": webhook_name}
         req = requests.Request("GET", url, headers=self.headers, params=params)
@@ -609,7 +605,6 @@ class LLMWhispererClientV2:
             LLMWhispererClientException: If the API request fails, it raises an exception with
                                             the error message and status code returned by the API.
         """
-
         url = f"{self.base_url}/whisper-manage-callback"
         params = {"webhook_name": webhook_name}
         req = requests.Request("DELETE", url, headers=self.headers, params=params)
@@ -639,7 +634,6 @@ class LLMWhispererClientV2:
         Returns:
             tuple: The bounding box of the line in the format (page,x1,y1,x2,y2)
         """
-
         page = line_metadata[0]
         x1 = 0
         y1 = line_metadata[1] - line_metadata[2]

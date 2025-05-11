@@ -1,6 +1,6 @@
 class LLMWhispererUtils:
     @staticmethod
-    def redact_key(api_key: str, reveal_length=4) -> str:
+    def redact_key(api_key: str, reveal_length: int = 4) -> str:
         """Hides sensitive information partially. Useful for logging keys.
 
         Args:
