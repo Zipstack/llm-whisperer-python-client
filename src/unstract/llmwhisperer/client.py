@@ -22,7 +22,6 @@ import os
 from typing import IO
 
 import requests
-
 from unstract.llmwhisperer.utils import LLMWhispererUtils
 
 BASE_URL = "https://llmwhisperer-api.unstract.com/v1"
@@ -167,8 +166,7 @@ class LLMWhispererClient:
         horizontal_stretch_factor: float = 1.0,
         encoding: str = "utf-8",
     ) -> dict:
-        """
-        Sends a request to the LLMWhisperer API to process a document.
+        """Sends a request to the LLMWhisperer API to process a document.
         Refer to https://docs.unstract.com/llm_whisperer/apis/llm_whisperer_text_extraction_api
 
         Args:
@@ -355,8 +353,7 @@ class LLMWhispererClient:
         }
 
     def highlight_data(self, whisper_hash: str, search_text: str) -> dict:
-        """
-        Highlights the specified text in the result of a whisper operation.
+        """Highlights the specified text in the result of a whisper operation.
         Note: The whisper operation must have been performed with the
         store_metadata_for_highlighting parameter set to True.
 
