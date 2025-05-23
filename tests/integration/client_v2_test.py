@@ -170,7 +170,7 @@ def test_whisper_v2_url_in_post(
     "url,token,webhook_name",
     [
         (
-            "https://webhook.site/62bb38ac-408c-4fcf-b8f1-cb22adbf3f96",  # need to find a clean solution
+            "https://webhook.site/0990fff9-ce95-4d11-95e1-be9ad38c40d6",  # need to find a clean solution
             "",
             "client_v2_test",
         ),
