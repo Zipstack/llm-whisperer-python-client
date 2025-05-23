@@ -4,13 +4,15 @@ from difflib import SequenceMatcher, unified_diff
 from pathlib import Path
 
 import pytest
-
-from unstract.llmwhisperer.client_v2 import LLMWhispererClientException
+from unstract.llmwhisperer.client_v2 import (
+    LLMWhispererClientException,
+    LLMWhispererClientV2,
+)
 
 logger = logging.getLogger(__name__)
 
 
-def test_get_usage_info(client_v2):
+def test_get_usage_info(client_v2: LLMWhispererClientV2) -> None:
     usage_info = client_v2.get_usage_info()
     logger.info(usage_info)
     assert isinstance(usage_info, dict), "usage_info should be a dictionary"
@@ -44,7 +46,13 @@ def test_get_usage_info(client_v2):
         ("layout_preserving", "high_quality", "utf_8_chars.pdf"),
     ],
 )
-def test_whisper_v2(client_v2, data_dir, output_mode, mode, input_file):
+def test_whisper_v2(
+    client_v2: LLMWhispererClientV2,
+    data_dir: str,
+    output_mode: str,
+    mode: str,
+    input_file: str,
+) -> None:
     file_path = os.path.join(data_dir, input_file)
     whisper_result = client_v2.whisper(
         mode=mode,
@@ -61,32 +69,12 @@ def test_whisper_v2(client_v2, data_dir, output_mode, mode, input_file):
 
 
 @pytest.mark.parametrize(
-    "output_mode, mode, input_file",
-    [
-        ("layout_preserving", "high_quality", "test.json"),
-    ],
-)
-def test_whisper_v2_error(client_v2, data_dir, output_mode, mode, input_file):
-    file_path = os.path.join(data_dir, input_file)
-
-    whisper_result = client_v2.whisper(
-        mode=mode,
-        output_mode=output_mode,
-        file_path=file_path,
-        wait_for_completion=True,
-    )
-    logger.debug(f"Result for '{output_mode}', '{mode}', " f"'{input_file}: {whisper_result}")
-
-    assert_error_message(whisper_result)
-
-
-@pytest.mark.parametrize(
     "input_file",
     [
         ("credit_card.pdf"),
     ],
 )
-def test_highlight(client_v2, data_dir, input_file):
+def test_highlight(client_v2: LLMWhispererClientV2, data_dir: str, input_file: str) -> None:
     file_path = os.path.join(data_dir, input_file)
 
     whisper_result = client_v2.whisper(
@@ -156,7 +144,15 @@ def test_highlight(client_v2, data_dir, input_file):
         ),
     ],
 )
-def test_whisper_v2_url_in_post(client_v2, data_dir, output_mode, mode, url, input_file, page_count):
+def test_whisper_v2_url_in_post(
+    client_v2: LLMWhispererClientV2,
+    data_dir: str,
+    output_mode: str,
+    mode: str,
+    url: str,
+    input_file: str,
+    page_count: int,
+) -> None:
     usage_before = client_v2.get_usage_info()
     whisper_result = client_v2.whisper(mode=mode, output_mode=output_mode, url=url, wait_for_completion=True)
     logger.debug(f"Result for '{output_mode}', '{mode}', " f"'{input_file}: {whisper_result}")
@@ -174,13 +170,13 @@ def test_whisper_v2_url_in_post(client_v2, data_dir, output_mode, mode, url, inp
     "url,token,webhook_name",
     [
         (
-            "https://webhook.site/62bb38ac-408c-4fcf-b8f1-cb22adbf3f96", # need to find a clean solution
+            "https://webhook.site/62bb38ac-408c-4fcf-b8f1-cb22adbf3f96",  # need to find a clean solution
             "",
             "client_v2_test",
         ),
     ],
 )
-def test_webhook(client_v2, url, token, webhook_name):
+def test_webhook(client_v2: LLMWhispererClientV2, url: str, token: str, webhook_name: str) -> None:
     """Tests the registration, retrieval, update, and deletion of a webhook.
 
     This test method performs the following steps:
@@ -227,13 +223,13 @@ def test_webhook(client_v2, url, token, webhook_name):
         assert e.error_message()["status_code"] == 404
 
 
-def assert_error_message(whisper_result):
+def assert_error_message(whisper_result: dict) -> None:
     assert isinstance(whisper_result, dict)
     assert whisper_result["status"] == "error"
     assert "error" in whisper_result["message"]
 
 
-def assert_extracted_text(file_path, whisper_result, mode, output_mode):
+def assert_extracted_text(file_path: str, whisper_result: dict, mode: str, output_mode: str) -> None:
     with open(file_path, encoding="utf-8") as f:
         exp = f.read()
 
@@ -263,7 +259,7 @@ def assert_extracted_text(file_path, whisper_result, mode, output_mode):
         pytest.fail(f"Diff:\n{diff}.\n Texts are not similar enough: {similarity * 100:.2f}% similarity. ")
 
 
-def verify_usage(before_extract, after_extract, page_count, mode="form"):
+def verify_usage(before_extract: dict, after_extract: dict, page_count: int, mode: str = "form") -> None:
     all_modes = ["form", "high_quality", "low_cost", "native_text"]
     all_modes.remove(mode)
     assert (

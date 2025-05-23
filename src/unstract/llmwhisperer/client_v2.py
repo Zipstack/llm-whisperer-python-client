@@ -22,7 +22,8 @@ import json
 import logging
 import os
 import time
-from typing import IO
+from collections.abc import Generator
+from typing import IO, Any
 
 import requests
 
@@ -41,13 +42,25 @@ class LLMWhispererClientException(Exception):
         status_code (int, optional): HTTP status code returned by the LLMWhisperer API. Defaults to None.
     """
 
-    def __init__(self, value):
-        self.value = value
+    def __init__(self, value: str, status_code: int | None = None) -> None:
+        """Initialize the LLMWhispererClientException.
 
-    def __str__(self):
+        Args:
+            value: The error message or value.
+            status_code: The HTTP status code returned by the LLMWhisperer API.
+        """
+        self.value = value
+        self.status_code = status_code
+
+    def __str__(self) -> str:
+        """Return string representation of the exception.
+
+        Returns:
+            String representation of the error value.
+        """
         return repr(self.value)
 
-    def error_message(self):
+    def error_message(self) -> str:
         return self.value
 
 
@@ -67,9 +80,9 @@ class LLMWhispererClientV2:
     log_stream_handler.setFormatter(formatter)
     logger.addHandler(log_stream_handler)
 
-    api_key = ""
-    base_url = ""
-    api_timeout = 120
+    api_key: str
+    base_url: str
+    api_timeout: int
 
     def __init__(
         self,
@@ -77,7 +90,7 @@ class LLMWhispererClientV2:
         api_key: str = "",
         logging_level: str = "",
         custom_headers: dict[str, str] | None = None,
-    ):
+    ) -> None:
         """Initializes the LLMWhispererClient with the given parameters.
 
         Args:
@@ -136,7 +149,7 @@ class LLMWhispererClientV2:
         #     "Start-Date": "2024-07-09",
         # }
 
-    def get_usage_info(self) -> dict:
+    def get_usage_info(self) -> Any:
         """Retrieves the usage information of the LLMWhisperer API.
 
         This method sends a GET request to the '/get-usage-info' endpoint of the LLMWhisperer API.
@@ -144,7 +157,7 @@ class LLMWhispererClientV2:
         Refer to https://docs.unstract.com/llm_whisperer/apis/llm_whisperer_usage_api
 
         Returns:
-            dict: A dictionary containing the usage information.
+            Dict[Any, Any]: A dictionary containing the usage information.
 
         Raises:
             LLMWhispererClientException: If the API request fails, it raises an exception with
@@ -163,7 +176,7 @@ class LLMWhispererClientV2:
             raise LLMWhispererClientException(err)
         return json.loads(response.text)
 
-    def get_highlight_data(self, whisper_hash: str, lines: str, extract_all_lines: bool = False) -> dict:
+    def get_highlight_data(self, whisper_hash: str, lines: str, extract_all_lines: bool = False) -> Any:
         """Retrieves the highlight information of the LLMWhisperer API.
 
         This method sends a GET request to the '/highlights' endpoint of the LLMWhisperer API.
@@ -178,7 +191,7 @@ class LLMWhispererClientV2:
                 till the last line meta data.
 
         Returns:
-            dict: A dictionary containing the highlight information.
+            Dict[Any, Any]: A dictionary containing the highlight information.
 
         Raises:
             LLMWhispererClientException: If the API request fails, it raises an exception with
@@ -205,7 +218,7 @@ class LLMWhispererClientV2:
     def whisper(
         self,
         file_path: str = "",
-        stream: IO[bytes] = None,
+        stream: IO[bytes] | None = None,
         url: str = "",
         mode: str = "form",
         output_mode: str = "layout_preserving",
@@ -219,17 +232,17 @@ class LLMWhispererClientV2:
         mark_horizontal_lines: bool = False,
         line_spitter_strategy: str = "left-priority",
         add_line_nos: bool = False,
-        lang="eng",
-        tag="default",
-        filename="",
-        webhook_metadata="",
-        use_webhook="",
-        wait_for_completion=False,
-        wait_timeout=180,
+        lang: str = "eng",
+        tag: str = "default",
+        filename: str = "",
+        webhook_metadata: str = "",
+        use_webhook: str = "",
+        wait_for_completion: bool = False,
+        wait_timeout: int = 180,
         encoding: str = "utf-8",
-    ) -> dict:
+    ) -> Any:
         """Sends a request to the LLMWhisperer API to process a document.
-        Refer to https://docs.unstract.com/llm_whisperer/apis/llm_whisperer_text_extraction_api
+        Refer to https://docs.unstract.com/llm_whisperer/apis/llm_whisperer_text_extraction_api.
 
         Args:
             file_path (str, optional): The path to the file to be processed. Defaults to "".
@@ -264,7 +277,7 @@ class LLMWhispererClientV2:
             encoding (str): The character encoding to use for processing the text. Defaults to "utf-8".
 
         Returns:
-            dict: The response from the API as a dictionary.
+            Dict[Any, Any]: The response from the API as a dictionary.
 
         Raises:
             LLMWhispererClientException: If the API request fails, it raises an exception with
@@ -296,19 +309,12 @@ class LLMWhispererClientV2:
         self.logger.debug("params: %s", params)
 
         if use_webhook != "" and wait_for_completion:
-            raise LLMWhispererClientException(
-                {
-                    "status_code": -1,
-                    "message": "Cannot wait for completion when using webhook",
-                }
-            )
+            raise LLMWhispererClientException("Cannot wait for completion when using webhook", 1)
 
         if url == "" and file_path == "" and stream is None:
             raise LLMWhispererClientException(
-                {
-                    "status_code": -1,
-                    "message": "Either url, stream or file_path must be provided",
-                }
+                "Either url, stream or file_path must be provided",
+                1,
             )
 
         should_stream = False
@@ -316,8 +322,9 @@ class LLMWhispererClientV2:
             if stream is not None:
                 should_stream = True
 
-                def generate():
-                    yield from stream
+                def generate() -> Generator[bytes, None, None]:
+                    if stream is not None:  # Add explicit type check
+                        yield from stream
 
                 req = requests.Request(
                     "POST",
@@ -410,7 +417,7 @@ class LLMWhispererClientV2:
         message["status_code"] = response.status_code
         return message
 
-    def whisper_status(self, whisper_hash: str) -> dict:
+    def whisper_status(self, whisper_hash: str) -> Any:
         """Retrieves the status of the whisper operation from the LLMWhisperer
         API.
 
@@ -446,7 +453,7 @@ class LLMWhispererClientV2:
         message["status_code"] = response.status_code
         return message
 
-    def whisper_retrieve(self, whisper_hash: str, encoding: str = "utf-8") -> dict:
+    def whisper_retrieve(self, whisper_hash: str, encoding: str = "utf-8") -> Any:
         """Retrieves the result of the whisper operation from the LLMWhisperer
         API.
 
@@ -485,7 +492,7 @@ class LLMWhispererClientV2:
             "extraction": json.loads(response.text),
         }
 
-    def register_webhook(self, url: str, auth_token: str, webhook_name: str) -> dict:
+    def register_webhook(self, url: str, auth_token: str, webhook_name: str) -> Any:
         """Registers a webhook with the LLMWhisperer API.
 
         This method sends a POST request to the '/whisper-manage-callback' endpoint of the LLMWhisperer API.
@@ -499,7 +506,7 @@ class LLMWhispererClientV2:
             webhook_name (str): The name of the webhook.
 
         Returns:
-            dict: A dictionary containing the status code and the response from the API.
+            Any: A dictionary containing the status code and the response from the API.
 
         Raises:
             LLMWhispererClientException: If the API request fails, it raises an exception with
@@ -521,7 +528,7 @@ class LLMWhispererClientV2:
             raise LLMWhispererClientException(err)
         return json.loads(response.text)
 
-    def update_webhook_details(self, webhook_name: str, url: str, auth_token: str) -> dict:
+    def update_webhook_details(self, webhook_name: str, url: str, auth_token: str) -> Any:
         """Updates the details of a webhook from the LLMWhisperer API.
 
         This method sends a PUT request to the '/whisper-manage-callback' endpoint of the LLMWhisperer API.
@@ -557,7 +564,7 @@ class LLMWhispererClientV2:
             raise LLMWhispererClientException(err)
         return json.loads(response.text)
 
-    def get_webhook_details(self, webhook_name: str) -> dict:
+    def get_webhook_details(self, webhook_name: str) -> Any:
         """Retrieves the details of a webhook from the LLMWhisperer API.
 
         This method sends a GET request to the '/whisper-manage-callback' endpoint of the LLMWhisperer API.
@@ -587,7 +594,7 @@ class LLMWhispererClientV2:
             raise LLMWhispererClientException(err)
         return json.loads(response.text)
 
-    def delete_webhook(self, webhook_name: str) -> dict:
+    def delete_webhook(self, webhook_name: str) -> Any:
         """Deletes a webhook from the LLMWhisperer API.
 
         This method sends a DELETE request to the '/whisper-manage-callback' endpoint of the LLMWhisperer API.
@@ -624,7 +631,7 @@ class LLMWhispererClientV2:
         target_height: int,
     ) -> tuple[int, int, int, int, int]:
         """Given the line metadata and the line number, this function returns
-        the bounding box of the line in the format (page,x1,y1,x2,y2)
+        the bounding box of the line in the format (page,x1,y1,x2,y2).
 
         Args:
             line_metadata (list[int]): The line metadata returned by the LLMWhisperer API.
