@@ -80,9 +80,9 @@ class LLMWhispererClientV2:
     log_stream_handler.setFormatter(formatter)
     logger.addHandler(log_stream_handler)
 
-    api_key: str
-    base_url: str
-    api_timeout: int
+    api_key: str = ""
+    base_url: str = ""
+    api_timeout: int = 120
 
     def __init__(
         self,
