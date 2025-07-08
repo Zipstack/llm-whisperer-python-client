@@ -446,9 +446,15 @@ class LLMWhispererClientV2:
         s = requests.Session()
         response = s.send(prepared, timeout=self.api_timeout)
         if response.status_code != 200:
-            err = json.loads(response.text)
-            err["status_code"] = response.status_code
-            raise LLMWhispererClientException(err)
+            if not (response.text or "").strip():
+                self.logger.error(f"Empty response body from API, status code: {response.status_code}")
+                raise LLMWhispererClientException("Empty response body from API", response.status_code)
+            try:
+                err = json.loads(response.text)
+            except json.JSONDecodeError as e:
+                self.logger.error(f"JSON decode error: {e}; Response text: {response.text!r}")
+                raise LLMWhispererClientException(f"Non-JSON response: {response.text}", response.status_code) from e
+            raise LLMWhispererClientException(err, response.status_code)
         message = json.loads(response.text)
         message["status_code"] = response.status_code
         return message
