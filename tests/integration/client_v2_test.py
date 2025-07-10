@@ -11,6 +11,12 @@ from unstract.llmwhisperer.client_v2 import (
 
 logger = logging.getLogger(__name__)
 
+# Test tolerance constants for better maintainability
+COORDINATE_TOLERANCE = 2
+PERCENTAGE_TOLERANCE = 0.05
+PAGE_HEIGHT_TOLERANCE = 5
+OCR_SIMILARITY_THRESHOLD = 0.90
+
 
 def test_get_usage_info(client_v2: LLMWhispererClientV2) -> None:
     usage_info = client_v2.get_usage_info()
@@ -103,12 +109,12 @@ def test_highlight(client_v2: LLMWhispererClientV2, data_dir: str, input_file: s
 
     # Assert line 2 data
     line2 = highlight_data["2"]
-    assert line2["base_y"] == pytest.approx(155, abs=2)
-    assert line2["base_y_percent"] == pytest.approx(4.8927, abs=0.05)  # Using approx for float comparison
-    assert line2["height"] == pytest.approx(51, abs=2)
-    assert line2["height_percent"] == pytest.approx(1.6098, abs=0.05)  # Using approx for float comparison
+    assert line2["base_y"] == pytest.approx(155, abs=COORDINATE_TOLERANCE)
+    assert line2["base_y_percent"] == pytest.approx(4.8927, abs=PERCENTAGE_TOLERANCE)
+    assert line2["height"] == pytest.approx(51, abs=COORDINATE_TOLERANCE)
+    assert line2["height_percent"] == pytest.approx(1.6098, abs=PERCENTAGE_TOLERANCE)
     assert line2["page"] == 0
-    assert line2["page_height"] == pytest.approx(3168, abs=5)
+    assert line2["page_height"] == pytest.approx(3168, abs=PAGE_HEIGHT_TOLERANCE)
 
 
 @pytest.mark.parametrize(
@@ -237,13 +243,13 @@ def assert_extracted_text(file_path: str, whisper_result: dict, mode: str, outpu
     assert whisper_result["status_code"] == 200
 
     # For OCR based processing
-    threshold = 0.90
+    threshold = OCR_SIMILARITY_THRESHOLD
 
     # For text based processing
     if mode == "native_text" and output_mode == "text":
         threshold = 0.99
     elif mode == "low_cost":
-        threshold = 0.90
+        threshold = OCR_SIMILARITY_THRESHOLD
     extracted_text = whisper_result["extraction"]["result_text"]
     similarity = SequenceMatcher(None, extracted_text, exp).ratio()
 
