@@ -34,6 +34,7 @@ def test_get_usage_info(client_v2: LLMWhispererClientV2) -> None:
         "overage_page_count",
         "subscription_plan",
         "today_page_count",
+        "current_page_count_table",
     ]
     assert set(usage_info.keys()) == set(expected_keys), f"usage_info {usage_info} does not contain the expected keys"
 
