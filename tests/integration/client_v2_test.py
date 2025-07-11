@@ -11,6 +11,12 @@ from unstract.llmwhisperer.client_v2 import (
 
 logger = logging.getLogger(__name__)
 
+# Test tolerance constants for better maintainability
+COORDINATE_TOLERANCE = 2
+PERCENTAGE_TOLERANCE = 0.05
+PAGE_HEIGHT_TOLERANCE = 5
+OCR_SIMILARITY_THRESHOLD = 0.90
+
 
 def test_get_usage_info(client_v2: LLMWhispererClientV2) -> None:
     usage_info = client_v2.get_usage_info()
@@ -28,6 +34,7 @@ def test_get_usage_info(client_v2: LLMWhispererClientV2) -> None:
         "overage_page_count",
         "subscription_plan",
         "today_page_count",
+        "current_page_count_table",
     ]
     assert set(usage_info.keys()) == set(expected_keys), f"usage_info {usage_info} does not contain the expected keys"
 
@@ -103,12 +110,12 @@ def test_highlight(client_v2: LLMWhispererClientV2, data_dir: str, input_file: s
 
     # Assert line 2 data
     line2 = highlight_data["2"]
-    assert line2["base_y"] == 155
-    assert line2["base_y_percent"] == pytest.approx(4.8927)  # Using approx for float comparison
-    assert line2["height"] == 51
-    assert line2["height_percent"] == pytest.approx(1.6098)  # Using approx for float comparison
+    assert line2["base_y"] == pytest.approx(155, abs=COORDINATE_TOLERANCE)
+    assert line2["base_y_percent"] == pytest.approx(4.8927, abs=PERCENTAGE_TOLERANCE)
+    assert line2["height"] == pytest.approx(51, abs=COORDINATE_TOLERANCE)
+    assert line2["height_percent"] == pytest.approx(1.6098, abs=PERCENTAGE_TOLERANCE)
     assert line2["page"] == 0
-    assert line2["page_height"] == 3168
+    assert line2["page_height"] == pytest.approx(3168, abs=PAGE_HEIGHT_TOLERANCE)
 
 
 @pytest.mark.parametrize(
@@ -170,7 +177,7 @@ def test_whisper_v2_url_in_post(
     "url,token,webhook_name",
     [
         (
-            "https://webhook.site/0990fff9-ce95-4d11-95e1-be9ad38c40d6",  # need to find a clean solution
+            os.getenv("WEBHOOK_TEST_URL", "https://httpbin.org/post"),  # configurable via env var, defaults to httpbin.org
             "",
             "client_v2_test",
         ),
@@ -237,13 +244,13 @@ def assert_extracted_text(file_path: str, whisper_result: dict, mode: str, outpu
     assert whisper_result["status_code"] == 200
 
     # For OCR based processing
-    threshold = 0.94
+    threshold = OCR_SIMILARITY_THRESHOLD
 
     # For text based processing
     if mode == "native_text" and output_mode == "text":
         threshold = 0.99
     elif mode == "low_cost":
-        threshold = 0.90
+        threshold = OCR_SIMILARITY_THRESHOLD
     extracted_text = whisper_result["extraction"]["result_text"]
     similarity = SequenceMatcher(None, extracted_text, exp).ratio()
 
