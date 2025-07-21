@@ -351,13 +351,23 @@ class LLMWhispererClientV2:
         s = requests.Session()
         response = s.send(prepared, timeout=wait_timeout, stream=should_stream)
         response.encoding = encoding
-        if response.status_code != 200 and response.status_code != 202:
-            message = json.loads(response.text)
+        if response.status_code not in (200, 202):
+            try:
+                message = json.loads(response.text)
+                if not isinstance(message, dict):
+                    message = {"message": str(message)}
+            except (json.JSONDecodeError, ValueError):
+                message = {"message": response.text}
             message["status_code"] = response.status_code
             message["extraction"] = {}
             raise LLMWhispererClientException(message)
         if response.status_code == 202:
-            message = json.loads(response.text)
+            try:
+                message = json.loads(response.text)
+                if not isinstance(message, dict):
+                    message = {"message": str(message)}
+            except (json.JSONDecodeError, ValueError):
+                message = {"message": response.text}
             message["status_code"] = response.status_code
             message["extraction"] = {}
             if not wait_for_completion:
@@ -455,7 +465,9 @@ class LLMWhispererClientV2:
                 # Truncate response text if too long to avoid log pollution
                 response_preview = response.text[:500] + "..." if len(response.text) > 500 else response.text
                 self.logger.error(f"API error - JSON decode failed: {e}; Response preview: {response_preview!r}")
-                raise LLMWhispererClientException(f"API error: non-JSON response - {response_preview}", response.status_code) from e
+                raise LLMWhispererClientException(
+                    f"API error: non-JSON response - {response_preview}", response.status_code
+                ) from e
             raise LLMWhispererClientException(err, response.status_code)
         message = json.loads(response.text)
         message["status_code"] = response.status_code
