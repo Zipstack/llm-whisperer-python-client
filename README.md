@@ -1,4 +1,4 @@
-# LLMWhisperer Python Client
+# Unstract LLMWhisperer Python Client
 
 [![PyPI - Downloads](https://img.shields.io/pypi/dm/llmwhisperer-client)](https://pypi.org/project/llmwhisperer-client/)
 [![Python Version from PEP 621 TOML](https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2FZipstack%2Fllm-whisperer-python-client%2Fmain%2Fpyproject.toml)
