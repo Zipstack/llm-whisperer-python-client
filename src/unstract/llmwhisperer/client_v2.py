@@ -232,6 +232,7 @@ class LLMWhispererClientV2:
         mark_horizontal_lines: bool = False,
         line_spitter_strategy: str = "left-priority",
         add_line_nos: bool = False,
+        include_line_confidence: bool = False,
         lang: str = "eng",
         tag: str = "default",
         filename: str = "",
@@ -263,6 +264,8 @@ class LLMWhispererClientV2:
             line_spitter_strategy (str, optional): The line splitter strategy. Defaults to "left-priority".
             add_line_nos (bool, optional): Adds line numbers to the extracted text and saves line metadata,
               which can be queried later using the highlights API.
+            include_line_confidence (bool, optional): Adds line confidence to the line metadata returned by
+              the highlights API. Requires add_line_nos to be enabled. Defaults to False.
             lang (str, optional): The language of the document. Defaults to "eng".
             tag (str, optional): The tag for the document. Defaults to "default".
             filename (str, optional): The name of the file to store in reports. Defaults to "".
@@ -298,6 +301,7 @@ class LLMWhispererClientV2:
             "mark_horizontal_lines": mark_horizontal_lines,
             "line_spitter_strategy": line_spitter_strategy,
             "add_line_nos": add_line_nos,
+            "include_line_confidence": include_line_confidence,
             "lang": lang,
             "tag": tag,
             "filename": filename,
