@@ -39,6 +39,52 @@ def test_get_usage_info(client_v2: LLMWhispererClientV2) -> None:
     assert set(usage_info.keys()) == set(expected_keys), f"usage_info {usage_info} does not contain the expected keys"
 
 
+def test_get_usage_with_default_tag(client_v2: LLMWhispererClientV2) -> None:
+    """Test get_usage method with default tag and no date range (last 30 days)."""
+    usage = client_v2.get_usage(tag="default")
+    logger.info(usage)
+
+    # Verify response structure
+    assert isinstance(usage, dict), "usage should be a dictionary"
+    expected_keys = ["end_date", "start_date", "subscription_id", "tag", "usage"]
+    assert set(usage.keys()) == set(expected_keys), f"usage {usage} does not contain the expected keys"
+
+    # Verify tag matches
+    assert usage["tag"] == "default", "tag should match the requested tag"
+
+    # Verify date fields are present
+    assert isinstance(usage["start_date"], str), "start_date should be a string"
+    assert isinstance(usage["end_date"], str), "end_date should be a string"
+
+    # Verify usage is a list
+    assert isinstance(usage["usage"], list), "usage should be a list"
+
+
+def test_get_usage_with_date_range(client_v2: LLMWhispererClientV2) -> None:
+    """Test get_usage method with tag and specific date range."""
+    usage = client_v2.get_usage(tag="default", from_date="2025-12-01", to_date="2025-12-31")
+    logger.info(usage)
+
+    # Verify response structure
+    assert isinstance(usage, dict), "usage should be a dictionary"
+
+    # Verify tag matches
+    assert usage["tag"] == "default", "tag should match the requested tag"
+
+    # Verify date range matches request
+    assert usage["start_date"] == "Mon, 01 Dec 2025 00:00:00 GMT", "start_date should match requested from_date"
+    assert usage["end_date"] == "Wed, 31 Dec 2025 23:59:59 GMT", "end_date should match requested to_date"
+
+    # Verify usage array structure
+    assert isinstance(usage["usage"], list), "usage should be a list"
+    if len(usage["usage"]) > 0:
+        # If there's usage data, verify structure
+        for usage_item in usage["usage"]:
+            assert isinstance(usage_item, dict), "each usage item should be a dictionary"
+            # Verify expected fields in usage items (these may vary based on API response)
+            assert "service_type" in usage_item or "pages_processed" in usage_item, "usage items should have expected fields"
+
+
 @pytest.mark.parametrize(
     "output_mode, mode, input_file",
     [
