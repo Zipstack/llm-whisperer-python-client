@@ -176,6 +176,50 @@ class LLMWhispererClientV2:
             raise LLMWhispererClientException(err)
         return json.loads(response.text)
 
+    def get_usage(self, tag: str, from_date: str = "", to_date: str = "") -> Any:
+        """Retrieves the usage statistics of the LLMWhisperer API filtered by tag and date range.
+
+        This method sends a GET request to the '/usage' endpoint of the LLMWhisperer API.
+        The response is a JSON object containing usage statistics including pages processed per service type.
+        When date parameters are omitted, the API returns usage data for the preceding 30 days.
+        Refer to https://docs.unstract.com/llmwhisperer/llm_whisperer/apis/llm_whisperer_usage_stats/
+
+        Args:
+            tag (str): Filter usage data by specified tag (required).
+            from_date (str, optional): Start date for usage data in YYYY-MM-DD format. Defaults to "".
+            to_date (str, optional): End date for usage data in YYYY-MM-DD format. Defaults to "".
+
+        Returns:
+            Dict[Any, Any]: A dictionary containing the usage statistics with keys:
+                - end_date: End date of the queried range
+                - start_date: Start date of the queried range
+                - subscription_id: Account identifier
+                - tag: Filter used
+                - usage: Array of objects showing pages processed per service type
+
+        Raises:
+            LLMWhispererClientException: If the API request fails, it raises an exception with
+                                          the error message and status code returned by the API.
+        """
+        self.logger.debug("get_usage called")
+        url = f"{self.base_url}/usage"
+        params = {"tag": tag}
+        if from_date:
+            params["from_date"] = from_date
+        if to_date:
+            params["to_date"] = to_date
+        self.logger.debug("url: %s", url)
+        self.logger.debug("params: %s", params)
+        req = requests.Request("GET", url, headers=self.headers, params=params)
+        prepared = req.prepare()
+        s = requests.Session()
+        response = s.send(prepared, timeout=self.api_timeout)
+        if response.status_code != 200:
+            err = json.loads(response.text)
+            err["status_code"] = response.status_code
+            raise LLMWhispererClientException(err)
+        return json.loads(response.text)
+
     def get_highlight_data(self, whisper_hash: str, lines: str, extract_all_lines: bool = False) -> Any:
         """Retrieves the highlight information of the LLMWhisperer API.
 
