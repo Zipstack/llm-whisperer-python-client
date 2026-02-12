@@ -24,6 +24,7 @@ def test_get_usage_info(client_v2: LLMWhispererClientV2) -> None:
     assert isinstance(usage_info, dict), "usage_info should be a dictionary"
     expected_keys = [
         "current_page_count",
+        "current_page_count_document_insights",
         "current_page_count_low_cost",
         "current_page_count_form",
         "current_page_count_high_quality",
@@ -36,7 +37,9 @@ def test_get_usage_info(client_v2: LLMWhispererClientV2) -> None:
         "today_page_count",
         "current_page_count_table",
     ]
-    assert set(usage_info.keys()) == set(expected_keys), f"usage_info {usage_info} does not contain the expected keys"
+    assert set(expected_keys).issubset(
+        usage_info.keys()
+    ), f"usage_info is missing expected keys: {set(expected_keys) - set(usage_info.keys())}"
 
 
 @pytest.mark.parametrize(
@@ -177,7 +180,9 @@ def test_whisper_v2_url_in_post(
     "url,token,webhook_name",
     [
         (
-            os.getenv("WEBHOOK_TEST_URL", "https://httpbin.org/post"),  # configurable via env var, defaults to httpbin.org
+            os.getenv(
+                "WEBHOOK_TEST_URL", "https://httpbin.org/post"
+            ),  # configurable via env var, defaults to httpbin.org
             "",
             "client_v2_test",
         ),

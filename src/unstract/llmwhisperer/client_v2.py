@@ -22,10 +22,11 @@ import json
 import logging
 import os
 import time
-from collections.abc import Generator
 from typing import IO, Any
 
 import requests
+import tenacity
+from tenacity import retry_if_exception, stop_after_attempt, stop_after_delay, wait_exponential_jitter
 
 BASE_URL_V2 = "https://llmwhisperer-api.us-central.unstract.com/api/v2"
 
@@ -64,6 +65,15 @@ class LLMWhispererClientException(Exception):
         return self.value
 
 
+class _RetryableHTTPError(Exception):
+    """Internal exception wrapping an HTTP response with a retryable status
+    code (429, 5xx)."""
+
+    def __init__(self, response: requests.Response) -> None:
+        self.response = response
+        super().__init__(f"HTTP {response.status_code}")
+
+
 class LLMWhispererClientV2:
     """A client for interacting with the LLMWhisperer API.
 
@@ -90,6 +100,9 @@ class LLMWhispererClientV2:
         api_key: str = "",
         logging_level: str = "",
         custom_headers: dict[str, str] | None = None,
+        max_retries: int = 3,
+        retry_min_wait: float = 1.0,
+        retry_max_wait: float = 60.0,
     ) -> None:
         """Initializes the LLMWhispererClient with the given parameters.
 
@@ -112,6 +125,11 @@ class LLMWhispererClientV2:
                                                                 headers, with custom
                                                                 headers taking precedence.
                                                                 Defaults to None.
+            max_retries (int, optional): Maximum number of retry attempts for transient
+                                         HTTP errors. Set to 0 to disable retries.
+                                         Defaults to 3.
+            retry_min_wait (float, optional): Minimum backoff wait in seconds. Defaults to 1.0.
+            retry_max_wait (float, optional): Maximum backoff wait in seconds. Defaults to 60.0.
         """
         if logging_level == "":
             logging_level = os.getenv("LLMWHISPERER_LOGGING_LEVEL", "DEBUG")
@@ -139,15 +157,109 @@ class LLMWhispererClientV2:
         self.headers = {"unstract-key": self.api_key}
         if custom_headers:
             self.headers.update(custom_headers)
-        # For test purpose
-        # self.headers = {
-        #     "Subscription-Id": "python-client",
-        #     "Subscription-Name": "python-client",
-        #     "User-Id": "python-client-user",
-        #     "Product-Id": "python-client-product",
-        #     "Product-Name": "python-client-product",
-        #     "Start-Date": "2024-07-09",
-        # }
+
+        self.max_retries = max_retries
+        self.retry_min_wait = retry_min_wait
+        self.retry_max_wait = retry_max_wait
+
+    @staticmethod
+    def _is_retryable(exc: BaseException) -> bool:
+        """Return True if the exception represents a transient/retryable
+        error."""
+        if isinstance(exc, requests.ConnectionError | requests.Timeout):
+            return True
+        if isinstance(exc, _RetryableHTTPError):
+            return bool(exc.response.status_code == 429 or exc.response.status_code >= 500)
+        return False
+
+    def _log_retry(self, retry_state: tenacity.RetryCallState) -> None:
+        """Log a warning before each retry sleep."""
+        exc = retry_state.outcome.exception() if retry_state.outcome else None
+        attempt = retry_state.attempt_number
+        if isinstance(exc, _RetryableHTTPError):
+            self.logger.warning("Retry attempt %d: HTTP %d", attempt, exc.response.status_code)
+        elif isinstance(exc, requests.ConnectionError | requests.Timeout):
+            self.logger.warning("Retry attempt %d: %s", attempt, type(exc).__name__)
+
+    def _retry_wait(self, retry_state: tenacity.RetryCallState) -> float:
+        """Compute wait time, respecting Retry-After header on 429
+        responses."""
+        exc = retry_state.outcome.exception() if retry_state.outcome else None
+        if isinstance(exc, _RetryableHTTPError) and exc.response.status_code == 429:
+            retry_after = exc.response.headers.get("Retry-After")
+            if retry_after is not None:
+                try:
+                    return float(retry_after)
+                except (ValueError, TypeError):
+                    pass
+        return wait_exponential_jitter(
+            initial=self.retry_min_wait,
+            max=self.retry_max_wait,
+        )(retry_state=retry_state)
+
+    def _send_request(
+        self,
+        prepared: requests.PreparedRequest,
+        timeout: int | None = None,
+        stream: bool = False,
+        deadline: float | None = None,
+    ) -> requests.Response:
+        """Send an HTTP request with optional tenacity retry on transient
+        errors.
+
+        Args:
+            prepared: The prepared request to send.
+            timeout: Request timeout in seconds. Defaults to self.api_timeout.
+            stream: Whether to stream the response. Defaults to False.
+            deadline: Absolute time (time.time()) by which all attempts must finish.
+                When set, each attempt's HTTP timeout is capped to the remaining time
+                and retries stop once the deadline is exceeded. Defaults to None
+                (no deadline).
+
+        Returns:
+            The HTTP response.
+
+        Raises:
+            requests.ConnectionError: If connection fails after all retries.
+            requests.Timeout: If request times out after all retries.
+        """
+        if timeout is None:
+            timeout = self.api_timeout
+        req_timeout: int = timeout
+
+        def _effective_timeout() -> int | float:
+            if deadline is not None:
+                remaining = max(0.1, deadline - time.time())
+                return min(req_timeout, remaining)
+            return req_timeout
+
+        if self.max_retries == 0:
+            s = requests.Session()
+            return s.send(prepared, timeout=_effective_timeout(), stream=stream)
+
+        def _attempt() -> requests.Response:
+            s = requests.Session()
+            response = s.send(prepared, timeout=_effective_timeout(), stream=stream)
+            if response.status_code == 429 or response.status_code >= 500:
+                raise _RetryableHTTPError(response)
+            return response
+
+        stop_condition: tenacity.stop.stop_base = stop_after_attempt(self.max_retries + 1)
+        if deadline is not None:
+            max_duration = max(0, deadline - time.time())
+            stop_condition = stop_condition | stop_after_delay(max_duration)
+
+        retrying = tenacity.Retrying(
+            retry=retry_if_exception(self._is_retryable),
+            stop=stop_condition,
+            wait=self._retry_wait,
+            before_sleep=self._log_retry,
+            reraise=True,
+        )
+        try:
+            return retrying(_attempt)
+        except _RetryableHTTPError as e:
+            return e.response
 
     def get_usage_info(self) -> Any:
         """Retrieves the usage information of the LLMWhisperer API.
@@ -168,8 +280,7 @@ class LLMWhispererClientV2:
         self.logger.debug("url: %s", url)
         req = requests.Request("GET", url, headers=self.headers)
         prepared = req.prepare()
-        s = requests.Session()
-        response = s.send(prepared, timeout=self.api_timeout)
+        response = self._send_request(prepared)
         if response.status_code != 200:
             err = json.loads(response.text)
             err["status_code"] = response.status_code
@@ -207,8 +318,7 @@ class LLMWhispererClientV2:
         self.logger.debug("url: %s", url)
         req = requests.Request("GET", url, headers=self.headers, params=params)
         prepared = req.prepare()
-        s = requests.Session()
-        response = s.send(prepared, timeout=self.api_timeout)
+        response = self._send_request(prepared)
         if response.status_code != 200:
             err = json.loads(response.text)
             err["status_code"] = response.status_code
@@ -325,17 +435,13 @@ class LLMWhispererClientV2:
         if url == "":
             if stream is not None:
                 should_stream = True
-
-                def generate() -> Generator[bytes, None, None]:
-                    if stream is not None:  # Add explicit type check
-                        yield from stream
-
+                data = b"".join(stream)
                 req = requests.Request(
                     "POST",
                     api_url,
                     params=params,
                     headers=self.headers,
-                    data=generate(),
+                    data=data,
                 )
 
             else:
@@ -352,8 +458,10 @@ class LLMWhispererClientV2:
             params["url_in_post"] = True
             req = requests.Request("POST", api_url, params=params, headers=self.headers, data=url)
         prepared = req.prepare()
-        s = requests.Session()
-        response = s.send(prepared, timeout=wait_timeout, stream=should_stream)
+        start_time = time.time()
+        deadline = start_time + wait_timeout
+        post_timeout = min(self.api_timeout, wait_timeout)
+        response = self._send_request(prepared, timeout=post_timeout, stream=should_stream, deadline=deadline)
         response.encoding = encoding
         if response.status_code not in (200, 202):
             try:
@@ -377,7 +485,6 @@ class LLMWhispererClientV2:
             if not wait_for_completion:
                 return message
             whisper_hash = message["whisper_hash"]
-            start_time = time.time()
             while time.time() - start_time < wait_timeout:
                 status = self.whisper_status(whisper_hash=whisper_hash)
                 if status["status_code"] != 200:
@@ -386,13 +493,13 @@ class LLMWhispererClientV2:
                     message["extraction"] = {}
                     return message
                 if status["status"] == "accepted":
-                    self.logger.debug(f'Whisper-hash:{whisper_hash} | STATUS: {status["status"]}...')
+                    self.logger.debug(f"Whisper-hash:{whisper_hash} | STATUS: {status['status']}...")
                 if status["status"] == "processing":
                     self.logger.debug(f"Whisper-hash:{whisper_hash} | STATUS: processing...")
 
                 elif status["status"] == "error":
                     self.logger.debug(f"Whisper-hash:{whisper_hash} | STATUS: failed...")
-                    self.logger.error(f'Whisper-hash:{whisper_hash} | STATUS: failed with {status["message"]}')
+                    self.logger.error(f"Whisper-hash:{whisper_hash} | STATUS: failed with {status['message']}")
                     message["status_code"] = -1
                     message["message"] = status["message"]
                     message["status"] = "error"
@@ -401,7 +508,7 @@ class LLMWhispererClientV2:
                 elif "error" in status["status"]:
                     # for backward compatabity
                     self.logger.debug(f"Whisper-hash:{whisper_hash} | STATUS: failed...")
-                    self.logger.error(f'Whisper-hash:{whisper_hash} | STATUS: failed with {status["status"]}')
+                    self.logger.error(f"Whisper-hash:{whisper_hash} | STATUS: failed with {status['status']}")
                     message["status_code"] = -1
                     message["message"] = status["status"]
                     message["status"] = "error"
@@ -457,8 +564,7 @@ class LLMWhispererClientV2:
         self.logger.debug("url: %s", url)
         req = requests.Request("GET", url, headers=self.headers, params=params)
         prepared = req.prepare()
-        s = requests.Session()
-        response = s.send(prepared, timeout=self.api_timeout)
+        response = self._send_request(prepared)
         if response.status_code != 200:
             if not (response.text or "").strip():
                 self.logger.error(f"API error - empty response body, status code: {response.status_code}")
@@ -503,8 +609,7 @@ class LLMWhispererClientV2:
         self.logger.debug("url: %s", url)
         req = requests.Request("GET", url, headers=self.headers, params=params)
         prepared = req.prepare()
-        s = requests.Session()
-        response = s.send(prepared, timeout=self.api_timeout)
+        response = self._send_request(prepared)
         response.encoding = encoding
         if response.status_code != 200:
             err = json.loads(response.text)
@@ -544,8 +649,7 @@ class LLMWhispererClientV2:
         url = f"{self.base_url}/whisper-manage-callback"
         req = requests.Request("POST", url, headers=self.headers, json=data)
         prepared = req.prepare()
-        s = requests.Session()
-        response = s.send(prepared, timeout=self.api_timeout)
+        response = self._send_request(prepared)
         if response.status_code != 201:
             err = json.loads(response.text)
             err["status_code"] = response.status_code
@@ -580,8 +684,7 @@ class LLMWhispererClientV2:
         url = f"{self.base_url}/whisper-manage-callback"
         req = requests.Request("PUT", url, headers=self.headers, json=data)
         prepared = req.prepare()
-        s = requests.Session()
-        response = s.send(prepared, timeout=self.api_timeout)
+        response = self._send_request(prepared)
         if response.status_code != 200:
             err = json.loads(response.text)
             err["status_code"] = response.status_code
@@ -610,8 +713,7 @@ class LLMWhispererClientV2:
         params = {"webhook_name": webhook_name}
         req = requests.Request("GET", url, headers=self.headers, params=params)
         prepared = req.prepare()
-        s = requests.Session()
-        response = s.send(prepared, timeout=self.api_timeout)
+        response = self._send_request(prepared)
         if response.status_code != 200:
             err = json.loads(response.text)
             err["status_code"] = response.status_code
@@ -640,8 +742,7 @@ class LLMWhispererClientV2:
         params = {"webhook_name": webhook_name}
         req = requests.Request("DELETE", url, headers=self.headers, params=params)
         prepared = req.prepare()
-        s = requests.Session()
-        response = s.send(prepared, timeout=self.api_timeout)
+        response = self._send_request(prepared)
         if response.status_code != 200:
             err = json.loads(response.text)
             err["status_code"] = response.status_code
