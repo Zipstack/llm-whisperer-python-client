@@ -6,7 +6,7 @@ from unstract.llmwhisperer.client_v2 import LLMWhispererClientV2
 
 @pytest.fixture(name="client_v2")
 def llm_whisperer_client_v2() -> LLMWhispererClientV2:
-    client = LLMWhispererClientV2()
+    client = LLMWhispererClientV2(max_retries=0)
     return client
 
 
