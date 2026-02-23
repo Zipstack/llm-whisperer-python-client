@@ -1,28 +1,54 @@
-name: Bump Version and Publish
+name: Release Tag and Publish Package
 
 on:
   workflow_dispatch:
     inputs:
-      version_type:
+      version_bump:
         description: "Version bump type"
         required: true
+        default: "patch"
         type: choice
         options:
           - patch
           - minor
           - major
+      pre_release:
+        description: "Create as pre-release"
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  id-token: write
+  contents: read
 
 jobs:
-  bump-version-and-publish:
-    name: Bump version, release, and publish to PyPI
+  release-and-publish:
     runs-on: ubuntu-latest
+    environment: release
     permissions:
       contents: write
       id-token: write
     steps:
+      - name: Generate GitHub App Token
+        id: generate-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ vars.PUSH_TO_MAIN_APP_ID }}
+          private-key: ${{ secrets.PUSH_TO_MAIN_APP_PRIVATE_KEY }}
+          owner: Zipstack
+          repositories: |
+            llm-whisperer-python-client
+
       - uses: actions/checkout@v4
         with:
+          token: ${{ steps.generate-token.outputs.token }}
           fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
       - uses: actions/setup-python@v5
         with:
@@ -33,13 +59,15 @@ jobs:
         with:
           version: "0.6.14"
 
-      - name: Bump version
-        id: bump
+      - name: Bump version and create release
+        id: create_release
         run: |
           CURRENT_VERSION=$(python -c "import re; content=open('src/unstract/llmwhisperer/__init__.py').read(); print(re.search(r'__version__\s*=\s*\"(.+?)\"', content).group(1))")
+          echo "Current version: $CURRENT_VERSION"
+
           IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
 
-          case "${{ github.event.inputs.version_type }}" in
+          case "${{ github.event.inputs.version_bump }}" in
             major)
               MAJOR=$((MAJOR + 1))
               MINOR=0
@@ -55,27 +83,44 @@ jobs:
           esac
 
           NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
-          echo "old_version=$CURRENT_VERSION" >> "$GITHUB_OUTPUT"
-          echo "new_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+          echo "New version: $NEW_VERSION"
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
 
           sed -i "s/__version__ = \"$CURRENT_VERSION\"/__version__ = \"$NEW_VERSION\"/" src/unstract/llmwhisperer/__init__.py
 
-      - name: Commit and tag
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
           git add src/unstract/llmwhisperer/__init__.py
-          git commit -m "Bump version to v${{ steps.bump.outputs.new_version }}"
-          git tag "v${{ steps.bump.outputs.new_version }}"
-          git push origin main --tags
+          git commit -m "chore: bump version to $NEW_VERSION [skip ci]"
+          git push origin main
+          git tag "v$NEW_VERSION"
+          git push origin "v$NEW_VERSION"
 
-      - name: Create GitHub Release
+          gh release create "v$NEW_VERSION" \
+            --title "Release v$NEW_VERSION" \
+            --generate-notes \
+            ${{ github.event.inputs.pre_release == 'true' && '--prerelease' || '' }}
+
+          echo "Created release v$NEW_VERSION"
         env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh release create "v${{ steps.bump.outputs.new_version }}" --generate-notes
+          GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+
+      - name: Verify version update
+        run: |
+          FILE_VERSION=$(python -c "import re; content=open('src/unstract/llmwhisperer/__init__.py').read(); print(re.search(r'__version__\s*=\s*\"(.+?)\"', content).group(1))")
+          echo "File version: $FILE_VERSION"
+          echo "Target version: ${{ steps.create_release.outputs.version }}"
+          if [ "$FILE_VERSION" != "${{ steps.create_release.outputs.version }}" ]; then
+            echo "Version mismatch! Exiting..."
+            exit 1
+          fi
 
       - name: Build package
         run: uv build
 
       - name: Publish to PyPI
         run: uv publish
+
+      - name: Success message
+        run: |
+          echo "Successfully published version ${{ steps.create_release.outputs.version }} to PyPI"
+          echo "Release: https://github.com/${{ github.repository }}/releases/tag/v${{ steps.create_release.outputs.version }}"
+          echo "PyPI: https://pypi.org/project/llmwhisperer-client/${{ steps.create_release.outputs.version }}/"
