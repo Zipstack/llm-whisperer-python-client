@@ -352,7 +352,7 @@ class LLMWhispererClientV2:
         req = requests.Request("GET", url, headers=self.headers, params=params)
         prepared = req.prepare()
         response = self._send_request(prepared)
-        if response.status_code != 200:
+            err = json.loads(response.text)
             err["status_code"] = response.status_code
             raise LLMWhispererClientException(err, response.status_code)
         return json.loads(response.text)
