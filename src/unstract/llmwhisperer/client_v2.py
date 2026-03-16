@@ -349,6 +349,8 @@ class LLMWhispererClientV2:
         url = f"{self.base_url}/whisper-detail"
         params = {"whisper_hash": whisper_hash}
         self.logger.debug("url: %s", url)
+        self.logger.debug("whisper_hash: %s", whisper_hash)
+
         req = requests.Request("GET", url, headers=self.headers, params=params)
         prepared = req.prepare()
         response = self._send_request(prepared)
