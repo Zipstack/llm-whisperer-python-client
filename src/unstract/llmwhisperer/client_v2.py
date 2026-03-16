@@ -353,7 +353,17 @@ class LLMWhispererClientV2:
         prepared = req.prepare()
         response = self._send_request(prepared)
         if response.status_code != 200:
-            err = json.loads(response.text)
+            if not (response.text or "").strip():
+                raise LLMWhispererClientException(
+                    "API error: empty response body", response.status_code
+                )
+            try:
+                err = json.loads(response.text)
+            except json.JSONDecodeError as e:
+                response_preview = response.text[:500] + "..." if len(response.text) > 500 else response.text
+                raise LLMWhispererClientException(
+                    f"API error: non-JSON response - {response_preview}", response.status_code
+                ) from e
             err["status_code"] = response.status_code
             raise LLMWhispererClientException(err)
         return json.loads(response.text)
