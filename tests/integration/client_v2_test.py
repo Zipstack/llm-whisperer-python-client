@@ -121,51 +121,6 @@ def test_highlight(client_v2: LLMWhispererClientV2, data_dir: str, input_file: s
     assert line2["page_height"] == pytest.approx(3168, abs=PAGE_HEIGHT_TOLERANCE)
 
 
-def test_whisper_detail(client_v2: LLMWhispererClientV2, data_dir: str) -> None:
-    """Test whisper_detail returns extraction metadata after a whisper operation."""
-    file_path = os.path.join(data_dir, "credit_card.pdf")
-    whisper_result = client_v2.whisper(
-        mode="native_text",
-        output_mode="text",
-        file_path=file_path,
-        wait_for_completion=True,
-    )
-    whisper_hash = whisper_result["whisper_hash"]
-
-    detail = client_v2.whisper_detail(whisper_hash)
-
-    assert isinstance(detail, dict)
-    assert detail["whisper_hash"] == whisper_hash
-    expected_keys = [
-        "completed_at",
-        "mode",
-        "processed_pages",
-        "processing_started_at",
-        "processing_time_in_seconds",
-        "requested_pages",
-        "tag",
-        "total_pages",
-        "upload_file_size_in_kb",
-        "whisper_hash",
-    ]
-    assert set(expected_keys).issubset(
-        detail.keys()
-    ), f"whisper_detail is missing expected keys: {set(expected_keys) - set(detail.keys())}"
-    assert detail["mode"] == "native_text"
-    assert detail["processed_pages"] > 0
-    assert detail["total_pages"] > 0
-
-
-def test_whisper_detail_not_found(client_v2: LLMWhispererClientV2) -> None:
-    """Test whisper_detail raises exception for a nonexistent whisper_hash."""
-    with pytest.raises(LLMWhispererClientException) as exc_info:
-        client_v2.whisper_detail("nonexistent_hash_12345")
-
-    error = exc_info.value.error_message()
-    assert exc_info.value.status_code == 400
-    assert "message" in error
-
-
 @pytest.mark.parametrize(
     "output_mode, mode, url, input_file, page_count",
     [
@@ -278,6 +233,51 @@ def test_webhook(client_v2: LLMWhispererClientV2, url: str, token: str, webhook_
     except LLMWhispererClientException as e:
         assert e.error_message()["message"] == "Webhook details not found"
         assert e.error_message()["status_code"] == 404
+
+
+def test_whisper_detail(client_v2: LLMWhispererClientV2, data_dir: str) -> None:
+    """Test whisper_detail returns extraction metadata after a whisper operation."""
+    file_path = os.path.join(data_dir, "credit_card.pdf")
+    whisper_result = client_v2.whisper(
+        mode="native_text",
+        output_mode="text",
+        file_path=file_path,
+        wait_for_completion=True,
+    )
+    whisper_hash = whisper_result["whisper_hash"]
+
+    detail = client_v2.whisper_detail(whisper_hash)
+
+    assert isinstance(detail, dict)
+    assert detail["whisper_hash"] == whisper_hash
+    expected_keys = [
+        "completed_at",
+        "mode",
+        "processed_pages",
+        "processing_started_at",
+        "processing_time_in_seconds",
+        "requested_pages",
+        "tag",
+        "total_pages",
+        "upload_file_size_in_kb",
+        "whisper_hash",
+    ]
+    assert set(expected_keys).issubset(
+        detail.keys()
+    ), f"whisper_detail is missing expected keys: {set(expected_keys) - set(detail.keys())}"
+    assert detail["mode"] == "native_text"
+    assert detail["processed_pages"] > 0
+    assert detail["total_pages"] > 0
+
+
+def test_whisper_detail_not_found(client_v2: LLMWhispererClientV2) -> None:
+    """Test whisper_detail raises exception for a nonexistent whisper_hash."""
+    with pytest.raises(LLMWhispererClientException) as exc_info:
+        client_v2.whisper_detail("nonexistent_hash_12345")
+
+    error = exc_info.value.error_message()
+    assert exc_info.value.status_code == 400
+    assert "message" in error
 
 
 def assert_error_message(whisper_result: dict) -> None:
