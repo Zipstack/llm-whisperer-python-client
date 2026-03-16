@@ -162,7 +162,8 @@ def test_whisper_detail_not_found(client_v2: LLMWhispererClientV2) -> None:
         client_v2.whisper_detail("nonexistent_hash_12345")
 
     error = exc_info.value.error_message()
-    assert error["status_code"] == 400
+    assert exc_info.value.status_code == 400
+    assert "message" in error
 
 
 @pytest.mark.parametrize(
