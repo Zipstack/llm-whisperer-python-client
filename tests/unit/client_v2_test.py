@@ -73,7 +73,7 @@ def test_whisper_detail_not_found(mocker: MockerFixture, client_v2: LLMWhisperer
     with pytest.raises(LLMWhispererClientException) as exc_info:
         client_v2.whisper_detail("nonexistent_hash")
 
-    error = exc_info.value.args[0]
+    error = exc_info.value.error_message()
     assert error["message"] == "Record not found"
     assert error["status_code"] == 400
     mock_send.assert_called_once()
