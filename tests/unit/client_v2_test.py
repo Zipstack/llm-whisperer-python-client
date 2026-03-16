@@ -75,7 +75,7 @@ def test_whisper_detail_not_found(mocker: MockerFixture, client_v2: LLMWhisperer
 
     error = exc_info.value.error_message()
     assert error["message"] == "Record not found"
-    assert error["status_code"] == 400
+    assert exc_info.value.status_code == 400
     mock_send.assert_called_once()
 
 
