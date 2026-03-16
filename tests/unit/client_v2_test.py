@@ -39,6 +39,46 @@ def test_get_webhook_details(mocker: MockerFixture, client_v2: LLMWhispererClien
     assert response["webhook_details"]["url"] == WEBHOOK_URL
 
 
+def test_whisper_detail_success(mocker: MockerFixture, client_v2: LLMWhispererClientV2) -> None:
+    """Test whisper_detail returns extraction details on success."""
+    mock_send = mocker.patch("requests.Session.send")
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.text = (
+        '{"whisper_hash": "abc123", "mode": "high_quality", "processed_pages": 3,'
+        ' "requested_pages": 3, "total_pages": 5, "upload_file_size_in_kb": 120.5,'
+        ' "processing_time_in_seconds": 4.2, "completed_at": "2025-01-01T00:00:00Z",'
+        ' "processing_started_at": "2025-01-01T00:00:00Z", "tag": "default"}'
+    )
+    mock_send.return_value = mock_response
+
+    response = client_v2.whisper_detail("abc123")
+
+    assert response["whisper_hash"] == "abc123"
+    assert response["mode"] == "high_quality"
+    assert response["processed_pages"] == 3
+    assert response["total_pages"] == 5
+    assert response["upload_file_size_in_kb"] == 120.5
+    mock_send.assert_called_once()
+
+
+def test_whisper_detail_not_found(mocker: MockerFixture, client_v2: LLMWhispererClientV2) -> None:
+    """Test whisper_detail raises exception when record is not found."""
+    mock_send = mocker.patch("requests.Session.send")
+    mock_response = MagicMock()
+    mock_response.status_code = 400
+    mock_response.text = '{"message": "Record not found"}'
+    mock_send.return_value = mock_response
+
+    with pytest.raises(LLMWhispererClientException) as exc_info:
+        client_v2.whisper_detail("nonexistent_hash")
+
+    error = exc_info.value.error_message()
+    assert error["message"] == "Record not found"
+    assert exc_info.value.status_code == 400
+    mock_send.assert_called_once()
+
+
 def test_whisper_json_string_response_error(mocker: MockerFixture, client_v2: LLMWhispererClientV2) -> None:
     """Test whisper method handles JSON string responses correctly for error
     cases."""

@@ -325,6 +325,48 @@ class LLMWhispererClientV2:
             raise LLMWhispererClientException(err)
         return json.loads(response.text)
 
+    def whisper_detail(self, whisper_hash: str) -> Any:
+        """Retrieves the details of a text extraction process.
+
+        This method sends a GET request to the '/whisper-detail' endpoint of the LLMWhisperer API.
+        The response is a JSON object containing metadata about the extraction job.
+        Refer to https://docs.unstract.com/llmwhisperer/llm_whisperer/apis/llm_whisperer_text_extraction_detail_api
+
+        Args:
+            whisper_hash (str): The identifier returned when starting the extraction process.
+
+        Returns:
+            Dict[Any, Any]: A dictionary containing the extraction details including
+                completed_at, mode, processed_pages, processing_started_at,
+                processing_time_in_seconds, requested_pages, tag, total_pages,
+                upload_file_size_in_kb, and whisper_hash.
+
+        Raises:
+            LLMWhispererClientException: If the API request fails, it raises an exception with
+                                          the error message and status code returned by the API.
+        """
+        self.logger.debug("whisper_detail called")
+        url = f"{self.base_url}/whisper-detail"
+        params = {"whisper_hash": whisper_hash}
+        self.logger.debug("url: %s", url)
+        self.logger.debug("whisper_hash: %s", whisper_hash)
+
+        req = requests.Request("GET", url, headers=self.headers, params=params)
+        prepared = req.prepare()
+        response = self._send_request(prepared)
+        if response.status_code != 200:
+            if not (response.text or "").strip():
+                raise LLMWhispererClientException("API error: empty response body", response.status_code)
+            try:
+                err = json.loads(response.text)
+            except json.JSONDecodeError as e:
+                response_preview = response.text[:500] + "..." if len(response.text) > 500 else response.text
+                raise LLMWhispererClientException(
+                    f"API error: non-JSON response - {response_preview}", response.status_code
+                ) from e
+            raise LLMWhispererClientException(err, response.status_code)
+        return json.loads(response.text)
+
     def whisper(
         self,
         file_path: str = "",

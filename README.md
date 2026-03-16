@@ -9,16 +9,33 @@ LLMs are powerful, but their output is as good as the input you provide. LLMWhis
 
 Refer to the client documentation for more information: [LLMWhisperer Client Documentation](https://docs.unstract.com/llmwhisperer/llm_whisperer/python_client/llm_whisperer_python_client_intro/)
 
-## A note on versions
+## Client
 
-There are two versions of the client library available in this package:
+This package provides **LLMWhispererClientV2**, the client for LLMWhisperer API v2. It is required for all users on API version 2.0.0 and above.
 
-**LLMWhispererClient**: This is the legacy version of the client library and is recommended for supporting older apps only. This version will be deprecated in the future.
+Documentation is available [here](https://docs.unstract.com/llmwhisperer/).
 
-**LLMWhispererClientV2**: This is the latest version of the client library and is recommended for all new users. It is mandatory for all users who are using LLMWhisperer API version 2.0.0 and above (All customers who have signed up after 5th November 2024).
+## Running Tests
 
-Documentation for both versions are available [here](https://docs.unstract.com/llmwhisperer/)
+Install test dependencies and run all tests:
 
+```bash
+uv run --group test pytest
+```
+
+To run only unit tests (skipping integration tests):
+
+```bash
+uv run --group test pytest tests/unit tests/utils_test.py
+```
+
+To run only integration tests:
+
+```bash
+uv run --group test pytest tests/integration
+```
+
+Integration tests require a valid API key. Copy `sample.env` to `.env` and fill in your credentials before running them.
 
 ## Questions and Feedback
 
