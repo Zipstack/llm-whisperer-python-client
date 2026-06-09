@@ -402,8 +402,8 @@ class LLMWhispererClientV2:
             file_path (str, optional): The path to the file to be processed. Defaults to "".
             stream (IO[bytes], optional): A stream of bytes to be processed. Defaults to None.
             url (str, optional): The URL of the file to be processed. Defaults to "".
-            mode (str, optional): The processing mode. Can be "high_quality", "form", "low_cost" or "native_text".
-                Defaults to "high_quality".
+            mode (str, optional): The processing mode. Can be "high_quality", "form", "low_cost", "native_text"
+                or "table". Defaults to "high_quality".
             output_mode (str, optional): The output mode. Can be "layout_preserving" or "text".
                 Defaults to "layout_preserving".
             page_seperator (str, optional): The page separator. Defaults to "<<<".
@@ -420,9 +420,10 @@ class LLMWhispererClientV2:
             include_line_confidence (bool, optional): Adds line confidence to the line metadata returned by
               the highlights API. Requires add_line_nos to be enabled. Defaults to False.
             word_confidence_threshold (float, optional): The minimum OCR confidence score a word must have to be
-              included in the extracted text. Any text whose confidence value falls below the configured threshold
-              is ignored and excluded from the final output. This parameter works only with "form", "high_quality"
-              and "table" modes. Defaults to 0.3.
+              included in the extracted text. Accepts a value in the range [0.0, 1.0], where higher values are
+              stricter. Any word whose confidence value falls below the configured threshold is ignored and
+              excluded from the final output. This parameter works only with "form", "high_quality" and "table"
+              modes. Defaults to 0.3.
             lang (str, optional): The language of the document. Defaults to "eng".
             tag (str, optional): The tag for the document. Defaults to "default".
             filename (str, optional): The name of the file to store in reports. Defaults to "".

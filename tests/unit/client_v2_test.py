@@ -1,5 +1,6 @@
 import time
 from unittest.mock import MagicMock
+from urllib.parse import parse_qs, urlparse
 
 import pytest
 import requests
@@ -159,7 +160,8 @@ def test_whisper_default_word_confidence_threshold(mocker: MockerFixture, client
     client_v2.whisper(url="https://example.com/test.pdf", wait_for_completion=False)
 
     prepared_request = mock_send.call_args[0][0]
-    assert "word_confidence_threshold=0.3" in prepared_request.url
+    query = parse_qs(urlparse(prepared_request.url).query)
+    assert query["word_confidence_threshold"] == ["0.3"]
 
 
 def test_whisper_custom_word_confidence_threshold(mocker: MockerFixture, client_v2: LLMWhispererClientV2) -> None:
@@ -174,7 +176,8 @@ def test_whisper_custom_word_confidence_threshold(mocker: MockerFixture, client_
     )
 
     prepared_request = mock_send.call_args[0][0]
-    assert "word_confidence_threshold=0.75" in prepared_request.url
+    query = parse_qs(urlparse(prepared_request.url).query)
+    assert query["word_confidence_threshold"] == ["0.75"]
 
 
 # --- Retry behavior tests ---
