@@ -1,5 +1,6 @@
 import time
 from unittest.mock import MagicMock
+from urllib.parse import parse_qs, urlparse
 
 import pytest
 import requests
@@ -149,6 +150,34 @@ def test_whisper_invalid_json_response_202(mocker: MockerFixture, client_v2: LLM
     assert response["message"] == "Invalid JSON response"
     assert response["status_code"] == 202
     assert response["extraction"] == {}
+
+
+def test_whisper_default_word_confidence_threshold(mocker: MockerFixture, client_v2: LLMWhispererClientV2) -> None:
+    """whisper() sends the default word_confidence_threshold when not specified."""
+    mock_send = mocker.patch("requests.Session.send")
+    mock_send.return_value = _mock_response(200, '{"status_code": 200, "extraction": {"text": "ok"}}')
+
+    client_v2.whisper(url="https://example.com/test.pdf", wait_for_completion=False)
+
+    prepared_request = mock_send.call_args[0][0]
+    query = parse_qs(urlparse(prepared_request.url).query)
+    assert query["word_confidence_threshold"] == ["0.3"]
+
+
+def test_whisper_custom_word_confidence_threshold(mocker: MockerFixture, client_v2: LLMWhispererClientV2) -> None:
+    """whisper() forwards a custom word_confidence_threshold as a request param."""
+    mock_send = mocker.patch("requests.Session.send")
+    mock_send.return_value = _mock_response(200, '{"status_code": 200, "extraction": {"text": "ok"}}')
+
+    client_v2.whisper(
+        url="https://example.com/test.pdf",
+        word_confidence_threshold=0.75,
+        wait_for_completion=False,
+    )
+
+    prepared_request = mock_send.call_args[0][0]
+    query = parse_qs(urlparse(prepared_request.url).query)
+    assert query["word_confidence_threshold"] == ["0.75"]
 
 
 # --- Retry behavior tests ---

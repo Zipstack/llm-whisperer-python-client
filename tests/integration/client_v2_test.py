@@ -206,6 +206,13 @@ def test_webhook(client_v2: LLMWhispererClientV2, url: str, token: str, webhook_
     Returns:
         None
     """
+    # Clean up any webhook left over from a previous (possibly failed) run so
+    # registration starts from a clean slate.
+    try:
+        client_v2.delete_webhook(webhook_name)
+    except LLMWhispererClientException:
+        pass
+
     result = client_v2.register_webhook(url, token, webhook_name)
     assert isinstance(result, dict)
     assert result["message"] == "Webhook created successfully"
