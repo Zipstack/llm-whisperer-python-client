@@ -1,0 +1,1151 @@
+{
+  "components": {
+    "schemas": {
+      "WebhookConfig": {
+        "properties": {
+          "auth_token": {
+            "type": "string"
+          },
+          "url": {
+            "format": "uri",
+            "type": "string"
+          },
+          "webhook_name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "url",
+          "auth_token",
+          "webhook_name"
+        ],
+        "type": "object"
+      },
+      "WhisperAccepted": {
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "whisper_hash": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "WhisperResult": {
+        "properties": {
+          "confidence_metadata": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "result_text": {
+            "type": "string"
+          },
+          "webhook_metadata": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "WhisperStatus": {
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "unstract_key": {
+        "in": "header",
+        "name": "unstract-key",
+        "type": "apiKey"
+      }
+    }
+  },
+  "info": {
+    "title": "Unstract LLMWhisperer",
+    "version": "v2"
+  },
+  "openapi": "3.0.3",
+  "paths": {
+    "/api/v2/convert-to-pdf": {
+      "post": {
+        "operationId": "convert_to_pdf",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "url",
+            "required": false,
+            "schema": {
+              "default": "",
+              "format": "uri",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "url_in_post",
+            "required": false,
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/octet-stream": {
+              "schema": {
+                "format": "binary",
+                "type": "string"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Convert a document to PDF",
+        "tags": [
+          "convert"
+        ]
+      }
+    },
+    "/api/v2/convert-xlsb-to-xlsx": {
+      "post": {
+        "operationId": "convert_xlsb_to_xlsx",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "url",
+            "required": false,
+            "schema": {
+              "default": "",
+              "format": "uri",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "url_in_post",
+            "required": false,
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/octet-stream": {
+              "schema": {
+                "format": "binary",
+                "type": "string"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Convert an XLSB workbook to XLSX",
+        "tags": [
+          "convert"
+        ]
+      }
+    },
+    "/api/v2/document-insights": {
+      "post": {
+        "operationId": "document_insights",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "file_name",
+            "required": false,
+            "schema": {
+              "default": "sample.pdf",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "pages_to_extract",
+            "required": false,
+            "schema": {
+              "default": "",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "tag",
+            "required": false,
+            "schema": {
+              "default": "default",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "url",
+            "required": false,
+            "schema": {
+              "default": "",
+              "format": "uri",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "url_in_post",
+            "required": false,
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "use_webhook",
+            "required": false,
+            "schema": {
+              "default": "",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "webhook_metadata",
+            "required": false,
+            "schema": {
+              "default": "",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/octet-stream": {
+              "schema": {
+                "format": "binary",
+                "type": "string"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Run document insights over a file",
+        "tags": [
+          "insights"
+        ]
+      }
+    },
+    "/api/v2/document-insights-retrieve": {
+      "get": {
+        "operationId": "document_insights_retrieve",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "whisper_hash",
+            "required": false,
+            "schema": {
+              "default": "",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Retrieve document insights result",
+        "tags": [
+          "insights"
+        ]
+      }
+    },
+    "/api/v2/get-usage-info": {
+      "get": {
+        "operationId": "usage_info",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Subscription usage summary",
+        "tags": [
+          "account"
+        ]
+      }
+    },
+    "/api/v2/highlights": {
+      "get": {
+        "operationId": "highlights",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "extract_all_lines",
+            "required": false,
+            "schema": {
+              "default": "false",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "lines",
+            "required": false,
+            "schema": {
+              "default": "",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "whisper_hash",
+            "required": false,
+            "schema": {
+              "default": "",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Line-level highlight geometry for an extraction",
+        "tags": [
+          "whisper"
+        ]
+      }
+    },
+    "/api/v2/pdf-to-images": {
+      "post": {
+        "operationId": "pdf_to_images",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "file_name",
+            "required": false,
+            "schema": {
+              "default": "sample.pdf",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "format",
+            "required": false,
+            "schema": {
+              "default": "png",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "tag",
+            "required": false,
+            "schema": {
+              "default": "default",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "url",
+            "required": false,
+            "schema": {
+              "default": "",
+              "format": "uri",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "url_in_post",
+            "required": false,
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "pdf to images",
+        "tags": [
+          "whisper"
+        ]
+      }
+    },
+    "/api/v2/pdf-to-images-retrieve": {
+      "get": {
+        "operationId": "pdf_to_images_retrieve",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "whisper_hash",
+            "required": false,
+            "schema": {
+              "default": "",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "pdf to images retrieve",
+        "tags": [
+          "whisper"
+        ]
+      }
+    },
+    "/api/v2/pdf-to-images-status": {
+      "get": {
+        "operationId": "pdf_to_images_status",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "whisper_hash",
+            "required": false,
+            "schema": {
+              "default": "",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "pdf to images status",
+        "tags": [
+          "whisper"
+        ]
+      }
+    },
+    "/api/v2/test-connection": {
+      "get": {
+        "operationId": "test_connection",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Verify credentials",
+        "tags": [
+          "account"
+        ]
+      }
+    },
+    "/api/v2/usage": {
+      "get": {
+        "operationId": "usage",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "from_date",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "tag",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to_date",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Detailed usage statistics",
+        "tags": [
+          "account"
+        ]
+      }
+    },
+    "/api/v2/whisper": {
+      "post": {
+        "operationId": "extract",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "add_line_nos",
+            "required": false,
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "allow_rotated_text",
+            "required": false,
+            "schema": {
+              "default": true,
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "checkbox_confidence_threshold",
+            "required": false,
+            "schema": {
+              "default": 0.3,
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "derotate_threshold",
+            "required": false,
+            "schema": {
+              "default": 10.0,
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "file_name",
+            "required": false,
+            "schema": {
+              "default": "sample.pdf",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "gaussian_blur_radius",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "horizontal_stretch_factor",
+            "required": false,
+            "schema": {
+              "default": 1.0,
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "ignore_vertical_text",
+            "required": false,
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "include_line_confidence",
+            "required": false,
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "lang",
+            "required": false,
+            "schema": {
+              "default": "eng",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "line_splitter_strategy",
+            "required": false,
+            "schema": {
+              "default": "left-priority",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "line_splitter_tolerance",
+            "required": false,
+            "schema": {
+              "default": 0.75,
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "mark_horizontal_lines",
+            "required": false,
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "mark_vertical_lines",
+            "required": false,
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "median_filter_size",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "min_table_width",
+            "required": false,
+            "schema": {
+              "default": 0.0,
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "mode",
+            "required": false,
+            "schema": {
+              "default": "form",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "output_mode",
+            "required": false,
+            "schema": {
+              "default": "layout_preserving",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page_separator",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "pages_to_extract",
+            "required": false,
+            "schema": {
+              "default": "",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "tag",
+            "required": false,
+            "schema": {
+              "default": "default",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "url",
+            "required": false,
+            "schema": {
+              "default": "",
+              "format": "uri",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "url_in_post",
+            "required": false,
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "use_webhook",
+            "required": false,
+            "schema": {
+              "default": "",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "watermark_angle_threshold",
+            "required": false,
+            "schema": {
+              "default": 25.0,
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "webhook_metadata",
+            "required": false,
+            "schema": {
+              "default": "",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "word_confidence_threshold",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/octet-stream": {
+              "schema": {
+                "format": "binary",
+                "type": "string"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WhisperAccepted"
+                }
+              }
+            },
+            "description": "Accepted"
+          }
+        },
+        "summary": "Submit a document for text extraction",
+        "tags": [
+          "whisper"
+        ]
+      }
+    },
+    "/api/v2/whisper-detail": {
+      "get": {
+        "operationId": "detail",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "whisper_hash",
+            "required": false,
+            "schema": {
+              "default": "",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Metadata about a whisper job",
+        "tags": [
+          "whisper"
+        ]
+      }
+    },
+    "/api/v2/whisper-manage-callback": {
+      "delete": {
+        "operationId": "webhook_delete",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "webhook_name",
+            "required": false,
+            "schema": {
+              "default": "",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Manage extraction webhooks",
+        "tags": [
+          "webhook"
+        ]
+      },
+      "get": {
+        "operationId": "webhook_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "webhook_name",
+            "required": false,
+            "schema": {
+              "default": "",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Manage extraction webhooks",
+        "tags": [
+          "webhook"
+        ]
+      },
+      "post": {
+        "operationId": "webhook_post",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "webhook_name",
+            "required": false,
+            "schema": {
+              "default": "",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebhookConfig"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Manage extraction webhooks",
+        "tags": [
+          "webhook"
+        ]
+      },
+      "put": {
+        "operationId": "webhook_put",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "webhook_name",
+            "required": false,
+            "schema": {
+              "default": "",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebhookConfig"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Manage extraction webhooks",
+        "tags": [
+          "webhook"
+        ]
+      }
+    },
+    "/api/v2/whisper-retrieve": {
+      "get": {
+        "operationId": "retrieve",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "text_only",
+            "required": false,
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "whisper_hash",
+            "required": false,
+            "schema": {
+              "default": "",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WhisperResult"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Retrieve extraction result (destructive \u2014 one shot)",
+        "tags": [
+          "whisper"
+        ]
+      }
+    },
+    "/api/v2/whisper-status": {
+      "get": {
+        "operationId": "status",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "whisper_hash",
+            "required": false,
+            "schema": {
+              "default": "",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WhisperStatus"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Poll extraction status",
+        "tags": [
+          "whisper"
+        ]
+      }
+    }
+  },
+  "security": [
+    {
+      "unstract_key": []
+    }
+  ],
+  "servers": [
+    {
+      "url": "https://llmwhisperer-api.us-central.unstract.com"
+    }
+  ]
+}

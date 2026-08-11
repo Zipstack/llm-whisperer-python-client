@@ -2,6 +2,7 @@ import time
 from unittest.mock import MagicMock
 from urllib.parse import parse_qs, urlparse
 
+import httpx
 import pytest
 import requests
 from pytest_mock import MockerFixture
@@ -15,7 +16,7 @@ WHISPER_RESPONSE = {"status_code": 200, "extraction": {"result_text": "Test resu
 
 
 def test_register_webhook(mocker: MockerFixture, client_v2: LLMWhispererClientV2) -> None:
-    mock_send = mocker.patch("requests.Session.send")
+    mock_send = mocker.patch.object(LLMWhispererClientV2, "_send")
     mock_response = MagicMock()
     mock_response.status_code = 201
     mock_response.text = '{"message": "Webhook registered successfully"}'  # noqa: E501
@@ -28,7 +29,7 @@ def test_register_webhook(mocker: MockerFixture, client_v2: LLMWhispererClientV2
 
 
 def test_get_webhook_details(mocker: MockerFixture, client_v2: LLMWhispererClientV2) -> None:
-    mock_send = mocker.patch("requests.Session.send")
+    mock_send = mocker.patch.object(LLMWhispererClientV2, "_send")
     mock_response = MagicMock()
     mock_response.status_code = 200
     mock_response.text = '{"status": "success", "webhook_details": {"url": "http://test-webhook.com/callback"}}'  # noqa: E501
@@ -42,7 +43,7 @@ def test_get_webhook_details(mocker: MockerFixture, client_v2: LLMWhispererClien
 
 def test_whisper_detail_success(mocker: MockerFixture, client_v2: LLMWhispererClientV2) -> None:
     """Test whisper_detail returns extraction details on success."""
-    mock_send = mocker.patch("requests.Session.send")
+    mock_send = mocker.patch.object(LLMWhispererClientV2, "_send")
     mock_response = MagicMock()
     mock_response.status_code = 200
     mock_response.text = (
@@ -65,7 +66,7 @@ def test_whisper_detail_success(mocker: MockerFixture, client_v2: LLMWhispererCl
 
 def test_whisper_detail_not_found(mocker: MockerFixture, client_v2: LLMWhispererClientV2) -> None:
     """Test whisper_detail raises exception when record is not found."""
-    mock_send = mocker.patch("requests.Session.send")
+    mock_send = mocker.patch.object(LLMWhispererClientV2, "_send")
     mock_response = MagicMock()
     mock_response.status_code = 400
     mock_response.text = '{"message": "Record not found"}'
@@ -83,7 +84,7 @@ def test_whisper_detail_not_found(mocker: MockerFixture, client_v2: LLMWhisperer
 def test_whisper_json_string_response_error(mocker: MockerFixture, client_v2: LLMWhispererClientV2) -> None:
     """Test whisper method handles JSON string responses correctly for error
     cases."""
-    mock_send = mocker.patch("requests.Session.send")
+    mock_send = mocker.patch.object(LLMWhispererClientV2, "_send")
     mock_response = MagicMock()
     mock_response.status_code = 400
     mock_response.text = '"Error message as JSON string"'
@@ -102,7 +103,7 @@ def test_whisper_json_string_response_error(mocker: MockerFixture, client_v2: LL
 def test_whisper_json_string_response_202(mocker: MockerFixture, client_v2: LLMWhispererClientV2) -> None:
     """Test whisper method handles JSON string responses correctly for 202
     status."""
-    mock_send = mocker.patch("requests.Session.send")
+    mock_send = mocker.patch.object(LLMWhispererClientV2, "_send")
     mock_response = MagicMock()
     mock_response.status_code = 202
     mock_response.text = '"Processing in progress"'
@@ -119,7 +120,7 @@ def test_whisper_json_string_response_202(mocker: MockerFixture, client_v2: LLMW
 def test_whisper_invalid_json_response_error(mocker: MockerFixture, client_v2: LLMWhispererClientV2) -> None:
     """Test whisper method handles invalid JSON responses correctly for error
     cases."""
-    mock_send = mocker.patch("requests.Session.send")
+    mock_send = mocker.patch.object(LLMWhispererClientV2, "_send")
     mock_response = MagicMock()
     mock_response.status_code = 500
     mock_response.text = "Invalid JSON response"
@@ -138,7 +139,7 @@ def test_whisper_invalid_json_response_error(mocker: MockerFixture, client_v2: L
 def test_whisper_invalid_json_response_202(mocker: MockerFixture, client_v2: LLMWhispererClientV2) -> None:
     """Test whisper method handles invalid JSON responses correctly for 202
     status."""
-    mock_send = mocker.patch("requests.Session.send")
+    mock_send = mocker.patch.object(LLMWhispererClientV2, "_send")
     mock_response = MagicMock()
     mock_response.status_code = 202
     mock_response.text = "Invalid JSON response"
@@ -155,20 +156,20 @@ def test_whisper_invalid_json_response_202(mocker: MockerFixture, client_v2: LLM
 def test_whisper_default_word_confidence_threshold(mocker: MockerFixture, client_v2: LLMWhispererClientV2) -> None:
     """Whisper() sends the default word_confidence_threshold when not
     specified."""
-    mock_send = mocker.patch("requests.Session.send")
+    mock_send = mocker.patch.object(LLMWhispererClientV2, "_send")
     mock_send.return_value = _mock_response(200, '{"status_code": 200, "extraction": {"text": "ok"}}')
 
     client_v2.whisper(url="https://example.com/test.pdf", wait_for_completion=False)
 
     prepared_request = mock_send.call_args[0][0]
-    query = parse_qs(urlparse(prepared_request.url).query)
+    query = parse_qs(urlparse(str(prepared_request.url)).query)
     assert query["word_confidence_threshold"] == ["0.3"]
 
 
 def test_whisper_custom_word_confidence_threshold(mocker: MockerFixture, client_v2: LLMWhispererClientV2) -> None:
     """Whisper() forwards a custom word_confidence_threshold as a request
     param."""
-    mock_send = mocker.patch("requests.Session.send")
+    mock_send = mocker.patch.object(LLMWhispererClientV2, "_send")
     mock_send.return_value = _mock_response(200, '{"status_code": 200, "extraction": {"text": "ok"}}')
 
     client_v2.whisper(
@@ -178,7 +179,7 @@ def test_whisper_custom_word_confidence_threshold(mocker: MockerFixture, client_
     )
 
     prepared_request = mock_send.call_args[0][0]
-    query = parse_qs(urlparse(prepared_request.url).query)
+    query = parse_qs(urlparse(str(prepared_request.url)).query)
     assert query["word_confidence_threshold"] == ["0.75"]
 
 
@@ -188,12 +189,12 @@ def test_whisper_custom_word_confidence_threshold(mocker: MockerFixture, client_
 def _whisper_query(mocker: MockerFixture, client_v2: LLMWhispererClientV2, **kwargs: object) -> dict[str, list[str]]:
     """Calls whisper() with a mocked transport and returns the query params
     sent."""
-    mock_send = mocker.patch("requests.Session.send")
+    mock_send = mocker.patch.object(LLMWhispererClientV2, "_send")
     mock_send.return_value = _mock_response(200, '{"status_code": 200, "extraction": {"text": "ok"}}')
 
     client_v2.whisper(url="https://example.com/test.pdf", wait_for_completion=False, **kwargs)
 
-    return parse_qs(urlparse(mock_send.call_args[0][0].url).query)
+    return parse_qs(urlparse(str(mock_send.call_args[0][0].url)).query)
 
 
 def test_whisper_sends_corrected_param_names(mocker: MockerFixture, client_v2: LLMWhispererClientV2) -> None:
@@ -302,8 +303,9 @@ def _mock_response(status_code: int = 200, text: str = '{"status": "ok"}') -> Ma
 def test_retry_on_connection_error(mocker: MockerFixture, retry_client: LLMWhispererClientV2) -> None:
     """ConnectionError triggers retry, succeeds on 3rd attempt."""
     success_resp = _mock_response(200, '{"pages_processed": 1}')
-    mock_send = mocker.patch(
-        "requests.Session.send",
+    mock_send = mocker.patch.object(
+        LLMWhispererClientV2,
+        "_send",
         side_effect=[
             requests.ConnectionError("connection refused"),
             requests.ConnectionError("connection refused"),
@@ -320,8 +322,9 @@ def test_retry_on_connection_error(mocker: MockerFixture, retry_client: LLMWhisp
 def test_retry_on_timeout(mocker: MockerFixture, retry_client: LLMWhispererClientV2) -> None:
     """Timeout triggers retry, succeeds on 2nd attempt."""
     success_resp = _mock_response(200, '{"pages_processed": 1}')
-    mock_send = mocker.patch(
-        "requests.Session.send",
+    mock_send = mocker.patch.object(
+        LLMWhispererClientV2,
+        "_send",
         side_effect=[
             requests.Timeout("request timed out"),
             success_resp,
@@ -338,8 +341,9 @@ def test_retry_on_429(mocker: MockerFixture, retry_client: LLMWhispererClientV2)
     """HTTP 429 triggers retry, succeeds on 2nd attempt."""
     rate_limit_resp = _mock_response(429, '{"error": "rate limited"}')
     success_resp = _mock_response(200, '{"pages_processed": 1}')
-    mock_send = mocker.patch(
-        "requests.Session.send",
+    mock_send = mocker.patch.object(
+        LLMWhispererClientV2,
+        "_send",
         side_effect=[rate_limit_resp, success_resp],
     )
 
@@ -353,8 +357,9 @@ def test_retry_on_500(mocker: MockerFixture, retry_client: LLMWhispererClientV2)
     """HTTP 500 triggers retry, succeeds on 2nd attempt."""
     server_err_resp = _mock_response(500, '{"error": "internal server error"}')
     success_resp = _mock_response(200, '{"pages_processed": 1}')
-    mock_send = mocker.patch(
-        "requests.Session.send",
+    mock_send = mocker.patch.object(
+        LLMWhispererClientV2,
+        "_send",
         side_effect=[server_err_resp, success_resp],
     )
 
@@ -367,7 +372,7 @@ def test_retry_on_500(mocker: MockerFixture, retry_client: LLMWhispererClientV2)
 def test_no_retry_on_400(mocker: MockerFixture, retry_client: LLMWhispererClientV2) -> None:
     """HTTP 400 does NOT retry (client error)."""
     bad_request_resp = _mock_response(400, '{"error": "bad request"}')
-    mock_send = mocker.patch("requests.Session.send", return_value=bad_request_resp)
+    mock_send = mocker.patch.object(LLMWhispererClientV2, "_send", return_value=bad_request_resp)
 
     with pytest.raises(LLMWhispererClientException):
         retry_client.get_usage_info()
@@ -378,7 +383,7 @@ def test_no_retry_on_400(mocker: MockerFixture, retry_client: LLMWhispererClient
 def test_no_retry_on_401(mocker: MockerFixture, retry_client: LLMWhispererClientV2) -> None:
     """HTTP 401 does NOT retry (auth error)."""
     unauth_resp = _mock_response(401, '{"error": "unauthorized"}')
-    mock_send = mocker.patch("requests.Session.send", return_value=unauth_resp)
+    mock_send = mocker.patch.object(LLMWhispererClientV2, "_send", return_value=unauth_resp)
 
     with pytest.raises(LLMWhispererClientException):
         retry_client.get_usage_info()
@@ -388,8 +393,9 @@ def test_no_retry_on_401(mocker: MockerFixture, retry_client: LLMWhispererClient
 
 def test_retries_exhausted_raises(mocker: MockerFixture, retry_client: LLMWhispererClientV2) -> None:
     """After all retries exhausted on ConnectionError, raises the exception."""
-    mock_send = mocker.patch(
-        "requests.Session.send",
+    mock_send = mocker.patch.object(
+        LLMWhispererClientV2,
+        "_send",
         side_effect=requests.ConnectionError("connection refused"),
     )
 
@@ -404,7 +410,7 @@ def test_retries_exhausted_500_returns_response(mocker: MockerFixture, retry_cli
     """After all retries exhausted on 500, returns the error response (caller
     raises exception)."""
     server_err_resp = _mock_response(500, '{"error": "internal server error"}')
-    mock_send = mocker.patch("requests.Session.send", return_value=server_err_resp)
+    mock_send = mocker.patch.object(LLMWhispererClientV2, "_send", return_value=server_err_resp)
 
     with pytest.raises(LLMWhispererClientException):
         retry_client.get_usage_info()
@@ -415,8 +421,9 @@ def test_retries_exhausted_500_returns_response(mocker: MockerFixture, retry_cli
 
 def test_retry_disabled(mocker: MockerFixture, no_retry_client: LLMWhispererClientV2) -> None:
     """max_retries=0 means single attempt only, no retry on failure."""
-    mock_send = mocker.patch(
-        "requests.Session.send",
+    mock_send = mocker.patch.object(
+        LLMWhispererClientV2,
+        "_send",
         side_effect=requests.ConnectionError("connection refused"),
     )
 
@@ -443,7 +450,7 @@ def test_whisper_post_uses_min_of_api_timeout_and_wait_timeout(
     # api_timeout defaults to 120, wait_timeout will be 180
     # So POST timeout should be min(120, 180) = 120
     mock_response = _mock_response(200, '{"status_code": 200, "extraction": {"text": "ok"}}')
-    mock_send = mocker.patch("requests.Session.send", return_value=mock_response)
+    mock_send = mocker.patch.object(LLMWhispererClientV2, "_send", return_value=mock_response)
 
     client.whisper(url="https://example.com/test.pdf", wait_timeout=180)
 
@@ -466,7 +473,7 @@ def test_whisper_post_uses_wait_timeout_when_smaller(
         max_retries=0,
     )
     mock_response = _mock_response(200, '{"status_code": 200, "extraction": {"text": "ok"}}')
-    mock_send = mocker.patch("requests.Session.send", return_value=mock_response)
+    mock_send = mocker.patch.object(LLMWhispererClientV2, "_send", return_value=mock_response)
 
     client.whisper(url="https://example.com/test.pdf", wait_timeout=10)
 
@@ -485,12 +492,11 @@ def test_send_request_deadline_caps_timeout(mocker: MockerFixture) -> None:
         max_retries=0,
     )
     mock_response = _mock_response(200)
-    mock_send = mocker.patch("requests.Session.send", return_value=mock_response)
+    mock_send = mocker.patch.object(LLMWhispererClientV2, "_send", return_value=mock_response)
 
     # Set deadline 2 seconds from now, but request timeout=300
     deadline = time.time() + 2.0
-    req = requests.Request("GET", "http://localhost/test", headers={})
-    prepared = req.prepare()
+    prepared = httpx.Request("GET", "http://localhost/test")
 
     client._send_request(prepared, timeout=300, deadline=deadline)
 
@@ -513,13 +519,12 @@ def test_send_request_deadline_stops_retries(mocker: MockerFixture) -> None:
     )
 
     server_err_resp = _mock_response(500, '{"error": "internal server error"}')
-    mock_send = mocker.patch("requests.Session.send", return_value=server_err_resp)
+    mock_send = mocker.patch.object(LLMWhispererClientV2, "_send", return_value=server_err_resp)
 
     # Deadline is 0.3s from now — with 0.1-0.2s waits between retries,
     # only a few attempts should fit before the deadline expires
     deadline = time.time() + 0.3
-    req = requests.Request("GET", "http://localhost/test", headers={})
-    prepared = req.prepare()
+    prepared = httpx.Request("GET", "http://localhost/test")
 
     response = client._send_request(prepared, timeout=1, deadline=deadline)
 

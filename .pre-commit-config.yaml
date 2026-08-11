@@ -2,6 +2,9 @@ default_language_version:
   python: python3.12
 default_stages:
   - pre-commit
+# Generated and vendored code is overwritten wholesale by its refresh script, so
+# a fix applied here is lost on the next run.
+exclude: "^(src/unstract/llmwhisperer/sdk_llmwhisperer/|tests/baseline/)"
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0

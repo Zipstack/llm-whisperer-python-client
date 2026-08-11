@@ -1,0 +1,3 @@
+# openapi-python-client config. Kept minimal on purpose: every knob here is
+# maintenance surface, and post-processing the generated code is a kill criterion.
+literal_enums: true

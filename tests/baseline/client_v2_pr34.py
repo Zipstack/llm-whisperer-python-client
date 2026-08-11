@@ -1,3 +1,5 @@
+# Vendored from llm-whisperer-python-client 0e9fda3 (PR #34 head), the parity baseline.
+# DO NOT EDIT. Refresh with tools/refresh_baseline.sh when the baseline moves.
 """This module provides a Python client for interacting with the LLMWhisperer
 API.
 
@@ -23,104 +25,13 @@ import logging
 import os
 import time
 import warnings
-from types import ModuleType
 from typing import IO, Any
 
-import httpx
-
-# `requests` remains a dependency for its exception classes. Callers catch
-# ConnectionError and Timeout by name around these calls, and the httpx
-# equivalents are not subclasses, so they are translated at the transport seam.
 import requests
 import tenacity
 from tenacity import retry_if_exception, stop_after_attempt, stop_after_delay, wait_exponential_jitter
-from unstract.llmwhisperer.sdk_llmwhisperer.api.account import usage_info
-from unstract.llmwhisperer.sdk_llmwhisperer.api.webhook import (
-    webhook_delete,
-    webhook_get,
-    webhook_post,
-    webhook_put,
-)
-from unstract.llmwhisperer.sdk_llmwhisperer.api.whisper import detail, extract, highlights, retrieve, status
-from unstract.llmwhisperer.sdk_llmwhisperer.models import WebhookConfig
-from unstract.llmwhisperer.sdk_llmwhisperer.types import File
 
 BASE_URL_V2 = "https://llmwhisperer-api.us-central.unstract.com/api/v2"
-
-#: The spec's paths are absolute from the service root, while ``base_url``
-#: already carries this prefix. Stripping it keeps the URL identical to the one
-#: the client built by hand, for any ``base_url`` a caller configures.
-_SPEC_PREFIX = "/api/v2"
-
-#: Query parameters each call sends. The generated builder writes every
-#: spec-declared parameter, including ones this client has never sent, and
-#: sending a default is not the same as omitting it: it pins a value the service
-#: would otherwise choose. A new parameter must be added here to be sent at all.
-_SEND_ONLY: dict[str, frozenset[str]] = {
-    "extract": frozenset(
-        {
-            "mode",
-            "output_mode",
-            "page_separator",
-            "pages_to_extract",
-            "median_filter_size",
-            "gaussian_blur_radius",
-            "line_splitter_tolerance",
-            "horizontal_stretch_factor",
-            "mark_vertical_lines",
-            "mark_horizontal_lines",
-            "line_splitter_strategy",
-            "add_line_nos",
-            "include_line_confidence",
-            "word_confidence_threshold",
-            "lang",
-            "tag",
-            "file_name",
-            "webhook_metadata",
-            "use_webhook",
-            # In URL mode the URL travels in the body; it is not also a query
-            # parameter, so `url` is deliberately absent here.
-            "url_in_post",
-        }
-    ),
-    "status": frozenset({"whisper_hash"}),
-    "detail": frozenset({"whisper_hash"}),
-    "retrieve": frozenset({"whisper_hash"}),
-    "highlights": frozenset({"whisper_hash", "lines", "extract_all_lines"}),
-    "usage_info": frozenset(),
-    "webhook_get": frozenset({"webhook_name"}),
-    "webhook_delete": frozenset({"webhook_name"}),
-    "webhook_post": frozenset(),
-    "webhook_put": frozenset(),
-}
-
-
-def _translate_transport_errors(fn: Any, *args: Any, **kwargs: Any) -> Any:
-    """Re-raise httpx transport failures as their ``requests`` equivalents.
-
-    Callers document and catch the ``requests`` classes. Ordering matters:
-    ``TimeoutException`` must be checked before ``ConnectError``, and
-    ``TransportError`` is the catch-all that keeps a novel transport failure from
-    escaping untranslated.
-    """
-    try:
-        return fn(*args, **kwargs)
-    except httpx.ConnectTimeout as e:
-        # requests.ConnectTimeout is both a ConnectionError and a Timeout; the
-        # plain Timeout httpx implies would stop matching half the callers.
-        raise requests.ConnectTimeout(str(e)) from e
-    except httpx.TimeoutException as e:
-        raise requests.Timeout(str(e)) from e
-    except httpx.ConnectError as e:
-        raise requests.ConnectionError(str(e)) from e
-    except httpx.TransportError as e:
-        raise requests.ConnectionError(str(e)) from e
-
-
-def _wire_value(value: Any) -> Any:
-    """Render a query value the way ``requests`` did: httpx lowercases
-    bools."""
-    return str(value) if isinstance(value, bool) else value
 
 
 class LLMWhispererClientException(Exception):
@@ -161,7 +72,7 @@ class _RetryableHTTPError(Exception):
     """Internal exception wrapping an HTTP response with a retryable status
     code (429, 5xx)."""
 
-    def __init__(self, response: httpx.Response) -> None:
+    def __init__(self, response: requests.Response) -> None:
         self.response = response
         super().__init__(f"HTTP {response.status_code}")
 
@@ -254,47 +165,6 @@ class LLMWhispererClientV2:
         self.retry_min_wait = retry_min_wait
         self.retry_max_wait = retry_max_wait
 
-    @property
-    def _transport(self) -> httpx.Client:
-        """The HTTP client, built on first use.
-
-        ``follow_redirects`` is on because the previous transport followed them
-        by default; without it a 30x from a proxy or an http->https upgrade
-        surfaces as an empty response body. Timeouts are set per request.
-        """
-        if getattr(self, "_transport_client", None) is None:
-            self._transport_client = httpx.Client(
-                headers=self.headers,
-                follow_redirects=True,
-                timeout=httpx.Timeout(None),
-            )
-        return self._transport_client
-
-    def _build_request(
-        self, module: ModuleType, send_only: frozenset[str] | None = None, **kwargs: Any
-    ) -> httpx.Request:
-        """Build a request from the generated builder for an operation.
-
-        The generated code owns the URL, the parameter names and the body
-        encoding. What it must not own is which parameters go out: it writes
-        every spec-declared default, so the set is narrowed to what this client
-        actually sets. Its ``Content-Type`` is dropped too — the transport
-        derives the same one the previous client sent.
-
-        ``send_only`` narrows further for a call whose parameter set varies with
-        its arguments; it must stay within the operation's declared set.
-        """
-        declared = _SEND_ONLY[module.__name__.rsplit(".", 1)[-1]]
-        if send_only is None:
-            send_only = declared
-        elif not send_only <= declared:
-            raise LLMWhispererClientException(f"Undeclared parameters: {sorted(send_only - declared)}", 1)
-        built = module._get_kwargs(**kwargs)
-        params = {k: _wire_value(v) for k, v in built.pop("params", {}).items() if k in send_only}
-        built.pop("headers", None)
-        url = self.base_url + built.pop("url").removeprefix(_SPEC_PREFIX)
-        return self._transport.build_request(built.pop("method").upper(), url, params=params, **built)
-
     @staticmethod
     def _is_retryable(exc: BaseException) -> bool:
         """Return True if the exception represents a transient/retryable
@@ -330,26 +200,13 @@ class LLMWhispererClientV2:
             max=self.retry_max_wait,
         )(retry_state=retry_state)
 
-    def _send(self, request: httpx.Request, *, timeout: float, stream: bool = False) -> httpx.Response:
-        """Issue one request, translating transport failures on the way out.
-
-        Translation happens here rather than around the retry loop, so
-        the retry predicate still sees the exception types it is
-        configured to retry.
-        """
-        request.extensions = {**request.extensions, "timeout": httpx.Timeout(timeout).as_dict()}
-        response: httpx.Response = _translate_transport_errors(self._transport.send, request, stream=stream)
-        if stream:
-            _translate_transport_errors(response.read)
-        return response
-
     def _send_request(
         self,
-        prepared: httpx.Request,
+        prepared: requests.PreparedRequest,
         timeout: int | None = None,
         stream: bool = False,
         deadline: float | None = None,
-    ) -> httpx.Response:
+    ) -> requests.Response:
         """Send an HTTP request with optional tenacity retry on transient
         errors.
 
@@ -380,10 +237,12 @@ class LLMWhispererClientV2:
             return req_timeout
 
         if self.max_retries == 0:
-            return self._send(prepared, timeout=_effective_timeout(), stream=stream)
+            s = requests.Session()
+            return s.send(prepared, timeout=_effective_timeout(), stream=stream)
 
-        def _attempt() -> httpx.Response:
-            response = self._send(prepared, timeout=_effective_timeout(), stream=stream)
+        def _attempt() -> requests.Response:
+            s = requests.Session()
+            response = s.send(prepared, timeout=_effective_timeout(), stream=stream)
             if response.status_code == 429 or response.status_code >= 500:
                 raise _RetryableHTTPError(response)
             return response
@@ -420,8 +279,10 @@ class LLMWhispererClientV2:
                                           the error message and status code returned by the API.
         """
         self.logger.debug("get_usage_info called")
-        prepared = self._build_request(usage_info)
-        self.logger.debug("url: %s", prepared.url)
+        url = f"{self.base_url}/get-usage-info"
+        self.logger.debug("url: %s", url)
+        req = requests.Request("GET", url, headers=self.headers)
+        prepared = req.prepare()
         response = self._send_request(prepared)
         if response.status_code != 200:
             err = json.loads(response.text)
@@ -451,13 +312,15 @@ class LLMWhispererClientV2:
                                           the error message and status code returned by the API.
         """
         self.logger.debug("highlight called")
-        prepared = self._build_request(
-            highlights,
-            whisper_hash=whisper_hash,
-            lines=lines,
-            extract_all_lines=extract_all_lines,
-        )
-        self.logger.debug("url: %s", prepared.url)
+        url = f"{self.base_url}/highlights"
+        params = {
+            "whisper_hash": whisper_hash,
+            "lines": lines,
+            "extract_all_lines": extract_all_lines,
+        }
+        self.logger.debug("url: %s", url)
+        req = requests.Request("GET", url, headers=self.headers, params=params)
+        prepared = req.prepare()
         response = self._send_request(prepared)
         if response.status_code != 200:
             err = json.loads(response.text)
@@ -486,10 +349,13 @@ class LLMWhispererClientV2:
                                           the error message and status code returned by the API.
         """
         self.logger.debug("whisper_detail called")
-        prepared = self._build_request(detail, whisper_hash=whisper_hash)
-        self.logger.debug("url: %s", prepared.url)
+        url = f"{self.base_url}/whisper-detail"
+        params = {"whisper_hash": whisper_hash}
+        self.logger.debug("url: %s", url)
         self.logger.debug("whisper_hash: %s", whisper_hash)
 
+        req = requests.Request("GET", url, headers=self.headers, params=params)
+        prepared = req.prepare()
         response = self._send_request(prepared)
         if response.status_code != 200:
             if not (response.text or "").strip():
@@ -689,18 +555,28 @@ class LLMWhispererClientV2:
             if stream is not None:
                 should_stream = True
                 data = b"".join(stream)
+                req = requests.Request(
+                    "POST",
+                    api_url,
+                    params=params,
+                    headers=self.headers,
+                    data=data,
+                )
+
             else:
                 with open(file_path, "rb") as f:
                     data = f.read()
+                req = requests.Request(
+                    "POST",
+                    api_url,
+                    params=params,
+                    headers=self.headers,
+                    data=data,
+                )
         else:
-            # The URL travels in the body, not on the query string; url_in_post
-            # is what tells the service to read it from there.
             params["url_in_post"] = True
-            data = url.encode()
-        # The wire carries exactly the parameters assembled above — url_in_post
-        # only exists in URL mode, and the generated default would otherwise
-        # send it on every upload.
-        prepared = self._build_request(extract, frozenset(params), body=File(payload=data), **params)
+            req = requests.Request("POST", api_url, params=params, headers=self.headers, data=url)
+        prepared = req.prepare()
         start_time = time.time()
         deadline = start_time + wait_timeout
         post_timeout = min(self.api_timeout, wait_timeout)
@@ -802,8 +678,11 @@ class LLMWhispererClientV2:
                                           the error message and status code returned by the API.
         """
         self.logger.debug("whisper_status called")
-        prepared = self._build_request(status, whisper_hash=whisper_hash)
-        self.logger.debug("url: %s", prepared.url)
+        url = f"{self.base_url}/whisper-status"
+        params = {"whisper_hash": whisper_hash}
+        self.logger.debug("url: %s", url)
+        req = requests.Request("GET", url, headers=self.headers, params=params)
+        prepared = req.prepare()
         response = self._send_request(prepared)
         if response.status_code != 200:
             if not (response.text or "").strip():
@@ -844,8 +723,11 @@ class LLMWhispererClientV2:
                                           the error message and status code returned by the API.
         """
         self.logger.debug("whisper_retrieve called")
-        prepared = self._build_request(retrieve, whisper_hash=whisper_hash)
-        self.logger.debug("url: %s", prepared.url)
+        url = f"{self.base_url}/whisper-retrieve"
+        params = {"whisper_hash": whisper_hash}
+        self.logger.debug("url: %s", url)
+        req = requests.Request("GET", url, headers=self.headers, params=params)
+        prepared = req.prepare()
         response = self._send_request(prepared)
         response.encoding = encoding
         if response.status_code != 200:
@@ -878,8 +760,14 @@ class LLMWhispererClientV2:
             LLMWhispererClientException: If the API request fails, it raises an exception with
                                             the error message and status code returned by the API.
         """
-        body = WebhookConfig(url=url, auth_token=auth_token, webhook_name=webhook_name)
-        prepared = self._build_request(webhook_post, body=body)
+        data = {
+            "url": url,
+            "auth_token": auth_token,
+            "webhook_name": webhook_name,
+        }
+        url = f"{self.base_url}/whisper-manage-callback"
+        req = requests.Request("POST", url, headers=self.headers, json=data)
+        prepared = req.prepare()
         response = self._send_request(prepared)
         if response.status_code != 201:
             err = json.loads(response.text)
@@ -907,8 +795,14 @@ class LLMWhispererClientV2:
             LLMWhispererClientException: If the API request fails, it raises an exception with
                                             the error message and status code returned by the API.
         """
-        body = WebhookConfig(url=url, auth_token=auth_token, webhook_name=webhook_name)
-        prepared = self._build_request(webhook_put, body=body)
+        data = {
+            "url": url,
+            "auth_token": auth_token,
+            "webhook_name": webhook_name,
+        }
+        url = f"{self.base_url}/whisper-manage-callback"
+        req = requests.Request("PUT", url, headers=self.headers, json=data)
+        prepared = req.prepare()
         response = self._send_request(prepared)
         if response.status_code != 200:
             err = json.loads(response.text)
@@ -934,7 +828,10 @@ class LLMWhispererClientV2:
             LLMWhispererClientException: If the API request fails, it raises an exception with
                                             the error message and status code returned by the API.
         """
-        prepared = self._build_request(webhook_get, webhook_name=webhook_name)
+        url = f"{self.base_url}/whisper-manage-callback"
+        params = {"webhook_name": webhook_name}
+        req = requests.Request("GET", url, headers=self.headers, params=params)
+        prepared = req.prepare()
         response = self._send_request(prepared)
         if response.status_code != 200:
             err = json.loads(response.text)
@@ -960,7 +857,10 @@ class LLMWhispererClientV2:
             LLMWhispererClientException: If the API request fails, it raises an exception with
                                             the error message and status code returned by the API.
         """
-        prepared = self._build_request(webhook_delete, webhook_name=webhook_name)
+        url = f"{self.base_url}/whisper-manage-callback"
+        params = {"webhook_name": webhook_name}
+        req = requests.Request("DELETE", url, headers=self.headers, params=params)
+        prepared = req.prepare()
         response = self._send_request(prepared)
         if response.status_code != 200:
             err = json.loads(response.text)
