@@ -6,15 +6,17 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
+from ...models.error import Error
 from ...models.highlights_response_200 import HighlightsResponse200
 from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    extract_all_lines: str | Unset = "false",
-    lines: str | Unset = "",
-    whisper_hash: str | Unset = "",
+    extract_all_lines: bool | Unset = False,
+    lines: str,
+    mode: str | Unset = "form",
+    whisper_hash: str,
 ) -> dict[str, Any]:
 
     params: dict[str, Any] = {}
@@ -22,6 +24,8 @@ def _get_kwargs(
     params["extract_all_lines"] = extract_all_lines
 
     params["lines"] = lines
+
+    params["mode"] = mode
 
     params["whisper_hash"] = whisper_hash
 
@@ -36,11 +40,33 @@ def _get_kwargs(
     return _kwargs
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> HighlightsResponse200 | None:
+def _parse_response(
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> Error | HighlightsResponse200 | None:
     if response.status_code == 200:
         response_200 = HighlightsResponse200.from_dict(response.json())
 
         return response_200
+
+    if response.status_code == 400:
+        response_400 = Error.from_dict(response.json())
+
+        return response_400
+
+    if response.status_code == 401:
+        response_401 = Error.from_dict(response.json())
+
+        return response_401
+
+    if response.status_code == 403:
+        response_403 = Error.from_dict(response.json())
+
+        return response_403
+
+    if response.status_code == 404:
+        response_404 = Error.from_dict(response.json())
+
+        return response_404
 
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
@@ -50,7 +76,7 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[HighlightsResponse200]:
+) -> Response[Error | HighlightsResponse200]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -62,27 +88,30 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
-    extract_all_lines: str | Unset = "false",
-    lines: str | Unset = "",
-    whisper_hash: str | Unset = "",
-) -> Response[HighlightsResponse200]:
+    extract_all_lines: bool | Unset = False,
+    lines: str,
+    mode: str | Unset = "form",
+    whisper_hash: str,
+) -> Response[Error | HighlightsResponse200]:
     """Line-level highlight geometry for an extraction
 
     Args:
-        extract_all_lines (str | Unset):  Default: 'false'.
-        lines (str | Unset):  Default: ''.
-        whisper_hash (str | Unset):  Default: ''.
+        extract_all_lines (bool | Unset):  Default: False.
+        lines (str):
+        mode (str | Unset):  Default: 'form'.
+        whisper_hash (str):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[HighlightsResponse200]
+        Response[Error | HighlightsResponse200]
     """
     kwargs = _get_kwargs(
         extract_all_lines=extract_all_lines,
         lines=lines,
+        mode=mode,
         whisper_hash=whisper_hash,
     )
 
@@ -96,28 +125,31 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient | Client,
-    extract_all_lines: str | Unset = "false",
-    lines: str | Unset = "",
-    whisper_hash: str | Unset = "",
-) -> HighlightsResponse200 | None:
+    extract_all_lines: bool | Unset = False,
+    lines: str,
+    mode: str | Unset = "form",
+    whisper_hash: str,
+) -> Error | HighlightsResponse200 | None:
     """Line-level highlight geometry for an extraction
 
     Args:
-        extract_all_lines (str | Unset):  Default: 'false'.
-        lines (str | Unset):  Default: ''.
-        whisper_hash (str | Unset):  Default: ''.
+        extract_all_lines (bool | Unset):  Default: False.
+        lines (str):
+        mode (str | Unset):  Default: 'form'.
+        whisper_hash (str):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        HighlightsResponse200
+        Error | HighlightsResponse200
     """
     return sync_detailed(
         client=client,
         extract_all_lines=extract_all_lines,
         lines=lines,
+        mode=mode,
         whisper_hash=whisper_hash,
     ).parsed
 
@@ -125,27 +157,30 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
-    extract_all_lines: str | Unset = "false",
-    lines: str | Unset = "",
-    whisper_hash: str | Unset = "",
-) -> Response[HighlightsResponse200]:
+    extract_all_lines: bool | Unset = False,
+    lines: str,
+    mode: str | Unset = "form",
+    whisper_hash: str,
+) -> Response[Error | HighlightsResponse200]:
     """Line-level highlight geometry for an extraction
 
     Args:
-        extract_all_lines (str | Unset):  Default: 'false'.
-        lines (str | Unset):  Default: ''.
-        whisper_hash (str | Unset):  Default: ''.
+        extract_all_lines (bool | Unset):  Default: False.
+        lines (str):
+        mode (str | Unset):  Default: 'form'.
+        whisper_hash (str):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[HighlightsResponse200]
+        Response[Error | HighlightsResponse200]
     """
     kwargs = _get_kwargs(
         extract_all_lines=extract_all_lines,
         lines=lines,
+        mode=mode,
         whisper_hash=whisper_hash,
     )
 
@@ -157,29 +192,32 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient | Client,
-    extract_all_lines: str | Unset = "false",
-    lines: str | Unset = "",
-    whisper_hash: str | Unset = "",
-) -> HighlightsResponse200 | None:
+    extract_all_lines: bool | Unset = False,
+    lines: str,
+    mode: str | Unset = "form",
+    whisper_hash: str,
+) -> Error | HighlightsResponse200 | None:
     """Line-level highlight geometry for an extraction
 
     Args:
-        extract_all_lines (str | Unset):  Default: 'false'.
-        lines (str | Unset):  Default: ''.
-        whisper_hash (str | Unset):  Default: ''.
+        extract_all_lines (bool | Unset):  Default: False.
+        lines (str):
+        mode (str | Unset):  Default: 'form'.
+        whisper_hash (str):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        HighlightsResponse200
+        Error | HighlightsResponse200
     """
     return (
         await asyncio_detailed(
             client=client,
             extract_all_lines=extract_all_lines,
             lines=lines,
+            mode=mode,
             whisper_hash=whisper_hash,
         )
     ).parsed

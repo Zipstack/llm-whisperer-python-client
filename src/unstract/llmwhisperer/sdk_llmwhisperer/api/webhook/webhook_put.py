@@ -6,28 +6,21 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
+from ...models.error import Error
 from ...models.webhook_config import WebhookConfig
 from ...models.webhook_put_response_200 import WebhookPutResponse200
-from ...types import UNSET, Response, Unset
+from ...types import Response
 
 
 def _get_kwargs(
     *,
     body: WebhookConfig,
-    webhook_name: str | Unset = "",
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
-
-    params: dict[str, Any] = {}
-
-    params["webhook_name"] = webhook_name
-
-    params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
     _kwargs: dict[str, Any] = {
         "method": "put",
         "url": "/api/v2/whisper-manage-callback",
-        "params": params,
     }
 
     _kwargs["json"] = body.to_dict()
@@ -38,11 +31,33 @@ def _get_kwargs(
     return _kwargs
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> WebhookPutResponse200 | None:
+def _parse_response(
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> Error | WebhookPutResponse200 | None:
     if response.status_code == 200:
         response_200 = WebhookPutResponse200.from_dict(response.json())
 
         return response_200
+
+    if response.status_code == 400:
+        response_400 = Error.from_dict(response.json())
+
+        return response_400
+
+    if response.status_code == 401:
+        response_401 = Error.from_dict(response.json())
+
+        return response_401
+
+    if response.status_code == 403:
+        response_403 = Error.from_dict(response.json())
+
+        return response_403
+
+    if response.status_code == 404:
+        response_404 = Error.from_dict(response.json())
+
+        return response_404
 
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
@@ -52,7 +67,7 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[WebhookPutResponse200]:
+) -> Response[Error | WebhookPutResponse200]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -65,12 +80,10 @@ def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
     body: WebhookConfig,
-    webhook_name: str | Unset = "",
-) -> Response[WebhookPutResponse200]:
+) -> Response[Error | WebhookPutResponse200]:
     """Manage extraction webhooks
 
     Args:
-        webhook_name (str | Unset):  Default: ''.
         body (WebhookConfig):
 
     Raises:
@@ -78,11 +91,10 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[WebhookPutResponse200]
+        Response[Error | WebhookPutResponse200]
     """
     kwargs = _get_kwargs(
         body=body,
-        webhook_name=webhook_name,
     )
 
     response = client.get_httpx_client().request(
@@ -96,12 +108,10 @@ def sync(
     *,
     client: AuthenticatedClient | Client,
     body: WebhookConfig,
-    webhook_name: str | Unset = "",
-) -> WebhookPutResponse200 | None:
+) -> Error | WebhookPutResponse200 | None:
     """Manage extraction webhooks
 
     Args:
-        webhook_name (str | Unset):  Default: ''.
         body (WebhookConfig):
 
     Raises:
@@ -109,12 +119,11 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        WebhookPutResponse200
+        Error | WebhookPutResponse200
     """
     return sync_detailed(
         client=client,
         body=body,
-        webhook_name=webhook_name,
     ).parsed
 
 
@@ -122,12 +131,10 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
     body: WebhookConfig,
-    webhook_name: str | Unset = "",
-) -> Response[WebhookPutResponse200]:
+) -> Response[Error | WebhookPutResponse200]:
     """Manage extraction webhooks
 
     Args:
-        webhook_name (str | Unset):  Default: ''.
         body (WebhookConfig):
 
     Raises:
@@ -135,11 +142,10 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[WebhookPutResponse200]
+        Response[Error | WebhookPutResponse200]
     """
     kwargs = _get_kwargs(
         body=body,
-        webhook_name=webhook_name,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -151,12 +157,10 @@ async def asyncio(
     *,
     client: AuthenticatedClient | Client,
     body: WebhookConfig,
-    webhook_name: str | Unset = "",
-) -> WebhookPutResponse200 | None:
+) -> Error | WebhookPutResponse200 | None:
     """Manage extraction webhooks
 
     Args:
-        webhook_name (str | Unset):  Default: ''.
         body (WebhookConfig):
 
     Raises:
@@ -164,12 +168,11 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        WebhookPutResponse200
+        Error | WebhookPutResponse200
     """
     return (
         await asyncio_detailed(
             client=client,
             body=body,
-            webhook_name=webhook_name,
         )
     ).parsed

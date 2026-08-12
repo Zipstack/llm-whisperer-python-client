@@ -6,24 +6,30 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.pdf_to_images_response_200 import PdfToImagesResponse200
-from ...types import UNSET, Response, Unset
+from ...models.error import Error
+from ...models.whisper_accepted import WhisperAccepted
+from ...types import UNSET, File, Response, Unset
 
 
 def _get_kwargs(
     *,
+    body: File | Unset = UNSET,
     file_name: str | Unset = "sample.pdf",
     format_: str | Unset = "png",
+    mode: str | Unset = "form",
     tag: str | Unset = "default",
-    url_query: str | Unset = "",
+    url_query: str | Unset = UNSET,
     url_in_post: bool | Unset = False,
 ) -> dict[str, Any]:
+    headers: dict[str, Any] = {}
 
     params: dict[str, Any] = {}
 
     params["file_name"] = file_name
 
     params["format"] = format_
+
+    params["mode"] = mode
 
     params["tag"] = tag
 
@@ -39,14 +45,41 @@ def _get_kwargs(
         "params": params,
     }
 
+    if not isinstance(body, Unset):
+        _kwargs["content"] = body.payload
+    headers["Content-Type"] = "application/octet-stream"
+
+    _kwargs["headers"] = headers
     return _kwargs
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> PdfToImagesResponse200 | None:
-    if response.status_code == 200:
-        response_200 = PdfToImagesResponse200.from_dict(response.json())
+def _parse_response(
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> Error | WhisperAccepted | None:
+    if response.status_code == 202:
+        response_202 = WhisperAccepted.from_dict(response.json())
 
-        return response_200
+        return response_202
+
+    if response.status_code == 400:
+        response_400 = Error.from_dict(response.json())
+
+        return response_400
+
+    if response.status_code == 401:
+        response_401 = Error.from_dict(response.json())
+
+        return response_401
+
+    if response.status_code == 403:
+        response_403 = Error.from_dict(response.json())
+
+        return response_403
+
+    if response.status_code == 404:
+        response_404 = Error.from_dict(response.json())
+
+        return response_404
 
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
@@ -56,7 +89,7 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[PdfToImagesResponse200]:
+) -> Response[Error | WhisperAccepted]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -68,31 +101,37 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
+    body: File | Unset = UNSET,
     file_name: str | Unset = "sample.pdf",
     format_: str | Unset = "png",
+    mode: str | Unset = "form",
     tag: str | Unset = "default",
-    url_query: str | Unset = "",
+    url_query: str | Unset = UNSET,
     url_in_post: bool | Unset = False,
-) -> Response[PdfToImagesResponse200]:
-    """Pdf to images
+) -> Response[Error | WhisperAccepted]:
+    """Render a PDF's pages as images
 
     Args:
         file_name (str | Unset):  Default: 'sample.pdf'.
         format_ (str | Unset):  Default: 'png'.
+        mode (str | Unset):  Default: 'form'.
         tag (str | Unset):  Default: 'default'.
-        url_query (str | Unset):  Default: ''.
+        url_query (str | Unset):
         url_in_post (bool | Unset):  Default: False.
+        body (File | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[PdfToImagesResponse200]
+        Response[Error | WhisperAccepted]
     """
     kwargs = _get_kwargs(
+        body=body,
         file_name=file_name,
         format_=format_,
+        mode=mode,
         tag=tag,
         url_query=url_query,
         url_in_post=url_in_post,
@@ -108,32 +147,38 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient | Client,
+    body: File | Unset = UNSET,
     file_name: str | Unset = "sample.pdf",
     format_: str | Unset = "png",
+    mode: str | Unset = "form",
     tag: str | Unset = "default",
-    url_query: str | Unset = "",
+    url_query: str | Unset = UNSET,
     url_in_post: bool | Unset = False,
-) -> PdfToImagesResponse200 | None:
-    """Pdf to images
+) -> Error | WhisperAccepted | None:
+    """Render a PDF's pages as images
 
     Args:
         file_name (str | Unset):  Default: 'sample.pdf'.
         format_ (str | Unset):  Default: 'png'.
+        mode (str | Unset):  Default: 'form'.
         tag (str | Unset):  Default: 'default'.
-        url_query (str | Unset):  Default: ''.
+        url_query (str | Unset):
         url_in_post (bool | Unset):  Default: False.
+        body (File | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        PdfToImagesResponse200
+        Error | WhisperAccepted
     """
     return sync_detailed(
         client=client,
+        body=body,
         file_name=file_name,
         format_=format_,
+        mode=mode,
         tag=tag,
         url_query=url_query,
         url_in_post=url_in_post,
@@ -143,31 +188,37 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
+    body: File | Unset = UNSET,
     file_name: str | Unset = "sample.pdf",
     format_: str | Unset = "png",
+    mode: str | Unset = "form",
     tag: str | Unset = "default",
-    url_query: str | Unset = "",
+    url_query: str | Unset = UNSET,
     url_in_post: bool | Unset = False,
-) -> Response[PdfToImagesResponse200]:
-    """Pdf to images
+) -> Response[Error | WhisperAccepted]:
+    """Render a PDF's pages as images
 
     Args:
         file_name (str | Unset):  Default: 'sample.pdf'.
         format_ (str | Unset):  Default: 'png'.
+        mode (str | Unset):  Default: 'form'.
         tag (str | Unset):  Default: 'default'.
-        url_query (str | Unset):  Default: ''.
+        url_query (str | Unset):
         url_in_post (bool | Unset):  Default: False.
+        body (File | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[PdfToImagesResponse200]
+        Response[Error | WhisperAccepted]
     """
     kwargs = _get_kwargs(
+        body=body,
         file_name=file_name,
         format_=format_,
+        mode=mode,
         tag=tag,
         url_query=url_query,
         url_in_post=url_in_post,
@@ -181,33 +232,39 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient | Client,
+    body: File | Unset = UNSET,
     file_name: str | Unset = "sample.pdf",
     format_: str | Unset = "png",
+    mode: str | Unset = "form",
     tag: str | Unset = "default",
-    url_query: str | Unset = "",
+    url_query: str | Unset = UNSET,
     url_in_post: bool | Unset = False,
-) -> PdfToImagesResponse200 | None:
-    """Pdf to images
+) -> Error | WhisperAccepted | None:
+    """Render a PDF's pages as images
 
     Args:
         file_name (str | Unset):  Default: 'sample.pdf'.
         format_ (str | Unset):  Default: 'png'.
+        mode (str | Unset):  Default: 'form'.
         tag (str | Unset):  Default: 'default'.
-        url_query (str | Unset):  Default: ''.
+        url_query (str | Unset):
         url_in_post (bool | Unset):  Default: False.
+        body (File | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        PdfToImagesResponse200
+        Error | WhisperAccepted
     """
     return (
         await asyncio_detailed(
             client=client,
+            body=body,
             file_name=file_name,
             format_=format_,
+            mode=mode,
             tag=tag,
             url_query=url_query,
             url_in_post=url_in_post,

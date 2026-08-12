@@ -6,13 +6,17 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
+from ...models.error import Error
+from ...models.extract_line_splitter_strategy import ExtractLineSplitterStrategy
+from ...models.extract_mode import ExtractMode
+from ...models.extract_output_mode import ExtractOutputMode
 from ...models.whisper_accepted import WhisperAccepted
 from ...types import UNSET, File, Response, Unset
 
 
 def _get_kwargs(
     *,
-    body: File,
+    body: File | Unset = UNSET,
     add_line_nos: bool | Unset = False,
     allow_rotated_text: bool | Unset = True,
     checkbox_confidence_threshold: float | Unset = 0.3,
@@ -23,22 +27,22 @@ def _get_kwargs(
     ignore_vertical_text: bool | Unset = False,
     include_line_confidence: bool | Unset = False,
     lang: str | Unset = "eng",
-    line_splitter_strategy: str | Unset = "left-priority",
+    line_splitter_strategy: ExtractLineSplitterStrategy | Unset = "left-priority",
     line_splitter_tolerance: float | Unset = 0.75,
     mark_horizontal_lines: bool | Unset = False,
     mark_vertical_lines: bool | Unset = False,
     median_filter_size: int | Unset = 0,
     min_table_width: float | Unset = 0.0,
-    mode: str | Unset = "form",
-    output_mode: str | Unset = "layout_preserving",
-    page_separator: str | Unset = UNSET,
-    pages_to_extract: str | Unset = "",
+    mode: ExtractMode | Unset = "form",
+    output_mode: ExtractOutputMode | Unset = "layout_preserving",
+    page_separator: str | Unset = "<<<",
+    pages_to_extract: str | Unset = UNSET,
     tag: str | Unset = "default",
-    url_query: str | Unset = "",
+    url_query: str | Unset = UNSET,
     url_in_post: bool | Unset = False,
-    use_webhook: str | Unset = "",
+    use_webhook: str | Unset = UNSET,
     watermark_angle_threshold: float | Unset = 25.0,
-    webhook_metadata: str | Unset = "",
+    webhook_metadata: str | Unset = UNSET,
     word_confidence_threshold: float | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
@@ -65,7 +69,11 @@ def _get_kwargs(
 
     params["lang"] = lang
 
-    params["line_splitter_strategy"] = line_splitter_strategy
+    json_line_splitter_strategy: str | Unset = UNSET
+    if not isinstance(line_splitter_strategy, Unset):
+        json_line_splitter_strategy = line_splitter_strategy
+
+    params["line_splitter_strategy"] = json_line_splitter_strategy
 
     params["line_splitter_tolerance"] = line_splitter_tolerance
 
@@ -77,9 +85,17 @@ def _get_kwargs(
 
     params["min_table_width"] = min_table_width
 
-    params["mode"] = mode
+    json_mode: str | Unset = UNSET
+    if not isinstance(mode, Unset):
+        json_mode = mode
 
-    params["output_mode"] = output_mode
+    params["mode"] = json_mode
+
+    json_output_mode: str | Unset = UNSET
+    if not isinstance(output_mode, Unset):
+        json_output_mode = output_mode
+
+    params["output_mode"] = json_output_mode
 
     params["page_separator"] = page_separator
 
@@ -107,18 +123,41 @@ def _get_kwargs(
         "params": params,
     }
 
-    _kwargs["content"] = body.payload
+    if not isinstance(body, Unset):
+        _kwargs["content"] = body.payload
     headers["Content-Type"] = "application/octet-stream"
 
     _kwargs["headers"] = headers
     return _kwargs
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> WhisperAccepted | None:
+def _parse_response(
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> Error | WhisperAccepted | None:
     if response.status_code == 202:
         response_202 = WhisperAccepted.from_dict(response.json())
 
         return response_202
+
+    if response.status_code == 400:
+        response_400 = Error.from_dict(response.json())
+
+        return response_400
+
+    if response.status_code == 401:
+        response_401 = Error.from_dict(response.json())
+
+        return response_401
+
+    if response.status_code == 403:
+        response_403 = Error.from_dict(response.json())
+
+        return response_403
+
+    if response.status_code == 404:
+        response_404 = Error.from_dict(response.json())
+
+        return response_404
 
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
@@ -126,7 +165,9 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
         return None
 
 
-def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[WhisperAccepted]:
+def _build_response(
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> Response[Error | WhisperAccepted]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -138,7 +179,7 @@ def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Res
 def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
-    body: File,
+    body: File | Unset = UNSET,
     add_line_nos: bool | Unset = False,
     allow_rotated_text: bool | Unset = True,
     checkbox_confidence_threshold: float | Unset = 0.3,
@@ -149,24 +190,24 @@ def sync_detailed(
     ignore_vertical_text: bool | Unset = False,
     include_line_confidence: bool | Unset = False,
     lang: str | Unset = "eng",
-    line_splitter_strategy: str | Unset = "left-priority",
+    line_splitter_strategy: ExtractLineSplitterStrategy | Unset = "left-priority",
     line_splitter_tolerance: float | Unset = 0.75,
     mark_horizontal_lines: bool | Unset = False,
     mark_vertical_lines: bool | Unset = False,
     median_filter_size: int | Unset = 0,
     min_table_width: float | Unset = 0.0,
-    mode: str | Unset = "form",
-    output_mode: str | Unset = "layout_preserving",
-    page_separator: str | Unset = UNSET,
-    pages_to_extract: str | Unset = "",
+    mode: ExtractMode | Unset = "form",
+    output_mode: ExtractOutputMode | Unset = "layout_preserving",
+    page_separator: str | Unset = "<<<",
+    pages_to_extract: str | Unset = UNSET,
     tag: str | Unset = "default",
-    url_query: str | Unset = "",
+    url_query: str | Unset = UNSET,
     url_in_post: bool | Unset = False,
-    use_webhook: str | Unset = "",
+    use_webhook: str | Unset = UNSET,
     watermark_angle_threshold: float | Unset = 25.0,
-    webhook_metadata: str | Unset = "",
+    webhook_metadata: str | Unset = UNSET,
     word_confidence_threshold: float | Unset = UNSET,
-) -> Response[WhisperAccepted]:
+) -> Response[Error | WhisperAccepted]:
     """Submit a document for text extraction
 
     Args:
@@ -180,31 +221,31 @@ def sync_detailed(
         ignore_vertical_text (bool | Unset):  Default: False.
         include_line_confidence (bool | Unset):  Default: False.
         lang (str | Unset):  Default: 'eng'.
-        line_splitter_strategy (str | Unset):  Default: 'left-priority'.
+        line_splitter_strategy (ExtractLineSplitterStrategy | Unset):  Default: 'left-priority'.
         line_splitter_tolerance (float | Unset):  Default: 0.75.
         mark_horizontal_lines (bool | Unset):  Default: False.
         mark_vertical_lines (bool | Unset):  Default: False.
         median_filter_size (int | Unset):  Default: 0.
         min_table_width (float | Unset):  Default: 0.0.
-        mode (str | Unset):  Default: 'form'.
-        output_mode (str | Unset):  Default: 'layout_preserving'.
-        page_separator (str | Unset):
-        pages_to_extract (str | Unset):  Default: ''.
+        mode (ExtractMode | Unset):  Default: 'form'.
+        output_mode (ExtractOutputMode | Unset):  Default: 'layout_preserving'.
+        page_separator (str | Unset):  Default: '<<<'.
+        pages_to_extract (str | Unset):
         tag (str | Unset):  Default: 'default'.
-        url_query (str | Unset):  Default: ''.
+        url_query (str | Unset):
         url_in_post (bool | Unset):  Default: False.
-        use_webhook (str | Unset):  Default: ''.
+        use_webhook (str | Unset):
         watermark_angle_threshold (float | Unset):  Default: 25.0.
-        webhook_metadata (str | Unset):  Default: ''.
+        webhook_metadata (str | Unset):
         word_confidence_threshold (float | Unset):
-        body (File):
+        body (File | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[WhisperAccepted]
+        Response[Error | WhisperAccepted]
     """
     kwargs = _get_kwargs(
         body=body,
@@ -247,7 +288,7 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient | Client,
-    body: File,
+    body: File | Unset = UNSET,
     add_line_nos: bool | Unset = False,
     allow_rotated_text: bool | Unset = True,
     checkbox_confidence_threshold: float | Unset = 0.3,
@@ -258,24 +299,24 @@ def sync(
     ignore_vertical_text: bool | Unset = False,
     include_line_confidence: bool | Unset = False,
     lang: str | Unset = "eng",
-    line_splitter_strategy: str | Unset = "left-priority",
+    line_splitter_strategy: ExtractLineSplitterStrategy | Unset = "left-priority",
     line_splitter_tolerance: float | Unset = 0.75,
     mark_horizontal_lines: bool | Unset = False,
     mark_vertical_lines: bool | Unset = False,
     median_filter_size: int | Unset = 0,
     min_table_width: float | Unset = 0.0,
-    mode: str | Unset = "form",
-    output_mode: str | Unset = "layout_preserving",
-    page_separator: str | Unset = UNSET,
-    pages_to_extract: str | Unset = "",
+    mode: ExtractMode | Unset = "form",
+    output_mode: ExtractOutputMode | Unset = "layout_preserving",
+    page_separator: str | Unset = "<<<",
+    pages_to_extract: str | Unset = UNSET,
     tag: str | Unset = "default",
-    url_query: str | Unset = "",
+    url_query: str | Unset = UNSET,
     url_in_post: bool | Unset = False,
-    use_webhook: str | Unset = "",
+    use_webhook: str | Unset = UNSET,
     watermark_angle_threshold: float | Unset = 25.0,
-    webhook_metadata: str | Unset = "",
+    webhook_metadata: str | Unset = UNSET,
     word_confidence_threshold: float | Unset = UNSET,
-) -> WhisperAccepted | None:
+) -> Error | WhisperAccepted | None:
     """Submit a document for text extraction
 
     Args:
@@ -289,31 +330,31 @@ def sync(
         ignore_vertical_text (bool | Unset):  Default: False.
         include_line_confidence (bool | Unset):  Default: False.
         lang (str | Unset):  Default: 'eng'.
-        line_splitter_strategy (str | Unset):  Default: 'left-priority'.
+        line_splitter_strategy (ExtractLineSplitterStrategy | Unset):  Default: 'left-priority'.
         line_splitter_tolerance (float | Unset):  Default: 0.75.
         mark_horizontal_lines (bool | Unset):  Default: False.
         mark_vertical_lines (bool | Unset):  Default: False.
         median_filter_size (int | Unset):  Default: 0.
         min_table_width (float | Unset):  Default: 0.0.
-        mode (str | Unset):  Default: 'form'.
-        output_mode (str | Unset):  Default: 'layout_preserving'.
-        page_separator (str | Unset):
-        pages_to_extract (str | Unset):  Default: ''.
+        mode (ExtractMode | Unset):  Default: 'form'.
+        output_mode (ExtractOutputMode | Unset):  Default: 'layout_preserving'.
+        page_separator (str | Unset):  Default: '<<<'.
+        pages_to_extract (str | Unset):
         tag (str | Unset):  Default: 'default'.
-        url_query (str | Unset):  Default: ''.
+        url_query (str | Unset):
         url_in_post (bool | Unset):  Default: False.
-        use_webhook (str | Unset):  Default: ''.
+        use_webhook (str | Unset):
         watermark_angle_threshold (float | Unset):  Default: 25.0.
-        webhook_metadata (str | Unset):  Default: ''.
+        webhook_metadata (str | Unset):
         word_confidence_threshold (float | Unset):
-        body (File):
+        body (File | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        WhisperAccepted
+        Error | WhisperAccepted
     """
     return sync_detailed(
         client=client,
@@ -351,7 +392,7 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
-    body: File,
+    body: File | Unset = UNSET,
     add_line_nos: bool | Unset = False,
     allow_rotated_text: bool | Unset = True,
     checkbox_confidence_threshold: float | Unset = 0.3,
@@ -362,24 +403,24 @@ async def asyncio_detailed(
     ignore_vertical_text: bool | Unset = False,
     include_line_confidence: bool | Unset = False,
     lang: str | Unset = "eng",
-    line_splitter_strategy: str | Unset = "left-priority",
+    line_splitter_strategy: ExtractLineSplitterStrategy | Unset = "left-priority",
     line_splitter_tolerance: float | Unset = 0.75,
     mark_horizontal_lines: bool | Unset = False,
     mark_vertical_lines: bool | Unset = False,
     median_filter_size: int | Unset = 0,
     min_table_width: float | Unset = 0.0,
-    mode: str | Unset = "form",
-    output_mode: str | Unset = "layout_preserving",
-    page_separator: str | Unset = UNSET,
-    pages_to_extract: str | Unset = "",
+    mode: ExtractMode | Unset = "form",
+    output_mode: ExtractOutputMode | Unset = "layout_preserving",
+    page_separator: str | Unset = "<<<",
+    pages_to_extract: str | Unset = UNSET,
     tag: str | Unset = "default",
-    url_query: str | Unset = "",
+    url_query: str | Unset = UNSET,
     url_in_post: bool | Unset = False,
-    use_webhook: str | Unset = "",
+    use_webhook: str | Unset = UNSET,
     watermark_angle_threshold: float | Unset = 25.0,
-    webhook_metadata: str | Unset = "",
+    webhook_metadata: str | Unset = UNSET,
     word_confidence_threshold: float | Unset = UNSET,
-) -> Response[WhisperAccepted]:
+) -> Response[Error | WhisperAccepted]:
     """Submit a document for text extraction
 
     Args:
@@ -393,31 +434,31 @@ async def asyncio_detailed(
         ignore_vertical_text (bool | Unset):  Default: False.
         include_line_confidence (bool | Unset):  Default: False.
         lang (str | Unset):  Default: 'eng'.
-        line_splitter_strategy (str | Unset):  Default: 'left-priority'.
+        line_splitter_strategy (ExtractLineSplitterStrategy | Unset):  Default: 'left-priority'.
         line_splitter_tolerance (float | Unset):  Default: 0.75.
         mark_horizontal_lines (bool | Unset):  Default: False.
         mark_vertical_lines (bool | Unset):  Default: False.
         median_filter_size (int | Unset):  Default: 0.
         min_table_width (float | Unset):  Default: 0.0.
-        mode (str | Unset):  Default: 'form'.
-        output_mode (str | Unset):  Default: 'layout_preserving'.
-        page_separator (str | Unset):
-        pages_to_extract (str | Unset):  Default: ''.
+        mode (ExtractMode | Unset):  Default: 'form'.
+        output_mode (ExtractOutputMode | Unset):  Default: 'layout_preserving'.
+        page_separator (str | Unset):  Default: '<<<'.
+        pages_to_extract (str | Unset):
         tag (str | Unset):  Default: 'default'.
-        url_query (str | Unset):  Default: ''.
+        url_query (str | Unset):
         url_in_post (bool | Unset):  Default: False.
-        use_webhook (str | Unset):  Default: ''.
+        use_webhook (str | Unset):
         watermark_angle_threshold (float | Unset):  Default: 25.0.
-        webhook_metadata (str | Unset):  Default: ''.
+        webhook_metadata (str | Unset):
         word_confidence_threshold (float | Unset):
-        body (File):
+        body (File | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[WhisperAccepted]
+        Response[Error | WhisperAccepted]
     """
     kwargs = _get_kwargs(
         body=body,
@@ -458,7 +499,7 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient | Client,
-    body: File,
+    body: File | Unset = UNSET,
     add_line_nos: bool | Unset = False,
     allow_rotated_text: bool | Unset = True,
     checkbox_confidence_threshold: float | Unset = 0.3,
@@ -469,24 +510,24 @@ async def asyncio(
     ignore_vertical_text: bool | Unset = False,
     include_line_confidence: bool | Unset = False,
     lang: str | Unset = "eng",
-    line_splitter_strategy: str | Unset = "left-priority",
+    line_splitter_strategy: ExtractLineSplitterStrategy | Unset = "left-priority",
     line_splitter_tolerance: float | Unset = 0.75,
     mark_horizontal_lines: bool | Unset = False,
     mark_vertical_lines: bool | Unset = False,
     median_filter_size: int | Unset = 0,
     min_table_width: float | Unset = 0.0,
-    mode: str | Unset = "form",
-    output_mode: str | Unset = "layout_preserving",
-    page_separator: str | Unset = UNSET,
-    pages_to_extract: str | Unset = "",
+    mode: ExtractMode | Unset = "form",
+    output_mode: ExtractOutputMode | Unset = "layout_preserving",
+    page_separator: str | Unset = "<<<",
+    pages_to_extract: str | Unset = UNSET,
     tag: str | Unset = "default",
-    url_query: str | Unset = "",
+    url_query: str | Unset = UNSET,
     url_in_post: bool | Unset = False,
-    use_webhook: str | Unset = "",
+    use_webhook: str | Unset = UNSET,
     watermark_angle_threshold: float | Unset = 25.0,
-    webhook_metadata: str | Unset = "",
+    webhook_metadata: str | Unset = UNSET,
     word_confidence_threshold: float | Unset = UNSET,
-) -> WhisperAccepted | None:
+) -> Error | WhisperAccepted | None:
     """Submit a document for text extraction
 
     Args:
@@ -500,31 +541,31 @@ async def asyncio(
         ignore_vertical_text (bool | Unset):  Default: False.
         include_line_confidence (bool | Unset):  Default: False.
         lang (str | Unset):  Default: 'eng'.
-        line_splitter_strategy (str | Unset):  Default: 'left-priority'.
+        line_splitter_strategy (ExtractLineSplitterStrategy | Unset):  Default: 'left-priority'.
         line_splitter_tolerance (float | Unset):  Default: 0.75.
         mark_horizontal_lines (bool | Unset):  Default: False.
         mark_vertical_lines (bool | Unset):  Default: False.
         median_filter_size (int | Unset):  Default: 0.
         min_table_width (float | Unset):  Default: 0.0.
-        mode (str | Unset):  Default: 'form'.
-        output_mode (str | Unset):  Default: 'layout_preserving'.
-        page_separator (str | Unset):
-        pages_to_extract (str | Unset):  Default: ''.
+        mode (ExtractMode | Unset):  Default: 'form'.
+        output_mode (ExtractOutputMode | Unset):  Default: 'layout_preserving'.
+        page_separator (str | Unset):  Default: '<<<'.
+        pages_to_extract (str | Unset):
         tag (str | Unset):  Default: 'default'.
-        url_query (str | Unset):  Default: ''.
+        url_query (str | Unset):
         url_in_post (bool | Unset):  Default: False.
-        use_webhook (str | Unset):  Default: ''.
+        use_webhook (str | Unset):
         watermark_angle_threshold (float | Unset):  Default: 25.0.
-        webhook_metadata (str | Unset):  Default: ''.
+        webhook_metadata (str | Unset):
         word_confidence_threshold (float | Unset):
-        body (File):
+        body (File | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        WhisperAccepted
+        Error | WhisperAccepted
     """
     return (
         await asyncio_detailed(

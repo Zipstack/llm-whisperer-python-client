@@ -624,6 +624,10 @@ def test_every_wrapped_operation_is_covered() -> None:
         for method, operation in path.items()
         if method in {"get", "post", "put", "patch", "delete"}
     }
+    # Checked before the subtraction: an entry excusing an operation the spec no
+    # longer declares keeps this passing forever, and nothing about a green run
+    # says the list is still describing anything.
+    assert UNWRAPPED_OPERATIONS <= declared
     assert declared - UNWRAPPED_OPERATIONS == set(_SEND_ONLY)
 
 

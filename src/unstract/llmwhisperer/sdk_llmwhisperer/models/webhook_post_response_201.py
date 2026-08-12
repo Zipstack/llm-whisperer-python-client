@@ -7,11 +7,11 @@ from typing import Any, Self, TypeVar
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-T = TypeVar("T", bound="ConvertXlsbToXlsxResponse200")
+T = TypeVar("T", bound="WebhookPostResponse201")
 
 
 @_attrs_define
-class ConvertXlsbToXlsxResponse200:
+class WebhookPostResponse201:
     """ """
 
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
@@ -26,10 +26,10 @@ class ConvertXlsbToXlsxResponse200:
     @classmethod
     def from_dict(cls, src_dict: Mapping[str, Any]) -> Self:
         d = dict(src_dict)
-        convert_xlsb_to_xlsx_response_200 = cls()
+        webhook_post_response_201 = cls()
 
-        convert_xlsb_to_xlsx_response_200.additional_properties = d
-        return convert_xlsb_to_xlsx_response_200
+        webhook_post_response_201.additional_properties = d
+        return webhook_post_response_201
 
     @property
     def additional_keys(self) -> list[str]:

@@ -6,26 +6,30 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.document_insights_response_200 import DocumentInsightsResponse200
+from ...models.error import Error
+from ...models.whisper_accepted import WhisperAccepted
 from ...types import UNSET, File, Response, Unset
 
 
 def _get_kwargs(
     *,
-    body: File,
+    body: File | Unset = UNSET,
     file_name: str | Unset = "sample.pdf",
-    pages_to_extract: str | Unset = "",
+    mode: str | Unset = "form",
+    pages_to_extract: str | Unset = UNSET,
     tag: str | Unset = "default",
-    url_query: str | Unset = "",
+    url_query: str | Unset = UNSET,
     url_in_post: bool | Unset = False,
-    use_webhook: str | Unset = "",
-    webhook_metadata: str | Unset = "",
+    use_webhook: str | Unset = UNSET,
+    webhook_metadata: str | Unset = UNSET,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     params: dict[str, Any] = {}
 
     params["file_name"] = file_name
+
+    params["mode"] = mode
 
     params["pages_to_extract"] = pages_to_extract
 
@@ -47,7 +51,8 @@ def _get_kwargs(
         "params": params,
     }
 
-    _kwargs["content"] = body.payload
+    if not isinstance(body, Unset):
+        _kwargs["content"] = body.payload
     headers["Content-Type"] = "application/octet-stream"
 
     _kwargs["headers"] = headers
@@ -56,11 +61,31 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> DocumentInsightsResponse200 | None:
-    if response.status_code == 200:
-        response_200 = DocumentInsightsResponse200.from_dict(response.json())
+) -> Error | WhisperAccepted | None:
+    if response.status_code == 202:
+        response_202 = WhisperAccepted.from_dict(response.json())
 
-        return response_200
+        return response_202
+
+    if response.status_code == 400:
+        response_400 = Error.from_dict(response.json())
+
+        return response_400
+
+    if response.status_code == 401:
+        response_401 = Error.from_dict(response.json())
+
+        return response_401
+
+    if response.status_code == 403:
+        response_403 = Error.from_dict(response.json())
+
+        return response_403
+
+    if response.status_code == 404:
+        response_404 = Error.from_dict(response.json())
+
+        return response_404
 
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
@@ -70,7 +95,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[DocumentInsightsResponse200]:
+) -> Response[Error | WhisperAccepted]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -82,37 +107,40 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
-    body: File,
+    body: File | Unset = UNSET,
     file_name: str | Unset = "sample.pdf",
-    pages_to_extract: str | Unset = "",
+    mode: str | Unset = "form",
+    pages_to_extract: str | Unset = UNSET,
     tag: str | Unset = "default",
-    url_query: str | Unset = "",
+    url_query: str | Unset = UNSET,
     url_in_post: bool | Unset = False,
-    use_webhook: str | Unset = "",
-    webhook_metadata: str | Unset = "",
-) -> Response[DocumentInsightsResponse200]:
+    use_webhook: str | Unset = UNSET,
+    webhook_metadata: str | Unset = UNSET,
+) -> Response[Error | WhisperAccepted]:
     """Run document insights over a file
 
     Args:
         file_name (str | Unset):  Default: 'sample.pdf'.
-        pages_to_extract (str | Unset):  Default: ''.
+        mode (str | Unset):  Default: 'form'.
+        pages_to_extract (str | Unset):
         tag (str | Unset):  Default: 'default'.
-        url_query (str | Unset):  Default: ''.
+        url_query (str | Unset):
         url_in_post (bool | Unset):  Default: False.
-        use_webhook (str | Unset):  Default: ''.
-        webhook_metadata (str | Unset):  Default: ''.
-        body (File):
+        use_webhook (str | Unset):
+        webhook_metadata (str | Unset):
+        body (File | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[DocumentInsightsResponse200]
+        Response[Error | WhisperAccepted]
     """
     kwargs = _get_kwargs(
         body=body,
         file_name=file_name,
+        mode=mode,
         pages_to_extract=pages_to_extract,
         tag=tag,
         url_query=url_query,
@@ -131,38 +159,41 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient | Client,
-    body: File,
+    body: File | Unset = UNSET,
     file_name: str | Unset = "sample.pdf",
-    pages_to_extract: str | Unset = "",
+    mode: str | Unset = "form",
+    pages_to_extract: str | Unset = UNSET,
     tag: str | Unset = "default",
-    url_query: str | Unset = "",
+    url_query: str | Unset = UNSET,
     url_in_post: bool | Unset = False,
-    use_webhook: str | Unset = "",
-    webhook_metadata: str | Unset = "",
-) -> DocumentInsightsResponse200 | None:
+    use_webhook: str | Unset = UNSET,
+    webhook_metadata: str | Unset = UNSET,
+) -> Error | WhisperAccepted | None:
     """Run document insights over a file
 
     Args:
         file_name (str | Unset):  Default: 'sample.pdf'.
-        pages_to_extract (str | Unset):  Default: ''.
+        mode (str | Unset):  Default: 'form'.
+        pages_to_extract (str | Unset):
         tag (str | Unset):  Default: 'default'.
-        url_query (str | Unset):  Default: ''.
+        url_query (str | Unset):
         url_in_post (bool | Unset):  Default: False.
-        use_webhook (str | Unset):  Default: ''.
-        webhook_metadata (str | Unset):  Default: ''.
-        body (File):
+        use_webhook (str | Unset):
+        webhook_metadata (str | Unset):
+        body (File | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        DocumentInsightsResponse200
+        Error | WhisperAccepted
     """
     return sync_detailed(
         client=client,
         body=body,
         file_name=file_name,
+        mode=mode,
         pages_to_extract=pages_to_extract,
         tag=tag,
         url_query=url_query,
@@ -175,37 +206,40 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
-    body: File,
+    body: File | Unset = UNSET,
     file_name: str | Unset = "sample.pdf",
-    pages_to_extract: str | Unset = "",
+    mode: str | Unset = "form",
+    pages_to_extract: str | Unset = UNSET,
     tag: str | Unset = "default",
-    url_query: str | Unset = "",
+    url_query: str | Unset = UNSET,
     url_in_post: bool | Unset = False,
-    use_webhook: str | Unset = "",
-    webhook_metadata: str | Unset = "",
-) -> Response[DocumentInsightsResponse200]:
+    use_webhook: str | Unset = UNSET,
+    webhook_metadata: str | Unset = UNSET,
+) -> Response[Error | WhisperAccepted]:
     """Run document insights over a file
 
     Args:
         file_name (str | Unset):  Default: 'sample.pdf'.
-        pages_to_extract (str | Unset):  Default: ''.
+        mode (str | Unset):  Default: 'form'.
+        pages_to_extract (str | Unset):
         tag (str | Unset):  Default: 'default'.
-        url_query (str | Unset):  Default: ''.
+        url_query (str | Unset):
         url_in_post (bool | Unset):  Default: False.
-        use_webhook (str | Unset):  Default: ''.
-        webhook_metadata (str | Unset):  Default: ''.
-        body (File):
+        use_webhook (str | Unset):
+        webhook_metadata (str | Unset):
+        body (File | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[DocumentInsightsResponse200]
+        Response[Error | WhisperAccepted]
     """
     kwargs = _get_kwargs(
         body=body,
         file_name=file_name,
+        mode=mode,
         pages_to_extract=pages_to_extract,
         tag=tag,
         url_query=url_query,
@@ -222,39 +256,42 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient | Client,
-    body: File,
+    body: File | Unset = UNSET,
     file_name: str | Unset = "sample.pdf",
-    pages_to_extract: str | Unset = "",
+    mode: str | Unset = "form",
+    pages_to_extract: str | Unset = UNSET,
     tag: str | Unset = "default",
-    url_query: str | Unset = "",
+    url_query: str | Unset = UNSET,
     url_in_post: bool | Unset = False,
-    use_webhook: str | Unset = "",
-    webhook_metadata: str | Unset = "",
-) -> DocumentInsightsResponse200 | None:
+    use_webhook: str | Unset = UNSET,
+    webhook_metadata: str | Unset = UNSET,
+) -> Error | WhisperAccepted | None:
     """Run document insights over a file
 
     Args:
         file_name (str | Unset):  Default: 'sample.pdf'.
-        pages_to_extract (str | Unset):  Default: ''.
+        mode (str | Unset):  Default: 'form'.
+        pages_to_extract (str | Unset):
         tag (str | Unset):  Default: 'default'.
-        url_query (str | Unset):  Default: ''.
+        url_query (str | Unset):
         url_in_post (bool | Unset):  Default: False.
-        use_webhook (str | Unset):  Default: ''.
-        webhook_metadata (str | Unset):  Default: ''.
-        body (File):
+        use_webhook (str | Unset):
+        webhook_metadata (str | Unset):
+        body (File | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        DocumentInsightsResponse200
+        Error | WhisperAccepted
     """
     return (
         await asyncio_detailed(
             client=client,
             body=body,
             file_name=file_name,
+            mode=mode,
             pages_to_extract=pages_to_extract,
             tag=tag,
             url_query=url_query,

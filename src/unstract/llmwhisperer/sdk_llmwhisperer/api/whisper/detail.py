@@ -7,12 +7,13 @@ import httpx
 from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.detail_response_200 import DetailResponse200
-from ...types import UNSET, Response, Unset
+from ...models.error import Error
+from ...types import UNSET, Response
 
 
 def _get_kwargs(
     *,
-    whisper_hash: str | Unset = "",
+    whisper_hash: str,
 ) -> dict[str, Any]:
 
     params: dict[str, Any] = {}
@@ -30,11 +31,33 @@ def _get_kwargs(
     return _kwargs
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> DetailResponse200 | None:
+def _parse_response(
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> DetailResponse200 | Error | None:
     if response.status_code == 200:
         response_200 = DetailResponse200.from_dict(response.json())
 
         return response_200
+
+    if response.status_code == 400:
+        response_400 = Error.from_dict(response.json())
+
+        return response_400
+
+    if response.status_code == 401:
+        response_401 = Error.from_dict(response.json())
+
+        return response_401
+
+    if response.status_code == 403:
+        response_403 = Error.from_dict(response.json())
+
+        return response_403
+
+    if response.status_code == 404:
+        response_404 = Error.from_dict(response.json())
+
+        return response_404
 
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
@@ -42,7 +65,9 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
         return None
 
 
-def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[DetailResponse200]:
+def _build_response(
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> Response[DetailResponse200 | Error]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -54,19 +79,19 @@ def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Res
 def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
-    whisper_hash: str | Unset = "",
-) -> Response[DetailResponse200]:
+    whisper_hash: str,
+) -> Response[DetailResponse200 | Error]:
     """Metadata about a whisper job
 
     Args:
-        whisper_hash (str | Unset):  Default: ''.
+        whisper_hash (str):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[DetailResponse200]
+        Response[DetailResponse200 | Error]
     """
     kwargs = _get_kwargs(
         whisper_hash=whisper_hash,
@@ -82,19 +107,19 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient | Client,
-    whisper_hash: str | Unset = "",
-) -> DetailResponse200 | None:
+    whisper_hash: str,
+) -> DetailResponse200 | Error | None:
     """Metadata about a whisper job
 
     Args:
-        whisper_hash (str | Unset):  Default: ''.
+        whisper_hash (str):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        DetailResponse200
+        DetailResponse200 | Error
     """
     return sync_detailed(
         client=client,
@@ -105,19 +130,19 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
-    whisper_hash: str | Unset = "",
-) -> Response[DetailResponse200]:
+    whisper_hash: str,
+) -> Response[DetailResponse200 | Error]:
     """Metadata about a whisper job
 
     Args:
-        whisper_hash (str | Unset):  Default: ''.
+        whisper_hash (str):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[DetailResponse200]
+        Response[DetailResponse200 | Error]
     """
     kwargs = _get_kwargs(
         whisper_hash=whisper_hash,
@@ -131,19 +156,19 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient | Client,
-    whisper_hash: str | Unset = "",
-) -> DetailResponse200 | None:
+    whisper_hash: str,
+) -> DetailResponse200 | Error | None:
     """Metadata about a whisper job
 
     Args:
-        whisper_hash (str | Unset):  Default: ''.
+        whisper_hash (str):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        DetailResponse200
+        DetailResponse200 | Error
     """
     return (
         await asyncio_detailed(

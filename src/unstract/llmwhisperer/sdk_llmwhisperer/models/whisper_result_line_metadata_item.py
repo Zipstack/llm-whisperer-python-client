@@ -7,11 +7,11 @@ from typing import Any, Self, TypeVar
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-T = TypeVar("T", bound="WebhookPostResponse200")
+T = TypeVar("T", bound="WhisperResultLineMetadataItem")
 
 
 @_attrs_define
-class WebhookPostResponse200:
+class WhisperResultLineMetadataItem:
     """ """
 
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
@@ -26,10 +26,10 @@ class WebhookPostResponse200:
     @classmethod
     def from_dict(cls, src_dict: Mapping[str, Any]) -> Self:
         d = dict(src_dict)
-        webhook_post_response_200 = cls()
+        whisper_result_line_metadata_item = cls()
 
-        webhook_post_response_200.additional_properties = d
-        return webhook_post_response_200
+        whisper_result_line_metadata_item.additional_properties = d
+        return whisper_result_line_metadata_item
 
     @property
     def additional_keys(self) -> list[str]:

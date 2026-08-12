@@ -7,29 +7,43 @@ from typing import Any, Self, TypeVar
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-T = TypeVar("T", bound="PdfToImagesResponse200")
+from ..types import UNSET, Unset
+
+T = TypeVar("T", bound="Error")
 
 
 @_attrs_define
-class PdfToImagesResponse200:
-    """ """
+class Error:
+    """
+    Attributes:
+        message (str | Unset):
+    """
 
+    message: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
+        message = self.message
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
+        field_dict.update({})
+        if message is not UNSET:
+            field_dict["message"] = message
 
         return field_dict
 
     @classmethod
     def from_dict(cls, src_dict: Mapping[str, Any]) -> Self:
         d = dict(src_dict)
-        pdf_to_images_response_200 = cls()
+        message = d.pop("message", UNSET)
 
-        pdf_to_images_response_200.additional_properties = d
-        return pdf_to_images_response_200
+        error = cls(
+            message=message,
+        )
+
+        error.additional_properties = d
+        return error
 
     @property
     def additional_keys(self) -> list[str]:

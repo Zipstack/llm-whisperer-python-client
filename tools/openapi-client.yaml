@@ -1,3 +1,12 @@
 # openapi-python-client config. Kept minimal on purpose: every knob here is
 # maintenance surface, and post-processing the generated code is a kill criterion.
 literal_enums: true
+
+# The service returns these as bytes. The generator knows how to hand back a
+# binary body but only recognises a handful of content types by name, and a
+# response it cannot parse is dropped rather than reported. Mapping them here
+# keeps the spec truthful about what comes back.
+content_type_overrides:
+  application/pdf: application/octet-stream
+  application/zip: application/octet-stream
+  application/vnd.openxmlformats-officedocument.spreadsheetml.sheet: application/octet-stream

@@ -28,9 +28,19 @@ if [ "$have" != "$want" ]; then
 fi
 
 rm -rf "${REPO:?}/$OUT"
+log="$(mktemp)"
+trap 'rm -f "$log"' EXIT
 (cd "$REPO" && "$VENV/bin/openapi-python-client" generate \
     --path "$REPO/specs/llmwhisperer.json" --output-path "$REPO/$OUT" \
-    --config "$REPO/tools/openapi-client.yaml" --overwrite --meta none)
+    --config "$REPO/tools/openapi-client.yaml" --overwrite --meta none) 2>&1 | tee "$log"
+
+# The generator downgrades a schema it cannot parse to a warning, drops
+# the endpoint or model it belongs to, writes the rest and exits 0. The
+# result is a client missing an operation and a spec that still looks fine.
+if grep -qi warning "$log"; then
+  echo "the generator reported a problem above and still exited 0; whatever it could not parse is missing from the output" >&2
+  exit 1
+fi
 
 # Stamp every file, so the rule survives contact with a reader who arrived via
 # grep rather than via this script.

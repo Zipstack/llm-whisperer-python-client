@@ -7,11 +7,11 @@ from typing import Any, Self, TypeVar
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-T = TypeVar("T", bound="PdfToImagesRetrieveResponse200")
+T = TypeVar("T", bound="WhisperStatusDetailItem")
 
 
 @_attrs_define
-class PdfToImagesRetrieveResponse200:
+class WhisperStatusDetailItem:
     """ """
 
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
@@ -26,10 +26,10 @@ class PdfToImagesRetrieveResponse200:
     @classmethod
     def from_dict(cls, src_dict: Mapping[str, Any]) -> Self:
         d = dict(src_dict)
-        pdf_to_images_retrieve_response_200 = cls()
+        whisper_status_detail_item = cls()
 
-        pdf_to_images_retrieve_response_200.additional_properties = d
-        return pdf_to_images_retrieve_response_200
+        whisper_status_detail_item.additional_properties = d
+        return whisper_status_detail_item
 
     @property
     def additional_keys(self) -> list[str]:

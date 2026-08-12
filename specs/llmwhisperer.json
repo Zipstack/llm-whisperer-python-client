@@ -1,6 +1,14 @@
 {
   "components": {
     "schemas": {
+      "Error": {
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "WebhookConfig": {
         "properties": {
           "auth_token": {
@@ -44,6 +52,13 @@
             },
             "type": "array"
           },
+          "line_metadata": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array"
+          },
           "metadata": {
             "additionalProperties": true,
             "type": "object"
@@ -53,12 +68,23 @@
           },
           "webhook_metadata": {
             "type": "string"
+          },
+          "whisper_metadata": {
+            "additionalProperties": true,
+            "type": "object"
           }
         },
         "type": "object"
       },
       "WhisperStatus": {
         "properties": {
+          "detail": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array"
+          },
           "message": {
             "type": "string"
           },
@@ -89,11 +115,18 @@
         "parameters": [
           {
             "in": "query",
+            "name": "mode",
+            "required": false,
+            "schema": {
+              "default": "form",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
             "name": "url",
             "required": false,
             "schema": {
-              "default": "",
-              "format": "uri",
               "type": "string"
             }
           },
@@ -116,19 +149,59 @@
               }
             }
           },
-          "required": true
+          "required": false
         },
         "responses": {
           "200": {
             "content": {
-              "application/json": {
+              "application/pdf": {
                 "schema": {
-                  "additionalProperties": true,
-                  "type": "object"
+                  "format": "binary",
+                  "type": "string"
                 }
               }
             },
             "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The request was rejected -- see `message`."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The API key is missing or not valid."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The key is valid but not entitled to this operation."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "No such resource."
           }
         },
         "summary": "Convert a document to PDF",
@@ -143,11 +216,18 @@
         "parameters": [
           {
             "in": "query",
+            "name": "mode",
+            "required": false,
+            "schema": {
+              "default": "form",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
             "name": "url",
             "required": false,
             "schema": {
-              "default": "",
-              "format": "uri",
               "type": "string"
             }
           },
@@ -170,19 +250,59 @@
               }
             }
           },
-          "required": true
+          "required": false
         },
         "responses": {
           "200": {
             "content": {
-              "application/json": {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
                 "schema": {
-                  "additionalProperties": true,
-                  "type": "object"
+                  "format": "binary",
+                  "type": "string"
                 }
               }
             },
             "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The request was rejected -- see `message`."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The API key is missing or not valid."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The key is valid but not entitled to this operation."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "No such resource."
           }
         },
         "summary": "Convert an XLSB workbook to XLSX",
@@ -206,10 +326,18 @@
           },
           {
             "in": "query",
+            "name": "mode",
+            "required": false,
+            "schema": {
+              "default": "form",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
             "name": "pages_to_extract",
             "required": false,
             "schema": {
-              "default": "",
               "type": "string"
             }
           },
@@ -227,8 +355,6 @@
             "name": "url",
             "required": false,
             "schema": {
-              "default": "",
-              "format": "uri",
               "type": "string"
             }
           },
@@ -246,7 +372,6 @@
             "name": "use_webhook",
             "required": false,
             "schema": {
-              "default": "",
               "type": "string"
             }
           },
@@ -255,7 +380,6 @@
             "name": "webhook_metadata",
             "required": false,
             "schema": {
-              "default": "",
               "type": "string"
             }
           }
@@ -269,19 +393,58 @@
               }
             }
           },
-          "required": true
+          "required": false
         },
         "responses": {
-          "200": {
+          "202": {
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "type": "object"
+                  "$ref": "#/components/schemas/WhisperAccepted"
                 }
               }
             },
-            "description": "OK"
+            "description": "Accepted"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The request was rejected -- see `message`."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The API key is missing or not valid."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The key is valid but not entitled to this operation."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "No such resource."
           }
         },
         "summary": "Run document insights over a file",
@@ -297,9 +460,8 @@
           {
             "in": "query",
             "name": "whisper_hash",
-            "required": false,
+            "required": true,
             "schema": {
-              "default": "",
               "type": "string"
             }
           }
@@ -315,9 +477,49 @@
               }
             },
             "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The request was rejected -- see `message`."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The API key is missing or not valid."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The key is valid but not entitled to this operation."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "No such resource."
           }
         },
-        "summary": "Retrieve document insights result",
+        "summary": "Retrieve document insights result (destructive \u2014 one shot)",
         "tags": [
           "insights"
         ]
@@ -338,6 +540,46 @@
               }
             },
             "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The request was rejected -- see `message`."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The API key is missing or not valid."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The key is valid but not entitled to this operation."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "No such resource."
           }
         },
         "summary": "Subscription usage summary",
@@ -355,25 +597,33 @@
             "name": "extract_all_lines",
             "required": false,
             "schema": {
-              "default": "false",
+              "default": false,
+              "type": "boolean"
+            }
+          },
+          {
+            "description": "Line numbers or ranges, e.g. `1-5,9`. Not required when `extract_all_lines=true`.",
+            "in": "query",
+            "name": "lines",
+            "required": true,
+            "schema": {
               "type": "string"
             }
           },
           {
             "in": "query",
-            "name": "lines",
+            "name": "mode",
             "required": false,
             "schema": {
-              "default": "",
+              "default": "form",
               "type": "string"
             }
           },
           {
             "in": "query",
             "name": "whisper_hash",
-            "required": false,
+            "required": true,
             "schema": {
-              "default": "",
               "type": "string"
             }
           }
@@ -389,6 +639,46 @@
               }
             },
             "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The request was rejected -- see `message`."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The API key is missing or not valid."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The key is valid but not entitled to this operation."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "No such resource."
           }
         },
         "summary": "Line-level highlight geometry for an extraction",
@@ -421,6 +711,15 @@
           },
           {
             "in": "query",
+            "name": "mode",
+            "required": false,
+            "schema": {
+              "default": "form",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
             "name": "tag",
             "required": false,
             "schema": {
@@ -433,8 +732,6 @@
             "name": "url",
             "required": false,
             "schema": {
-              "default": "",
-              "format": "uri",
               "type": "string"
             }
           },
@@ -448,22 +745,72 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/octet-stream": {
+              "schema": {
+                "format": "binary",
+                "type": "string"
+              }
+            }
+          },
+          "required": false
+        },
         "responses": {
-          "200": {
+          "202": {
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "type": "object"
+                  "$ref": "#/components/schemas/WhisperAccepted"
                 }
               }
             },
-            "description": "OK"
+            "description": "Accepted"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The request was rejected -- see `message`."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The API key is missing or not valid."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The key is valid but not entitled to this operation."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "No such resource."
           }
         },
-        "summary": "pdf to images",
+        "summary": "Render a PDF's pages as images",
         "tags": [
-          "whisper"
+          "convert"
         ]
       }
     },
@@ -474,9 +821,8 @@
           {
             "in": "query",
             "name": "whisper_hash",
-            "required": false,
+            "required": true,
             "schema": {
-              "default": "",
               "type": "string"
             }
           }
@@ -484,19 +830,59 @@
         "responses": {
           "200": {
             "content": {
-              "application/json": {
+              "application/zip": {
                 "schema": {
-                  "additionalProperties": true,
-                  "type": "object"
+                  "format": "binary",
+                  "type": "string"
                 }
               }
             },
             "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The request was rejected -- see `message`."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The API key is missing or not valid."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The key is valid but not entitled to this operation."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "No such resource."
           }
         },
-        "summary": "pdf to images retrieve",
+        "summary": "Retrieve rendered images as a zip (destructive \u2014 one shot)",
         "tags": [
-          "whisper"
+          "convert"
         ]
       }
     },
@@ -507,9 +893,8 @@
           {
             "in": "query",
             "name": "whisper_hash",
-            "required": false,
+            "required": true,
             "schema": {
-              "default": "",
               "type": "string"
             }
           }
@@ -525,11 +910,51 @@
               }
             },
             "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The request was rejected -- see `message`."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The API key is missing or not valid."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The key is valid but not entitled to this operation."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "No such resource."
           }
         },
-        "summary": "pdf to images status",
+        "summary": "Poll PDF-to-images status",
         "tags": [
-          "whisper"
+          "convert"
         ]
       }
     },
@@ -548,6 +973,46 @@
               }
             },
             "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The request was rejected -- see `message`."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The API key is missing or not valid."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The key is valid but not entitled to this operation."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "No such resource."
           }
         },
         "summary": "Verify credentials",
@@ -571,7 +1036,7 @@
           {
             "in": "query",
             "name": "tag",
-            "required": false,
+            "required": true,
             "schema": {
               "type": "string"
             }
@@ -596,6 +1061,46 @@
               }
             },
             "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The request was rejected -- see `message`."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The API key is missing or not valid."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The key is valid but not entitled to this operation."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "No such resource."
           }
         },
         "summary": "Detailed usage statistics",
@@ -704,6 +1209,11 @@
             "required": false,
             "schema": {
               "default": "left-priority",
+              "enum": [
+                "left-priority",
+                "mid-priority",
+                "right-priority"
+              ],
               "type": "string"
             }
           },
@@ -758,6 +1268,16 @@
             "required": false,
             "schema": {
               "default": "form",
+              "enum": [
+                "document_insights",
+                "excel",
+                "form",
+                "high_quality",
+                "low_cost",
+                "native_text",
+                "pdf_to_images",
+                "table"
+              ],
               "type": "string"
             }
           },
@@ -767,6 +1287,12 @@
             "required": false,
             "schema": {
               "default": "layout_preserving",
+              "enum": [
+                "dump-text",
+                "layout_preserving",
+                "line-printer",
+                "text"
+              ],
               "type": "string"
             }
           },
@@ -775,6 +1301,7 @@
             "name": "page_separator",
             "required": false,
             "schema": {
+              "default": "<<<",
               "type": "string"
             }
           },
@@ -783,7 +1310,6 @@
             "name": "pages_to_extract",
             "required": false,
             "schema": {
-              "default": "",
               "type": "string"
             }
           },
@@ -797,16 +1323,17 @@
             }
           },
           {
+            "description": "Fetch the document from this URL instead of sending a body.",
             "in": "query",
             "name": "url",
             "required": false,
             "schema": {
-              "default": "",
               "format": "uri",
               "type": "string"
             }
           },
           {
+            "description": "Read the URL to fetch from the request body.",
             "in": "query",
             "name": "url_in_post",
             "required": false,
@@ -820,7 +1347,6 @@
             "name": "use_webhook",
             "required": false,
             "schema": {
-              "default": "",
               "type": "string"
             }
           },
@@ -838,7 +1364,6 @@
             "name": "webhook_metadata",
             "required": false,
             "schema": {
-              "default": "",
               "type": "string"
             }
           },
@@ -860,7 +1385,7 @@
               }
             }
           },
-          "required": true
+          "required": false
         },
         "responses": {
           "202": {
@@ -872,6 +1397,46 @@
               }
             },
             "description": "Accepted"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The request was rejected -- see `message`."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The API key is missing or not valid."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The key is valid but not entitled to this operation."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "No such resource."
           }
         },
         "summary": "Submit a document for text extraction",
@@ -887,9 +1452,8 @@
           {
             "in": "query",
             "name": "whisper_hash",
-            "required": false,
+            "required": true,
             "schema": {
-              "default": "",
               "type": "string"
             }
           }
@@ -905,6 +1469,46 @@
               }
             },
             "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The request was rejected -- see `message`."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The API key is missing or not valid."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The key is valid but not entitled to this operation."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "No such resource."
           }
         },
         "summary": "Metadata about a whisper job",
@@ -920,9 +1524,8 @@
           {
             "in": "query",
             "name": "webhook_name",
-            "required": false,
+            "required": true,
             "schema": {
-              "default": "",
               "type": "string"
             }
           }
@@ -938,6 +1541,46 @@
               }
             },
             "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The request was rejected -- see `message`."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The API key is missing or not valid."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The key is valid but not entitled to this operation."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "No such resource."
           }
         },
         "summary": "Manage extraction webhooks",
@@ -951,9 +1594,8 @@
           {
             "in": "query",
             "name": "webhook_name",
-            "required": false,
+            "required": true,
             "schema": {
-              "default": "",
               "type": "string"
             }
           }
@@ -969,6 +1611,46 @@
               }
             },
             "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The request was rejected -- see `message`."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The API key is missing or not valid."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The key is valid but not entitled to this operation."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "No such resource."
           }
         },
         "summary": "Manage extraction webhooks",
@@ -978,17 +1660,7 @@
       },
       "post": {
         "operationId": "webhook_post",
-        "parameters": [
-          {
-            "in": "query",
-            "name": "webhook_name",
-            "required": false,
-            "schema": {
-              "default": "",
-              "type": "string"
-            }
-          }
-        ],
+        "parameters": [],
         "requestBody": {
           "content": {
             "application/json": {
@@ -1000,7 +1672,7 @@
           "required": true
         },
         "responses": {
-          "200": {
+          "201": {
             "content": {
               "application/json": {
                 "schema": {
@@ -1009,7 +1681,47 @@
                 }
               }
             },
-            "description": "OK"
+            "description": "Created"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The request was rejected -- see `message`."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The API key is missing or not valid."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The key is valid but not entitled to this operation."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "No such resource."
           }
         },
         "summary": "Manage extraction webhooks",
@@ -1019,17 +1731,7 @@
       },
       "put": {
         "operationId": "webhook_put",
-        "parameters": [
-          {
-            "in": "query",
-            "name": "webhook_name",
-            "required": false,
-            "schema": {
-              "default": "",
-              "type": "string"
-            }
-          }
-        ],
+        "parameters": [],
         "requestBody": {
           "content": {
             "application/json": {
@@ -1051,6 +1753,46 @@
               }
             },
             "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The request was rejected -- see `message`."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The API key is missing or not valid."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The key is valid but not entitled to this operation."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "No such resource."
           }
         },
         "summary": "Manage extraction webhooks",
@@ -1075,9 +1817,8 @@
           {
             "in": "query",
             "name": "whisper_hash",
-            "required": false,
+            "required": true,
             "schema": {
-              "default": "",
               "type": "string"
             }
           }
@@ -1097,6 +1838,46 @@
               }
             },
             "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The request was rejected -- see `message`."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The API key is missing or not valid."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The key is valid but not entitled to this operation."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "No such resource."
           }
         },
         "summary": "Retrieve extraction result (destructive \u2014 one shot)",
@@ -1112,9 +1893,8 @@
           {
             "in": "query",
             "name": "whisper_hash",
-            "required": false,
+            "required": true,
             "schema": {
-              "default": "",
               "type": "string"
             }
           }
@@ -1129,6 +1909,46 @@
               }
             },
             "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The request was rejected -- see `message`."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The API key is missing or not valid."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The key is valid but not entitled to this operation."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "No such resource."
           }
         },
         "summary": "Poll extraction status",
@@ -1145,7 +1965,7 @@
   ],
   "servers": [
     {
-      "url": "https://llmwhisperer-api.us-central.unstract.com"
+      "url": "https://llmwhisperer-api.unstract.com"
     }
   ]
 }

@@ -6,6 +6,7 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
+from ...models.error import Error
 from ...models.whisper_result import WhisperResult
 from ...types import UNSET, Response, Unset
 
@@ -13,7 +14,7 @@ from ...types import UNSET, Response, Unset
 def _get_kwargs(
     *,
     text_only: bool | Unset = False,
-    whisper_hash: str | Unset = "",
+    whisper_hash: str,
 ) -> dict[str, Any]:
 
     params: dict[str, Any] = {}
@@ -33,11 +34,31 @@ def _get_kwargs(
     return _kwargs
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> WhisperResult | None:
+def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Error | WhisperResult | None:
     if response.status_code == 200:
         response_200 = WhisperResult.from_dict(response.json())
 
         return response_200
+
+    if response.status_code == 400:
+        response_400 = Error.from_dict(response.json())
+
+        return response_400
+
+    if response.status_code == 401:
+        response_401 = Error.from_dict(response.json())
+
+        return response_401
+
+    if response.status_code == 403:
+        response_403 = Error.from_dict(response.json())
+
+        return response_403
+
+    if response.status_code == 404:
+        response_404 = Error.from_dict(response.json())
+
+        return response_404
 
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
@@ -45,7 +66,9 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
         return None
 
 
-def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[WhisperResult]:
+def _build_response(
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> Response[Error | WhisperResult]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -58,20 +81,20 @@ def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
     text_only: bool | Unset = False,
-    whisper_hash: str | Unset = "",
-) -> Response[WhisperResult]:
+    whisper_hash: str,
+) -> Response[Error | WhisperResult]:
     """Retrieve extraction result (destructive — one shot)
 
     Args:
         text_only (bool | Unset):  Default: False.
-        whisper_hash (str | Unset):  Default: ''.
+        whisper_hash (str):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[WhisperResult]
+        Response[Error | WhisperResult]
     """
     kwargs = _get_kwargs(
         text_only=text_only,
@@ -89,20 +112,20 @@ def sync(
     *,
     client: AuthenticatedClient | Client,
     text_only: bool | Unset = False,
-    whisper_hash: str | Unset = "",
-) -> WhisperResult | None:
+    whisper_hash: str,
+) -> Error | WhisperResult | None:
     """Retrieve extraction result (destructive — one shot)
 
     Args:
         text_only (bool | Unset):  Default: False.
-        whisper_hash (str | Unset):  Default: ''.
+        whisper_hash (str):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        WhisperResult
+        Error | WhisperResult
     """
     return sync_detailed(
         client=client,
@@ -115,20 +138,20 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
     text_only: bool | Unset = False,
-    whisper_hash: str | Unset = "",
-) -> Response[WhisperResult]:
+    whisper_hash: str,
+) -> Response[Error | WhisperResult]:
     """Retrieve extraction result (destructive — one shot)
 
     Args:
         text_only (bool | Unset):  Default: False.
-        whisper_hash (str | Unset):  Default: ''.
+        whisper_hash (str):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[WhisperResult]
+        Response[Error | WhisperResult]
     """
     kwargs = _get_kwargs(
         text_only=text_only,
@@ -144,20 +167,20 @@ async def asyncio(
     *,
     client: AuthenticatedClient | Client,
     text_only: bool | Unset = False,
-    whisper_hash: str | Unset = "",
-) -> WhisperResult | None:
+    whisper_hash: str,
+) -> Error | WhisperResult | None:
     """Retrieve extraction result (destructive — one shot)
 
     Args:
         text_only (bool | Unset):  Default: False.
-        whisper_hash (str | Unset):  Default: ''.
+        whisper_hash (str):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        WhisperResult
+        Error | WhisperResult
     """
     return (
         await asyncio_detailed(

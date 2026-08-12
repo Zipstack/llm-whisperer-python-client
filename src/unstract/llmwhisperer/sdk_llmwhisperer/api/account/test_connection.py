@@ -6,6 +6,7 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
+from ...models.error import Error
 from ...models.test_connection_response_200 import TestConnectionResponse200
 from ...types import Response
 
@@ -22,11 +23,31 @@ def _get_kwargs() -> dict[str, Any]:
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> TestConnectionResponse200 | None:
+) -> Error | TestConnectionResponse200 | None:
     if response.status_code == 200:
         response_200 = TestConnectionResponse200.from_dict(response.json())
 
         return response_200
+
+    if response.status_code == 400:
+        response_400 = Error.from_dict(response.json())
+
+        return response_400
+
+    if response.status_code == 401:
+        response_401 = Error.from_dict(response.json())
+
+        return response_401
+
+    if response.status_code == 403:
+        response_403 = Error.from_dict(response.json())
+
+        return response_403
+
+    if response.status_code == 404:
+        response_404 = Error.from_dict(response.json())
+
+        return response_404
 
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
@@ -36,7 +57,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[TestConnectionResponse200]:
+) -> Response[Error | TestConnectionResponse200]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -48,7 +69,7 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
-) -> Response[TestConnectionResponse200]:
+) -> Response[Error | TestConnectionResponse200]:
     """Verify credentials
 
     Raises:
@@ -56,7 +77,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[TestConnectionResponse200]
+        Response[Error | TestConnectionResponse200]
     """
     kwargs = _get_kwargs()
 
@@ -70,7 +91,7 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient | Client,
-) -> TestConnectionResponse200 | None:
+) -> Error | TestConnectionResponse200 | None:
     """Verify credentials
 
     Raises:
@@ -78,7 +99,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        TestConnectionResponse200
+        Error | TestConnectionResponse200
     """
     return sync_detailed(
         client=client,
@@ -88,7 +109,7 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
-) -> Response[TestConnectionResponse200]:
+) -> Response[Error | TestConnectionResponse200]:
     """Verify credentials
 
     Raises:
@@ -96,7 +117,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[TestConnectionResponse200]
+        Response[Error | TestConnectionResponse200]
     """
     kwargs = _get_kwargs()
 
@@ -108,7 +129,7 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient | Client,
-) -> TestConnectionResponse200 | None:
+) -> Error | TestConnectionResponse200 | None:
     """Verify credentials
 
     Raises:
@@ -116,7 +137,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        TestConnectionResponse200
+        Error | TestConnectionResponse200
     """
     return (
         await asyncio_detailed(

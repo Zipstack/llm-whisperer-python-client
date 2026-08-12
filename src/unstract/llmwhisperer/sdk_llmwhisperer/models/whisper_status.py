@@ -2,12 +2,16 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, Self, TypeVar
+from typing import TYPE_CHECKING, Any, Self, TypeVar
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
 from ..types import UNSET, Unset
+
+if TYPE_CHECKING:
+    from ..models.whisper_status_detail_item import WhisperStatusDetailItem
+
 
 T = TypeVar("T", bound="WhisperStatus")
 
@@ -16,15 +20,24 @@ T = TypeVar("T", bound="WhisperStatus")
 class WhisperStatus:
     """
     Attributes:
+        detail (list[WhisperStatusDetailItem] | Unset):
         message (str | Unset):
         status (str | Unset):
     """
 
+    detail: list[WhisperStatusDetailItem] | Unset = UNSET
     message: str | Unset = UNSET
     status: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
+        detail: list[dict[str, Any]] | Unset = UNSET
+        if not isinstance(self.detail, Unset):
+            detail = []
+            for detail_item_data in self.detail:
+                detail_item = detail_item_data.to_dict()
+                detail.append(detail_item)
+
         message = self.message
 
         status = self.status
@@ -32,6 +45,8 @@ class WhisperStatus:
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update({})
+        if detail is not UNSET:
+            field_dict["detail"] = detail
         if message is not UNSET:
             field_dict["message"] = message
         if status is not UNSET:
@@ -41,12 +56,24 @@ class WhisperStatus:
 
     @classmethod
     def from_dict(cls, src_dict: Mapping[str, Any]) -> Self:
+        from ..models.whisper_status_detail_item import WhisperStatusDetailItem
+
         d = dict(src_dict)
+        _detail = d.pop("detail", UNSET)
+        detail: list[WhisperStatusDetailItem] | Unset = UNSET
+        if _detail is not UNSET:
+            detail = []
+            for detail_item_data in _detail:
+                detail_item = WhisperStatusDetailItem.from_dict(detail_item_data)
+
+                detail.append(detail_item)
+
         message = d.pop("message", UNSET)
 
         status = d.pop("status", UNSET)
 
         whisper_status = cls(
+            detail=detail,
             message=message,
             status=status,
         )

@@ -11,7 +11,9 @@ from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
     from ..models.whisper_result_confidence_metadata_item import WhisperResultConfidenceMetadataItem
+    from ..models.whisper_result_line_metadata_item import WhisperResultLineMetadataItem
     from ..models.whisper_result_metadata import WhisperResultMetadata
+    from ..models.whisper_result_whisper_metadata import WhisperResultWhisperMetadata
 
 
 T = TypeVar("T", bound="WhisperResult")
@@ -22,15 +24,19 @@ class WhisperResult:
     """
     Attributes:
         confidence_metadata (list[WhisperResultConfidenceMetadataItem] | Unset):
+        line_metadata (list[WhisperResultLineMetadataItem] | Unset):
         metadata (WhisperResultMetadata | Unset):
         result_text (str | Unset):
         webhook_metadata (str | Unset):
+        whisper_metadata (WhisperResultWhisperMetadata | Unset):
     """
 
     confidence_metadata: list[WhisperResultConfidenceMetadataItem] | Unset = UNSET
+    line_metadata: list[WhisperResultLineMetadataItem] | Unset = UNSET
     metadata: WhisperResultMetadata | Unset = UNSET
     result_text: str | Unset = UNSET
     webhook_metadata: str | Unset = UNSET
+    whisper_metadata: WhisperResultWhisperMetadata | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -41,6 +47,13 @@ class WhisperResult:
                 confidence_metadata_item = confidence_metadata_item_data.to_dict()
                 confidence_metadata.append(confidence_metadata_item)
 
+        line_metadata: list[dict[str, Any]] | Unset = UNSET
+        if not isinstance(self.line_metadata, Unset):
+            line_metadata = []
+            for line_metadata_item_data in self.line_metadata:
+                line_metadata_item = line_metadata_item_data.to_dict()
+                line_metadata.append(line_metadata_item)
+
         metadata: dict[str, Any] | Unset = UNSET
         if not isinstance(self.metadata, Unset):
             metadata = self.metadata.to_dict()
@@ -49,24 +62,34 @@ class WhisperResult:
 
         webhook_metadata = self.webhook_metadata
 
+        whisper_metadata: dict[str, Any] | Unset = UNSET
+        if not isinstance(self.whisper_metadata, Unset):
+            whisper_metadata = self.whisper_metadata.to_dict()
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update({})
         if confidence_metadata is not UNSET:
             field_dict["confidence_metadata"] = confidence_metadata
+        if line_metadata is not UNSET:
+            field_dict["line_metadata"] = line_metadata
         if metadata is not UNSET:
             field_dict["metadata"] = metadata
         if result_text is not UNSET:
             field_dict["result_text"] = result_text
         if webhook_metadata is not UNSET:
             field_dict["webhook_metadata"] = webhook_metadata
+        if whisper_metadata is not UNSET:
+            field_dict["whisper_metadata"] = whisper_metadata
 
         return field_dict
 
     @classmethod
     def from_dict(cls, src_dict: Mapping[str, Any]) -> Self:
         from ..models.whisper_result_confidence_metadata_item import WhisperResultConfidenceMetadataItem
+        from ..models.whisper_result_line_metadata_item import WhisperResultLineMetadataItem
         from ..models.whisper_result_metadata import WhisperResultMetadata
+        from ..models.whisper_result_whisper_metadata import WhisperResultWhisperMetadata
 
         d = dict(src_dict)
         _confidence_metadata = d.pop("confidence_metadata", UNSET)
@@ -77,6 +100,15 @@ class WhisperResult:
                 confidence_metadata_item = WhisperResultConfidenceMetadataItem.from_dict(confidence_metadata_item_data)
 
                 confidence_metadata.append(confidence_metadata_item)
+
+        _line_metadata = d.pop("line_metadata", UNSET)
+        line_metadata: list[WhisperResultLineMetadataItem] | Unset = UNSET
+        if _line_metadata is not UNSET:
+            line_metadata = []
+            for line_metadata_item_data in _line_metadata:
+                line_metadata_item = WhisperResultLineMetadataItem.from_dict(line_metadata_item_data)
+
+                line_metadata.append(line_metadata_item)
 
         _metadata = d.pop("metadata", UNSET)
         metadata: WhisperResultMetadata | Unset
@@ -89,11 +121,20 @@ class WhisperResult:
 
         webhook_metadata = d.pop("webhook_metadata", UNSET)
 
+        _whisper_metadata = d.pop("whisper_metadata", UNSET)
+        whisper_metadata: WhisperResultWhisperMetadata | Unset
+        if isinstance(_whisper_metadata, Unset):
+            whisper_metadata = UNSET
+        else:
+            whisper_metadata = WhisperResultWhisperMetadata.from_dict(_whisper_metadata)
+
         whisper_result = cls(
             confidence_metadata=confidence_metadata,
+            line_metadata=line_metadata,
             metadata=metadata,
             result_text=result_text,
             webhook_metadata=webhook_metadata,
+            whisper_metadata=whisper_metadata,
         )
 
         whisper_result.additional_properties = d
