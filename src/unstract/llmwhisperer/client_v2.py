@@ -102,10 +102,10 @@ _SEND_ONLY: dict[str, frozenset[str]] = {
 }
 
 
-#: Headers the previous transport put on the wire without being asked, which
-#: httpx spells differently. Only `Accept-Encoding` is load-bearing: the
-#: previous one asked for no compression, so a service that gzips its response
-#: was never exercised against this client. Overridable via `custom_headers`.
+#: Headers the released client put on the wire without being asked, which httpx
+#: spells differently. `Accept-Encoding` is load-bearing: it asks for no
+#: compression, and a service that gzips its response has never been exercised
+#: against this client. Overridable via `custom_headers`.
 _TRANSPORT_HEADERS = {"Accept-Encoding": "identity"}
 
 
