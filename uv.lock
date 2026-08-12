@@ -294,6 +294,8 @@ dev = [
     { name = "pycln" },
     { name = "pytest" },
     { name = "ruff" },
+    { name = "types-requests" },
+    { name = "types-setuptools" },
     { name = "yamllint" },
 ]
 test = [
@@ -307,7 +309,7 @@ test = [
 [package.metadata]
 requires-dist = [
     { name = "attrs", specifier = ">=23.2" },
-    { name = "httpx", specifier = ">=0.27" },
+    { name = "httpx", specifier = ">=0.27,<0.29" },
     { name = "requests", specifier = ">=2" },
     { name = "tenacity", specifier = ">=8.0" },
 ]
@@ -320,7 +322,9 @@ dev = [
     { name = "pre-commit", specifier = "~=3.3.1" },
     { name = "pycln", specifier = ">=2.5.0" },
     { name = "pytest", specifier = ">=8.0.1" },
-    { name = "ruff", specifier = ">=0.2.2,<1.0.0" },
+    { name = "ruff", specifier = "==0.11.9" },
+    { name = "types-requests", specifier = ">=2.32" },
+    { name = "types-setuptools", specifier = ">=75" },
     { name = "yamllint", specifier = ">=1.35.1" },
 ]
 test = [
@@ -797,6 +801,27 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/98/1a/5f36851f439884bcfe8539f6a20ff7516e7b60f319bbaf69a90dc35cc2eb/typer-0.15.3.tar.gz", hash = "sha256:818873625d0569653438316567861899f7e9972f2e6e0c16dab608345ced713c", size = 101641, upload-time = "2025-04-28T21:40:59.204Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/48/20/9d953de6f4367163d23ec823200eb3ecb0050a2609691e512c8b95827a9b/typer-0.15.3-py3-none-any.whl", hash = "sha256:c86a65ad77ca531f03de08d1b9cb67cd09ad02ddddf4b34745b5008f43b239bd", size = 45253, upload-time = "2025-04-28T21:40:56.269Z" },
+]
+
+[[package]]
+name = "types-requests"
+version = "2.33.0.20260712"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "urllib3" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/db/51/703318f7b7be8bee126ec13bf615050f932d0179b8784420f3a0199cc769/types_requests-2.33.0.20260712.tar.gz", hash = "sha256:2141b67ab534a5c5cd2dac5034f2a35f42e699c5bf185eee608c5246a069d7fb", size = 25084, upload-time = "2026-07-12T05:14:20.455Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/62/e7/010c87f559e216d83f9dc51e939633fd0d0ead3377340181ab0e223cd3b5/types_requests-2.33.0.20260712-py3-none-any.whl", hash = "sha256:de027e28c171d3da529689cbfa023b0b4eab188c8dfa22fd834eebd2cee6e7bb", size = 21392, upload-time = "2026-07-12T05:14:19.616Z" },
+]
+
+[[package]]
+name = "types-setuptools"
+version = "84.0.0.20260812"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/4f/cd/3b2a3362a526f91c33f785a291462b2ec448ae531101c62372fc30a21f53/types_setuptools-84.0.0.20260812.tar.gz", hash = "sha256:09bedc248ebbb7a232c9419dfcdca329706e61bf2aa5743e9424d027f1d956b4", size = 46545, upload-time = "2026-08-12T03:52:42.316Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/8a/e5/3a41cab4066465593facd660b2683c017f3d88d3297cdd26db0677b8e479/types_setuptools-84.0.0.20260812-py3-none-any.whl", hash = "sha256:799c08e4bc6a288e8a0b538afb5f5ff320a08927ba8dbedb30c74ee3ba5d867b", size = 70320, upload-time = "2026-08-12T03:52:41.154Z" },
 ]
 
 [[package]]

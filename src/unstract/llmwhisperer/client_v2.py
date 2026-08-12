@@ -34,6 +34,7 @@ import httpx
 import requests
 import tenacity
 from tenacity import retry_if_exception, stop_after_attempt, stop_after_delay, wait_exponential_jitter
+
 from unstract.llmwhisperer.sdk_llmwhisperer.api.account import usage_info
 from unstract.llmwhisperer.sdk_llmwhisperer.api.webhook import (
     webhook_delete,
@@ -108,43 +109,44 @@ _SEND_ONLY: dict[str, frozenset[str]] = {
 _TRANSPORT_HEADERS = {"Accept-Encoding": "identity"}
 
 
+#: httpx failure -> the ``requests`` class callers catch. First match wins, so a
+#: subclass has to precede the base it derives from, and ``RequestError`` last is
+#: what keeps a novel httpx failure from escaping untranslated.
+_TRANSLATIONS: tuple[tuple[type[httpx.RequestError], type[Exception]], ...] = (
+    # requests.ConnectTimeout is both a ConnectionError and a Timeout; the plain
+    # Timeout httpx implies would stop matching half the callers.
+    (httpx.ConnectTimeout, requests.ConnectTimeout),
+    (httpx.ReadTimeout, requests.ReadTimeout),
+    # Neither had a Timeout equivalent: a send that failed and a pool that could
+    # not hand out a connection both surfaced as ConnectionError.
+    (httpx.WriteTimeout, requests.ConnectionError),
+    (httpx.PoolTimeout, requests.ConnectionError),
+    (httpx.TimeoutException, requests.Timeout),
+    # A URL rejected before any socket is opened. Deliberately not a
+    # ConnectionError: retrying a malformed URL cannot start working.
+    (httpx.UnsupportedProtocol, requests.exceptions.MissingSchema),
+    (httpx.ProxyError, requests.exceptions.ProxyError),
+    (httpx.ConnectError, requests.ConnectionError),
+    (httpx.TooManyRedirects, requests.TooManyRedirects),
+    (httpx.DecodingError, requests.exceptions.ContentDecodingError),
+    (httpx.RequestError, requests.ConnectionError),
+)
+
+
 def _translate_transport_errors(fn: Any, *args: Any, **kwargs: Any) -> Any:
     """Re-raise httpx transport failures as their ``requests`` equivalents.
 
     Callers document and catch the ``requests`` classes, and the retry policy
     keys off them too, so the class chosen here decides whether a failure is
-    retried. Every branch is ordered before the base class it derives from, and
-    ``RequestError`` is the catch-all that keeps a novel failure from escaping
-    untranslated.
+    retried.
     """
     try:
         return fn(*args, **kwargs)
-    except httpx.ConnectTimeout as e:
-        # requests.ConnectTimeout is both a ConnectionError and a Timeout; the
-        # plain Timeout httpx implies would stop matching half the callers.
-        raise requests.ConnectTimeout(str(e)) from e
-    except httpx.ReadTimeout as e:
-        raise requests.ReadTimeout(str(e)) from e
-    except (httpx.WriteTimeout, httpx.PoolTimeout) as e:
-        # Neither had a Timeout equivalent: a send that failed and a pool that
-        # could not hand out a connection both surfaced as ConnectionError.
-        raise requests.ConnectionError(str(e)) from e
-    except httpx.TimeoutException as e:
-        raise requests.Timeout(str(e)) from e
-    except httpx.UnsupportedProtocol as e:
-        # A URL rejected before any socket is opened. Deliberately not a
-        # ConnectionError: retrying a malformed URL cannot start working.
-        raise requests.exceptions.MissingSchema(str(e)) from e
-    except httpx.ProxyError as e:
-        raise requests.exceptions.ProxyError(str(e)) from e
-    except httpx.ConnectError as e:
-        raise requests.ConnectionError(str(e)) from e
-    except httpx.TooManyRedirects as e:
-        raise requests.TooManyRedirects(str(e)) from e
-    except httpx.DecodingError as e:
-        raise requests.exceptions.ContentDecodingError(str(e)) from e
     except httpx.RequestError as e:
-        raise requests.ConnectionError(str(e)) from e
+        for failure, equivalent in _TRANSLATIONS:
+            if isinstance(e, failure):
+                raise equivalent(str(e)) from e
+        raise
 
 
 def _wire_value(value: Any) -> Any:
@@ -576,7 +578,7 @@ class LLMWhispererClientV2:
         warnings.warn(message, DeprecationWarning, stacklevel=3)
         return deprecated_value if forward else default
 
-    def whisper(
+    def whisper(  # noqa: C901
         self,
         file_path: str = "",
         stream: IO[bytes] | None = None,

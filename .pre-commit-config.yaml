@@ -34,7 +34,9 @@ repos:
       - id: mixed-line-ending
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.3.4
+    # Kept in step with the pinned ruff in the dev group: two versions disagree
+    # on import order and docstrings, and each undoes the other's fixes.
+    rev: v0.11.9
     hooks:
       - id: ruff
         args: [--fix]

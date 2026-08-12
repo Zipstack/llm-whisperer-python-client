@@ -30,6 +30,7 @@ from urllib.parse import parse_qs, urlparse
 import httpx
 import pytest
 import requests
+
 from unstract.llmwhisperer.client_v2 import (
     _SEND_ONLY,
     LLMWhispererClientException,
@@ -229,8 +230,7 @@ def _wire_heads(*calls: Callable[[str], Any]) -> list[dict[str, str]]:
             heads.append(data.split(b"\r\n\r\n")[0])
             body = b'{"ok":true}'
             conn.sendall(
-                b"HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n"
-                b"Content-Length: %d\r\n\r\n%s" % (len(body), body)
+                b"HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: %d\r\n\r\n%s" % (len(body), body)
             )
             conn.close()
 
@@ -247,9 +247,7 @@ def _wire_heads(*calls: Callable[[str], Any]) -> list[dict[str, str]]:
     return [
         {
             name.lower(): value.strip()
-            for name, _, value in (
-                line.partition(":") for line in head.decode().split("\r\n")[1:]
-            )
+            for name, _, value in (line.partition(":") for line in head.decode().split("\r\n")[1:])
         }
         for head in heads
     ]
@@ -257,8 +255,8 @@ def _wire_heads(*calls: Callable[[str], Any]) -> list[dict[str, str]]:
 
 def test_wire_headers_match_the_published_client() -> None:
     """`Accept-Encoding` is the load-bearing one: the published client asked
-    for no compression, so a response this client has never seen decoded is
-    not something a transport swap should start requesting."""
+    for no compression, so a response this client has never seen decoded is not
+    something a transport swap should start requesting."""
     ours, theirs = _wire_heads(
         lambda url: _client(base_url=url).get_usage_info(),
         lambda url: _baseline_client(base_url=url).get_usage_info(),
@@ -277,9 +275,7 @@ def test_wire_headers_match_the_published_client() -> None:
 
 def test_custom_headers_override_the_transport_defaults() -> None:
     (ours,) = _wire_heads(
-        lambda url: _client(
-            base_url=url, custom_headers={"Accept-Encoding": "gzip"}
-        ).get_usage_info()
+        lambda url: _client(base_url=url, custom_headers={"Accept-Encoding": "gzip"}).get_usage_info()
     )
     assert ours["accept-encoding"] == "gzip"
 
@@ -363,7 +359,8 @@ def test_an_unrequested_parameter_is_not_sent() -> None:
 @pytest.mark.parametrize(("name", "value", "expected"), [(n, v, e) for n, (v, e) in _ADDED_PARAMS.items()])
 def test_a_requested_parameter_is_sent(name: str, value: Any, expected: str) -> None:
     """Every value here is falsy or off: a truthiness filter would drop them and
-    hand the decision back to the service without saying so."""
+    hand the decision back to the service without saying so.
+    """
     assert _whisper_query(_client(), **{name: value})[name] == [expected]
 
 
@@ -512,7 +509,10 @@ def _httpx_request_errors() -> list[type[Exception]]:
     return sorted(found, key=lambda cls: cls.__name__)
 
 
-@pytest.mark.parametrize("cls", _httpx_request_errors(), ids=lambda cls: cls.__name__)
+_REQUEST_ERRORS = _httpx_request_errors()
+
+
+@pytest.mark.parametrize("cls", _REQUEST_ERRORS, ids=[cls.__name__ for cls in _REQUEST_ERRORS])
 def test_no_httpx_failure_escapes_untranslated(cls: type[Exception]) -> None:
     """An httpx class reaching a caller is a class no caller catches."""
     client = _client()
