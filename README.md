@@ -15,6 +15,14 @@ This package provides **LLMWhispererClientV2**, the client for LLMWhisperer API 
 
 Documentation is available [here](https://docs.unstract.com/llmwhisperer/).
 
+### Service version note
+
+A custom `page_separator` needs LLMWhisperer **v2.64.2 or later**. The query
+parameter was renamed in that release; an older service reads only the previous
+spelling, so it falls back to the default `<<<` separator and reports no error.
+Check the service version before relying on a custom separator against a
+self-hosted deployment.
+
 ## Running Tests
 
 Install test dependencies and run all tests:
