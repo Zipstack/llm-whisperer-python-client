@@ -22,6 +22,7 @@ import json
 import logging
 import os
 import time
+import warnings
 from typing import IO, Any
 
 import requests
@@ -367,6 +368,48 @@ class LLMWhispererClientV2:
             raise LLMWhispererClientException(err, response.status_code)
         return json.loads(response.text)
 
+    def _resolve_deprecated_param(
+        self,
+        name: str,
+        value: str | None,
+        deprecated_name: str,
+        deprecated_value: str | None,
+        default: str,
+        *,
+        forward: bool,
+    ) -> str:
+        """Resolves a renamed parameter, warning when the old name is used.
+
+        Args:
+            name: The supported parameter name.
+            value: Value passed under the supported name, None when unset.
+            deprecated_name: The deprecated parameter name.
+            deprecated_value: Value passed under the deprecated name, None when unset.
+            default: Value to use when neither name is passed.
+            forward: Whether the deprecated value is honoured. False for parameters the
+                service never received, where applying the value now would silently
+                change extraction output.
+
+        Returns:
+            The resolved value.
+
+        Raises:
+            LLMWhispererClientException: If both names are passed.
+        """
+        if deprecated_value is None:
+            return default if value is None else value
+        if value is not None:
+            raise LLMWhispererClientException(
+                f"Cannot pass both '{deprecated_name}' and '{name}', use '{name}' only",
+                1,
+            )
+        message = f"'{deprecated_name}' is deprecated and will be removed in a future release, use '{name}' instead"
+        if not forward:
+            message += f". The value passed is ignored: '{deprecated_name}' never reached the service"
+        self.logger.warning(message)
+        warnings.warn(message, DeprecationWarning, stacklevel=3)
+        return deprecated_value if forward else default
+
     def whisper(
         self,
         file_path: str = "",
@@ -374,7 +417,7 @@ class LLMWhispererClientV2:
         url: str = "",
         mode: str = "form",
         output_mode: str = "layout_preserving",
-        page_seperator: str = "<<<",
+        page_seperator: str | None = None,
         pages_to_extract: str = "",
         median_filter_size: int = 0,
         gaussian_blur_radius: int = 0,
@@ -382,18 +425,21 @@ class LLMWhispererClientV2:
         horizontal_stretch_factor: float = 1.0,
         mark_vertical_lines: bool = False,
         mark_horizontal_lines: bool = False,
-        line_spitter_strategy: str = "left-priority",
+        line_spitter_strategy: str | None = None,
         add_line_nos: bool = False,
         include_line_confidence: bool = False,
         word_confidence_threshold: float = 0.3,
         lang: str = "eng",
         tag: str = "default",
-        filename: str = "",
+        filename: str | None = None,
         webhook_metadata: str = "",
         use_webhook: str = "",
         wait_for_completion: bool = False,
         wait_timeout: int = 180,
         encoding: str = "utf-8",
+        page_separator: str | None = None,
+        line_splitter_strategy: str | None = None,
+        file_name: str | None = None,
     ) -> Any:
         """Sends a request to the LLMWhisperer API to process a document.
         Refer to https://docs.unstract.com/llm_whisperer/apis/llm_whisperer_text_extraction_api.
@@ -406,7 +452,8 @@ class LLMWhispererClientV2:
                 or "table". Defaults to "high_quality".
             output_mode (str, optional): The output mode. Can be "layout_preserving" or "text".
                 Defaults to "layout_preserving".
-            page_seperator (str, optional): The page separator. Defaults to "<<<".
+            page_seperator (str, optional): Deprecated misspelling of page_separator, still
+                honoured. Defaults to None.
             pages_to_extract (str, optional): The pages to extract. Defaults to "".
             median_filter_size (int, optional): The size of the median filter. Defaults to 0.
             gaussian_blur_radius (int, optional): The radius of the Gaussian blur. Defaults to 0.
@@ -414,7 +461,9 @@ class LLMWhispererClientV2:
             horizontal_stretch_factor (float, optional): The horizontal stretch factor. Defaults to 1.0.
             mark_vertical_lines (bool, optional): Whether to mark vertical lines. Defaults to False.
             mark_horizontal_lines (bool, optional): Whether to mark horizontal lines. Defaults to False.
-            line_spitter_strategy (str, optional): The line splitter strategy. Defaults to "left-priority".
+            line_spitter_strategy (str, optional): Deprecated misspelling of
+                line_splitter_strategy. The value is ignored, since it was never sent under a
+                name the service reads. Defaults to None.
             add_line_nos (bool, optional): Adds line numbers to the extracted text and saves line metadata,
               which can be queried later using the highlights API.
             include_line_confidence (bool, optional): Adds line confidence to the line metadata returned by
@@ -426,7 +475,8 @@ class LLMWhispererClientV2:
               modes. Defaults to 0.3.
             lang (str, optional): The language of the document. Defaults to "eng".
             tag (str, optional): The tag for the document. Defaults to "default".
-            filename (str, optional): The name of the file to store in reports. Defaults to "".
+            filename (str, optional): Deprecated name for file_name, still honoured.
+                Defaults to None.
             webhook_metadata (str, optional): The webhook metadata. This data will be passed to the webhook if
                 webhooks are used Defaults to "".
             use_webhook (str, optional): Webhook name to call. Defaults to "". If not provided, then
@@ -436,6 +486,10 @@ class LLMWhispererClientV2:
             wait_timeout (int, optional): The number of seconds to wait for the whisper operation to complete.
                 Defaults to 180.
             encoding (str): The character encoding to use for processing the text. Defaults to "utf-8".
+            page_separator (str, optional): The page separator. Defaults to "<<<".
+            line_splitter_strategy (str, optional): The line splitter strategy.
+                Defaults to "left-priority".
+            file_name (str, optional): The name of the file to store in reports. Defaults to "".
 
         Returns:
             Dict[Any, Any]: The response from the API as a dictionary.
@@ -443,13 +497,27 @@ class LLMWhispererClientV2:
         Raises:
             LLMWhispererClientException: If the API request fails, it raises an exception with
                                           the error message and status code returned by the API.
+                                          Also raised when a parameter is passed under both its
+                                          deprecated and its supported name.
         """
         self.logger.debug("whisper called")
+        page_separator = self._resolve_deprecated_param(
+            "page_separator", page_separator, "page_seperator", page_seperator, "<<<", forward=True
+        )
+        line_splitter_strategy = self._resolve_deprecated_param(
+            "line_splitter_strategy",
+            line_splitter_strategy,
+            "line_spitter_strategy",
+            line_spitter_strategy,
+            "left-priority",
+            forward=False,
+        )
+        file_name = self._resolve_deprecated_param("file_name", file_name, "filename", filename, "", forward=True)
         api_url = f"{self.base_url}/whisper"
         params = {
             "mode": mode,
             "output_mode": output_mode,
-            "page_seperator": page_seperator,
+            "page_separator": page_separator,
             "pages_to_extract": pages_to_extract,
             "median_filter_size": median_filter_size,
             "gaussian_blur_radius": gaussian_blur_radius,
@@ -457,13 +525,13 @@ class LLMWhispererClientV2:
             "horizontal_stretch_factor": horizontal_stretch_factor,
             "mark_vertical_lines": mark_vertical_lines,
             "mark_horizontal_lines": mark_horizontal_lines,
-            "line_spitter_strategy": line_spitter_strategy,
+            "line_splitter_strategy": line_splitter_strategy,
             "add_line_nos": add_line_nos,
             "include_line_confidence": include_line_confidence,
             "word_confidence_threshold": word_confidence_threshold,
             "lang": lang,
             "tag": tag,
-            "filename": filename,
+            "file_name": file_name,
             "webhook_metadata": webhook_metadata,
             "use_webhook": use_webhook,
         }

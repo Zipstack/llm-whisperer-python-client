@@ -287,6 +287,24 @@ def test_whisper_detail_not_found(client_v2: LLMWhispererClientV2) -> None:
     assert "message" in error
 
 
+def test_whisper_line_splitter_strategy_reaches_service(
+    client_v2: LLMWhispererClientV2, data_dir: str
+) -> None:
+    """An unknown strategy is rejected, which only happens if the param arrives."""
+    file_path = os.path.join(data_dir, "credit_card.pdf")
+
+    with pytest.raises(LLMWhispererClientException) as exc_info:
+        client_v2.whisper(
+            mode="native_text",
+            output_mode="text",
+            file_path=file_path,
+            line_splitter_strategy="not-a-strategy",
+            wait_for_completion=True,
+        )
+
+    assert exc_info.value.error_message()["status_code"] == 400
+
+
 def assert_error_message(whisper_result: dict) -> None:
     assert isinstance(whisper_result, dict)
     assert whisper_result["status"] == "error"

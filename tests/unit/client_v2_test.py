@@ -153,7 +153,8 @@ def test_whisper_invalid_json_response_202(mocker: MockerFixture, client_v2: LLM
 
 
 def test_whisper_default_word_confidence_threshold(mocker: MockerFixture, client_v2: LLMWhispererClientV2) -> None:
-    """whisper() sends the default word_confidence_threshold when not specified."""
+    """Whisper() sends the default word_confidence_threshold when not
+    specified."""
     mock_send = mocker.patch("requests.Session.send")
     mock_send.return_value = _mock_response(200, '{"status_code": 200, "extraction": {"text": "ok"}}')
 
@@ -165,7 +166,8 @@ def test_whisper_default_word_confidence_threshold(mocker: MockerFixture, client
 
 
 def test_whisper_custom_word_confidence_threshold(mocker: MockerFixture, client_v2: LLMWhispererClientV2) -> None:
-    """whisper() forwards a custom word_confidence_threshold as a request param."""
+    """Whisper() forwards a custom word_confidence_threshold as a request
+    param."""
     mock_send = mocker.patch("requests.Session.send")
     mock_send.return_value = _mock_response(200, '{"status_code": 200, "extraction": {"text": "ok"}}')
 
@@ -178,6 +180,90 @@ def test_whisper_custom_word_confidence_threshold(mocker: MockerFixture, client_
     prepared_request = mock_send.call_args[0][0]
     query = parse_qs(urlparse(prepared_request.url).query)
     assert query["word_confidence_threshold"] == ["0.75"]
+
+
+# --- Deprecated parameter tests ---
+
+
+def _whisper_query(mocker: MockerFixture, client_v2: LLMWhispererClientV2, **kwargs: object) -> dict[str, list[str]]:
+    """Calls whisper() with a mocked transport and returns the query params
+    sent."""
+    mock_send = mocker.patch("requests.Session.send")
+    mock_send.return_value = _mock_response(200, '{"status_code": 200, "extraction": {"text": "ok"}}')
+
+    client_v2.whisper(url="https://example.com/test.pdf", wait_for_completion=False, **kwargs)
+
+    return parse_qs(urlparse(mock_send.call_args[0][0].url).query)
+
+
+def test_whisper_sends_corrected_param_names(mocker: MockerFixture, client_v2: LLMWhispererClientV2) -> None:
+    """Whisper() sends the names the service reads, not the misspelled ones."""
+    query = _whisper_query(
+        mocker,
+        client_v2,
+        page_separator="---",
+        line_splitter_strategy="mid-priority",
+        file_name="invoice.pdf",
+    )
+
+    assert query["page_separator"] == ["---"]
+    assert query["line_splitter_strategy"] == ["mid-priority"]
+    assert query["file_name"] == ["invoice.pdf"]
+    assert "page_seperator" not in query
+    assert "line_spitter_strategy" not in query
+    assert "filename" not in query
+
+
+def test_whisper_defaults_when_no_param_passed(mocker: MockerFixture, client_v2: LLMWhispererClientV2) -> None:
+    """Omitting the renamed params keeps the previous defaults."""
+    query = _whisper_query(mocker, client_v2)
+
+    assert query["page_separator"] == ["<<<"]
+    assert query["line_splitter_strategy"] == ["left-priority"]
+    assert "file_name" not in query  # sent blank, and parse_qs drops blank values
+
+
+def test_whisper_deprecated_page_seperator_is_forwarded(mocker: MockerFixture, client_v2: LLMWhispererClientV2) -> None:
+    """page_seperator still applies, under the corrected name."""
+    with pytest.warns(DeprecationWarning, match="page_separator"):
+        query = _whisper_query(mocker, client_v2, page_seperator="---")
+
+    assert query["page_separator"] == ["---"]
+
+
+def test_whisper_deprecated_filename_is_forwarded(mocker: MockerFixture, client_v2: LLMWhispererClientV2) -> None:
+    """Deprecated filename still applies, under the corrected name."""
+    with pytest.warns(DeprecationWarning, match="file_name"):
+        query = _whisper_query(mocker, client_v2, filename="invoice.pdf")
+
+    assert query["file_name"] == ["invoice.pdf"]
+
+
+def test_whisper_deprecated_line_spitter_strategy_is_ignored(
+    mocker: MockerFixture, client_v2: LLMWhispererClientV2
+) -> None:
+    """line_spitter_strategy never reached the service, so its value stays
+    unused."""
+    with pytest.warns(DeprecationWarning, match="line_splitter_strategy"):
+        query = _whisper_query(mocker, client_v2, line_spitter_strategy="mid-priority")
+
+    assert query["line_splitter_strategy"] == ["left-priority"]
+
+
+@pytest.mark.parametrize(
+    ("deprecated_name", "name"),
+    [
+        ("page_seperator", "page_separator"),
+        ("line_spitter_strategy", "line_splitter_strategy"),
+        ("filename", "file_name"),
+    ],
+)
+def test_whisper_rejects_both_spellings(
+    mocker: MockerFixture, client_v2: LLMWhispererClientV2, deprecated_name: str, name: str
+) -> None:
+    """Passing a param under both names is ambiguous and fails loudly."""
+    with pytest.raises(LLMWhispererClientException, match="Cannot pass both"):
+        _whisper_query(mocker, client_v2, **{deprecated_name: "x", name: "y"})
 
 
 # --- Retry behavior tests ---
