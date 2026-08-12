@@ -725,7 +725,9 @@ class LLMWhispererClientV2:
         }
         # Only what the caller asked for. These have no default here on purpose:
         # sending one pins a value the service would otherwise choose, and the
-        # two diverge the moment the service's own default moves.
+        # two diverge the moment the service's own default moves. ``None`` is
+        # dropped with ``UNSET``: a query string carries no null, so it would go
+        # out as the literal string "None".
         params.update(
             {
                 name: value
@@ -737,7 +739,7 @@ class LLMWhispererClientV2:
                     ("checkbox_confidence_threshold", checkbox_confidence_threshold),
                     ("min_table_width", min_table_width),
                 )
-                if not isinstance(value, Unset)
+                if not isinstance(value, Unset) and value is not None
             }
         )
 
