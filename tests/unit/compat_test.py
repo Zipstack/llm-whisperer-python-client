@@ -16,6 +16,8 @@ import importlib.util
 import inspect
 import io
 import json
+import socket
+import threading
 import time
 from collections.abc import Callable
 from pathlib import Path
@@ -197,6 +199,87 @@ def test_request_matches_the_published_client(name: str, sample_file: str) -> No
 def test_the_auth_header_is_unchanged(sample_file: str) -> None:
     ours, theirs = _sent(*CALLS["usage_info"], sample_file)
     assert ours.headers["unstract-key"] == theirs.headers["unstract-key"] == "test-key"
+
+
+def _wire_heads(*calls: Callable[[str], Any]) -> list[dict[str, str]]:
+    """Run each call against a loopback server and return its request headers.
+
+    Below the client, the transport adds headers of its own -- and drops none
+    of them into any object the client can be asked for. A socket is the only
+    place both clients can be compared on what they actually send. One server
+    serves every call, so the `Host` header is the same for all of them.
+    """
+    heads: list[bytes] = []
+    server = socket.socket()
+    server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    server.bind(("127.0.0.1", 0))
+    server.listen(len(calls))
+
+    def serve() -> None:
+        for _ in calls:
+            conn, _address = server.accept()
+            data = b""
+            while b"\r\n\r\n" not in data:
+                chunk = conn.recv(65536)
+                if not chunk:
+                    break
+                data += chunk
+            heads.append(data.split(b"\r\n\r\n")[0])
+            body = b'{"ok":true}'
+            conn.sendall(
+                b"HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n"
+                b"Content-Length: %d\r\n\r\n%s" % (len(body), body)
+            )
+            conn.close()
+
+    thread = threading.Thread(target=serve, daemon=True)
+    thread.start()
+    try:
+        url = f"http://127.0.0.1:{server.getsockname()[1]}/api/v2"
+        for call in calls:
+            call(url)
+    finally:
+        thread.join(timeout=10)
+        server.close()
+
+    return [
+        {
+            name.lower(): value.strip()
+            for name, _, value in (
+                line.partition(":") for line in head.decode().split("\r\n")[1:]
+            )
+        }
+        for head in heads
+    ]
+
+
+def test_wire_headers_match_the_published_client() -> None:
+    """`Accept-Encoding` is the load-bearing one: the published client asked
+    for no compression, so a response this client has never seen decoded is
+    not something a transport swap should start requesting."""
+    ours, theirs = _wire_heads(
+        lambda url: _client(base_url=url).get_usage_info(),
+        lambda url: _baseline_client(base_url=url).get_usage_info(),
+    )
+
+    assert theirs["accept-encoding"] == "identity"
+    assert {name: ours[name] for name in theirs if name != "user-agent"} == {
+        name: value for name, value in theirs.items() if name != "user-agent"
+    }
+    # The two httpx adds mean what their absence meant: `*/*` is the default
+    # Accept and keep-alive the default in HTTP/1.1. It also names itself,
+    # which is the one value that changes.
+    assert ours.keys() - theirs.keys() == {"accept", "connection"}
+    assert ours["user-agent"].startswith("python-httpx/")
+
+
+def test_custom_headers_override_the_transport_defaults() -> None:
+    (ours,) = _wire_heads(
+        lambda url: _client(
+            base_url=url, custom_headers={"Accept-Encoding": "gzip"}
+        ).get_usage_info()
+    )
+    assert ours["accept-encoding"] == "gzip"
 
 
 def test_custom_headers_still_reach_the_request() -> None:
@@ -384,13 +467,18 @@ def test_whisper_poll_loop_matches_the_published_client(sample_file: str) -> Non
     [
         (httpx.ConnectTimeout("connect timed out"), requests.ConnectTimeout),
         (httpx.ReadTimeout("read timed out"), requests.ReadTimeout),
-        (httpx.WriteTimeout("write timed out"), requests.Timeout),
-        (httpx.PoolTimeout("pool timed out"), requests.Timeout),
+        # Neither had a Timeout equivalent: a send that failed and a pool that
+        # could not hand out a connection both surfaced as ConnectionError.
+        (httpx.WriteTimeout("write timed out"), requests.ConnectionError),
+        (httpx.PoolTimeout("pool timed out"), requests.ConnectionError),
         (httpx.ConnectError("refused"), requests.ConnectionError),
         (httpx.ReadError("reset"), requests.ConnectionError),
         (httpx.WriteError("broken pipe"), requests.ConnectionError),
         (httpx.ProtocolError("bad framing"), requests.ConnectionError),
-        (httpx.ProxyError("proxy exploded"), requests.ConnectionError),
+        (httpx.ProxyError("proxy exploded"), requests.exceptions.ProxyError),
+        (httpx.UnsupportedProtocol("no scheme"), requests.exceptions.MissingSchema),
+        (httpx.TooManyRedirects("looping"), requests.TooManyRedirects),
+        (httpx.DecodingError("bad gzip"), requests.exceptions.ContentDecodingError),
     ],
 )
 def test_transport_errors_are_translated(raised: Exception, expected: type[Exception]) -> None:
@@ -406,6 +494,49 @@ def test_transport_errors_are_translated(raised: Exception, expected: type[Excep
         with pytest.raises(expected) as caught:
             client.get_usage_info()
     assert type(caught.value) is expected
+
+
+def _httpx_request_errors() -> list[type[Exception]]:
+    """Every httpx request failure, discovered rather than listed.
+
+    A hand-written list is exactly as complete as it was the day it was
+    written; this one grows when httpx does.
+    """
+    found, stack = [], [httpx.RequestError]
+    while stack:
+        cls = stack.pop()
+        found.append(cls)
+        stack.extend(cls.__subclasses__())
+    return sorted(found, key=lambda cls: cls.__name__)
+
+
+@pytest.mark.parametrize("cls", _httpx_request_errors(), ids=lambda cls: cls.__name__)
+def test_no_httpx_failure_escapes_untranslated(cls: type[Exception]) -> None:
+    """An httpx class reaching a caller is a class no caller catches."""
+    client = _client()
+    with patch.object(client._transport, "send", side_effect=cls("boom")):
+        with pytest.raises(requests.RequestException):
+            client.get_usage_info()
+
+
+@pytest.mark.parametrize(
+    ("raised", "retried"),
+    [
+        (httpx.PoolTimeout("pool timed out"), True),
+        (httpx.ProxyError("proxy exploded"), True),
+        # Retrying these cannot start working: the URL stays malformed, the
+        # redirect chain stays a loop, the body stays undecodable.
+        (httpx.UnsupportedProtocol("no scheme"), False),
+        (httpx.TooManyRedirects("looping"), False),
+        (httpx.DecodingError("bad gzip"), False),
+    ],
+)
+def test_translation_decides_what_gets_retried(raised: Exception, retried: bool) -> None:
+    client = _client(max_retries=2, retry_min_wait=0, retry_max_wait=0)
+    with patch.object(client._transport, "send", side_effect=raised) as send:
+        with pytest.raises(requests.RequestException):
+            client.get_usage_info()
+    assert (send.call_count > 1) is retried
 
 
 def test_a_connect_timeout_is_still_a_connection_error() -> None:

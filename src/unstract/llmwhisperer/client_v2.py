@@ -101,13 +101,21 @@ _SEND_ONLY: dict[str, frozenset[str]] = {
 }
 
 
+#: Headers the previous transport put on the wire without being asked, which
+#: httpx spells differently. Only `Accept-Encoding` is load-bearing: the
+#: previous one asked for no compression, so a service that gzips its response
+#: was never exercised against this client. Overridable via `custom_headers`.
+_TRANSPORT_HEADERS = {"Accept-Encoding": "identity"}
+
+
 def _translate_transport_errors(fn: Any, *args: Any, **kwargs: Any) -> Any:
     """Re-raise httpx transport failures as their ``requests`` equivalents.
 
-    Callers document and catch the ``requests`` classes. Ordering matters:
-    ``TimeoutException`` must be checked before ``ConnectError``, and
-    ``TransportError`` is the catch-all that keeps a novel transport failure from
-    escaping untranslated.
+    Callers document and catch the ``requests`` classes, and the retry policy
+    keys off them too, so the class chosen here decides whether a failure is
+    retried. Every branch is ordered before the base class it derives from, and
+    ``RequestError`` is the catch-all that keeps a novel failure from escaping
+    untranslated.
     """
     try:
         return fn(*args, **kwargs)
@@ -117,11 +125,25 @@ def _translate_transport_errors(fn: Any, *args: Any, **kwargs: Any) -> Any:
         raise requests.ConnectTimeout(str(e)) from e
     except httpx.ReadTimeout as e:
         raise requests.ReadTimeout(str(e)) from e
+    except (httpx.WriteTimeout, httpx.PoolTimeout) as e:
+        # Neither had a Timeout equivalent: a send that failed and a pool that
+        # could not hand out a connection both surfaced as ConnectionError.
+        raise requests.ConnectionError(str(e)) from e
     except httpx.TimeoutException as e:
         raise requests.Timeout(str(e)) from e
+    except httpx.UnsupportedProtocol as e:
+        # A URL rejected before any socket is opened. Deliberately not a
+        # ConnectionError: retrying a malformed URL cannot start working.
+        raise requests.exceptions.MissingSchema(str(e)) from e
+    except httpx.ProxyError as e:
+        raise requests.exceptions.ProxyError(str(e)) from e
     except httpx.ConnectError as e:
         raise requests.ConnectionError(str(e)) from e
-    except httpx.TransportError as e:
+    except httpx.TooManyRedirects as e:
+        raise requests.TooManyRedirects(str(e)) from e
+    except httpx.DecodingError as e:
+        raise requests.exceptions.ContentDecodingError(str(e)) from e
+    except httpx.RequestError as e:
         raise requests.ConnectionError(str(e)) from e
 
 
@@ -272,7 +294,7 @@ class LLMWhispererClientV2:
         """
         if getattr(self, "_transport_client", None) is None:
             self._transport_client = httpx.Client(
-                headers=self.headers,
+                headers={**_TRANSPORT_HEADERS, **self.headers},
                 follow_redirects=True,
                 timeout=httpx.Timeout(None),
             )
