@@ -253,6 +253,35 @@ def test_send_only_covers_every_parameter_whisper_builds(sample_file: str) -> No
     assert query <= _SEND_ONLY["extract"]
 
 
+_ADDED_PARAMS = {
+    "allow_rotated_text": (False, "False"),
+    "watermark_angle_threshold": (0.0, "0.0"),
+    "ignore_vertical_text": (True, "True"),
+    "derotate_threshold": (0, "0"),
+    "checkbox_confidence_threshold": (0.0, "0.0"),
+    "min_table_width": (0.5, "0.5"),
+}
+
+
+def _whisper_query(client: Any, **kwargs: Any) -> dict[str, list[str]]:
+    with patch.object(LLMWhispererClientV2, "_send", return_value=_mock_response(200, _WHISPER_OK)) as send:
+        client.whisper(url="https://e.test/a.pdf", wait_for_completion=False, **kwargs)
+    return parse_qs(urlparse(str(send.call_args[0][0].url)).query)
+
+
+def test_an_unrequested_parameter_is_not_sent() -> None:
+    """Sending one pins a value the service would otherwise choose, and the two
+    diverge the moment the service's own default moves."""
+    assert not set(_whisper_query(_client())) & set(_ADDED_PARAMS)
+
+
+@pytest.mark.parametrize(("name", "value", "expected"), [(n, v, e) for n, (v, e) in _ADDED_PARAMS.items()])
+def test_a_requested_parameter_is_sent(name: str, value: Any, expected: str) -> None:
+    """Every value here is falsy or off: a truthiness filter would drop them and
+    hand the decision back to the service without saying so."""
+    assert _whisper_query(_client(), **{name: value})[name] == [expected]
+
+
 def test_undeclared_parameters_are_refused() -> None:
     from unstract.llmwhisperer.sdk_llmwhisperer.api.whisper import status as status_module
 
@@ -269,7 +298,10 @@ def test_no_operation_sends_a_spec_default_the_client_never_set() -> None:
     assert "text_only" in inspect.signature(retrieve._get_kwargs).parameters
     assert "text_only" not in _SEND_ONLY["retrieve"]
     declared = set(inspect.signature(extract._get_kwargs).parameters) - {"body"}
-    assert declared - _SEND_ONLY["extract"] - {"url_query"}
+    # In URL mode the URL travels in the body, so the query parameter the
+    # generator writes for it is the one extract must never send.
+    assert declared - _SEND_ONLY["extract"] == {"url_query"}
+    assert _SEND_ONLY["extract"] <= declared
 
 
 # --------------------------------------------------------------------------
@@ -482,11 +514,17 @@ def _params(node: ast.FunctionDef) -> list[tuple[str, object]]:
     return list(zip([a.arg for a in args], defaults, strict=False))
 
 
-def _live_params(func: Any) -> list[tuple[str, object]]:
+def _live_params(func: Any, *, keyword_only: bool = True) -> list[tuple[str, object]]:
+    """Parameters in order, with their defaults.
+
+    ``keyword_only=False`` drops keyword-only parameters, for the comparisons
+    where a keyword-only addition is allowed: none is reachable from a released
+    call shape, so adding one leaves every existing call intact.
+    """
     return [
         (name, None if p.default is inspect.Parameter.empty else p.default)
         for name, p in inspect.signature(func).parameters.items()
-        if name not in ("self", "cls")
+        if name not in ("self", "cls") and (keyword_only or p.kind is not inspect.Parameter.KEYWORD_ONLY)
     ]
 
 
@@ -506,7 +544,7 @@ def test_public_methods_are_unchanged() -> None:
     for name, node in methods.items():
         live = getattr(LLMWhispererClientV2, name, None)
         assert live is not None, f"{name} disappeared from the client"
-        assert _live_params(live) == _params(node), name
+        assert _live_params(live, keyword_only=False) == _params(node), name
 
 
 def test_the_deprecated_parameter_resolver_is_unchanged() -> None:

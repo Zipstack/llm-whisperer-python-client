@@ -43,7 +43,7 @@ from unstract.llmwhisperer.sdk_llmwhisperer.api.webhook import (
 )
 from unstract.llmwhisperer.sdk_llmwhisperer.api.whisper import detail, extract, highlights, retrieve, status
 from unstract.llmwhisperer.sdk_llmwhisperer.models import WebhookConfig
-from unstract.llmwhisperer.sdk_llmwhisperer.types import File
+from unstract.llmwhisperer.sdk_llmwhisperer.types import UNSET, File, Unset
 
 BASE_URL_V2 = "https://llmwhisperer-api.us-central.unstract.com/api/v2"
 
@@ -78,6 +78,12 @@ _SEND_ONLY: dict[str, frozenset[str]] = {
             "file_name",
             "webhook_metadata",
             "use_webhook",
+            "allow_rotated_text",
+            "watermark_angle_threshold",
+            "ignore_vertical_text",
+            "derotate_threshold",
+            "checkbox_confidence_threshold",
+            "min_table_width",
             # In URL mode the URL travels in the body; it is not also a query
             # parameter, so `url` is deliberately absent here.
             "url_in_post",
@@ -578,6 +584,13 @@ class LLMWhispererClientV2:
         page_separator: str | None = None,
         line_splitter_strategy: str | None = None,
         file_name: str | None = None,
+        *,
+        allow_rotated_text: bool | Unset = UNSET,
+        watermark_angle_threshold: float | Unset = UNSET,
+        ignore_vertical_text: bool | Unset = UNSET,
+        derotate_threshold: float | Unset = UNSET,
+        checkbox_confidence_threshold: float | Unset = UNSET,
+        min_table_width: float | Unset = UNSET,
     ) -> Any:
         """Sends a request to the LLMWhisperer API to process a document.
         Refer to https://docs.unstract.com/llm_whisperer/apis/llm_whisperer_text_extraction_api.
@@ -628,6 +641,21 @@ class LLMWhispererClientV2:
             line_splitter_strategy (str, optional): The line splitter strategy.
                 Defaults to "left-priority".
             file_name (str, optional): The name of the file to store in reports. Defaults to "".
+            allow_rotated_text (bool, optional): Whether to keep words whose own orientation is
+              rotated. With this off, a word angled further than watermark_angle_threshold is
+              treated as a watermark and excluded. Defaults to True.
+            watermark_angle_threshold (float, optional): The angle in degrees beyond which a
+              rotated word counts as a watermark. Only applies when allow_rotated_text is off.
+              Defaults to 25.0.
+            ignore_vertical_text (bool, optional): Whether to drop vertically oriented text
+              instead of extracting it. Defaults to False.
+            derotate_threshold (float, optional): The page rotation in degrees beyond which the
+              page is straightened and re-read. Defaults to 10.0.
+            checkbox_confidence_threshold (float, optional): The minimum confidence a detected
+              checkbox mark must have to be reported as marked. Accepts a value in the range
+              [0.0, 1.0]. Defaults to 0.3.
+            min_table_width (float, optional): The minimum width a table must span, as a
+              fraction of the page width, to be extracted as a table. Defaults to 0.
 
         Returns:
             Dict[Any, Any]: The response from the API as a dictionary.
@@ -673,6 +701,23 @@ class LLMWhispererClientV2:
             "webhook_metadata": webhook_metadata,
             "use_webhook": use_webhook,
         }
+        # Only what the caller asked for. These have no default here on purpose:
+        # sending one pins a value the service would otherwise choose, and the
+        # two diverge the moment the service's own default moves.
+        params.update(
+            {
+                name: value
+                for name, value in (
+                    ("allow_rotated_text", allow_rotated_text),
+                    ("watermark_angle_threshold", watermark_angle_threshold),
+                    ("ignore_vertical_text", ignore_vertical_text),
+                    ("derotate_threshold", derotate_threshold),
+                    ("checkbox_confidence_threshold", checkbox_confidence_threshold),
+                    ("min_table_width", min_table_width),
+                )
+                if not isinstance(value, Unset)
+            }
+        )
 
         self.logger.debug("api_url: %s", api_url)
         self.logger.debug("params: %s", params)
