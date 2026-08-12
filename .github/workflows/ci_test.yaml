@@ -9,6 +9,29 @@ on:
     branches: [main]
 
 jobs:
+  sdk-drift:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.6.14"
+          python-version: 3.12.9
+
+      # The generated tree is committed, so an edit to it reviews like any
+      # other change and then disappears on the next regeneration. Same for a
+      # spec change that never had the generator run over it.
+      - name: Regenerate from the committed spec
+        run: ./tools/gen_sdk.sh
+
+      - name: Fail if the committed SDK is not what the spec generates
+        run: git diff --exit-code -- src/unstract/llmwhisperer/sdk_llmwhisperer
+
   test:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
