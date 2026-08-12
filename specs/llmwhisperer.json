@@ -104,6 +104,7 @@
     }
   },
   "info": {
+    "description": "The hosted regions are listed under `servers`; a self-hosted deployment serves the same API from its own URL, which every client takes as a configuration option.",
     "title": "Unstract LLMWhisperer",
     "version": "v2"
   },
@@ -1965,7 +1966,12 @@
   ],
   "servers": [
     {
-      "url": "https://llmwhisperer-api.unstract.com"
+      "description": "US region (the default of the published clients).",
+      "url": "https://llmwhisperer-api.us-central.unstract.com"
+    },
+    {
+      "description": "EU region.",
+      "url": "https://llmwhisperer-api.eu-west.unstract.com"
     }
   ]
 }
