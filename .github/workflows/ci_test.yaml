@@ -29,8 +29,12 @@ jobs:
       - name: Regenerate from the committed spec
         run: ./tools/gen_sdk.sh
 
+      # `git add -N` first: a diff alone cannot see a file the generator has
+      # newly created, which is exactly what a spec growing an endpoint does.
       - name: Fail if the committed SDK is not what the spec generates
-        run: git diff --exit-code -- src/unstract/llmwhisperer/sdk_llmwhisperer
+        run: |
+          git add -N -- src/unstract/llmwhisperer/sdk_llmwhisperer
+          git diff --exit-code -- src/unstract/llmwhisperer/sdk_llmwhisperer
 
   test:
     if: github.event.pull_request.draft == false

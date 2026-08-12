@@ -112,7 +112,7 @@ _TRANSPORT_HEADERS = {"Accept-Encoding": "identity"}
 #: httpx failure -> the ``requests`` class callers catch. First match wins, so a
 #: subclass has to precede the base it derives from, and ``RequestError`` last is
 #: what keeps a novel httpx failure from escaping untranslated.
-_TRANSLATIONS: tuple[tuple[type[httpx.RequestError], type[Exception]], ...] = (
+_TRANSLATIONS: tuple[tuple[type[Exception], type[Exception]], ...] = (
     # requests.ConnectTimeout is both a ConnectionError and a Timeout; the plain
     # Timeout httpx implies would stop matching half the callers.
     (httpx.ConnectTimeout, requests.ConnectTimeout),
@@ -129,6 +129,7 @@ _TRANSLATIONS: tuple[tuple[type[httpx.RequestError], type[Exception]], ...] = (
     (httpx.ConnectError, requests.ConnectionError),
     (httpx.TooManyRedirects, requests.TooManyRedirects),
     (httpx.DecodingError, requests.exceptions.ContentDecodingError),
+    (httpx.InvalidURL, requests.exceptions.InvalidURL),
     (httpx.RequestError, requests.ConnectionError),
 )
 
@@ -139,10 +140,15 @@ def _translate_transport_errors(fn: Any, *args: Any, **kwargs: Any) -> Any:
     Callers document and catch the ``requests`` classes, and the retry policy
     keys off them too, so the class chosen here decides whether a failure is
     retried.
+
+    ``RequestError`` is the catch-all for the transport subtree, which is where
+    a novel failure appears. httpx puts three families outside it: ``InvalidURL``,
+    translated here because ``requests`` raised its own, and ``StreamError`` and
+    ``CookieConflict``, which propagate as themselves.
     """
     try:
         return fn(*args, **kwargs)
-    except httpx.RequestError as e:
+    except (httpx.RequestError, httpx.InvalidURL) as e:
         for failure, equivalent in _TRANSLATIONS:
             if isinstance(e, failure):
                 raise equivalent(str(e)) from e
