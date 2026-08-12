@@ -351,7 +351,7 @@ def test_whisper_poll_loop_matches_the_published_client(sample_file: str) -> Non
     ("raised", "expected"),
     [
         (httpx.ConnectTimeout("connect timed out"), requests.ConnectTimeout),
-        (httpx.ReadTimeout("read timed out"), requests.Timeout),
+        (httpx.ReadTimeout("read timed out"), requests.ReadTimeout),
         (httpx.WriteTimeout("write timed out"), requests.Timeout),
         (httpx.PoolTimeout("pool timed out"), requests.Timeout),
         (httpx.ConnectError("refused"), requests.ConnectionError),
@@ -363,11 +363,17 @@ def test_whisper_poll_loop_matches_the_published_client(sample_file: str) -> Non
 )
 def test_transport_errors_are_translated(raised: Exception, expected: type[Exception]) -> None:
     """Callers catch the ``requests`` classes by name; httpx's are not
-    subclasses of them."""
+    subclasses of them.
+
+    The exact class matters, not just the family: a caller that catches
+    ``ReadTimeout`` sees nothing if a broader ``Timeout`` is raised in its
+    place.
+    """
     client = _client()
     with patch.object(client._transport, "send", side_effect=raised):
-        with pytest.raises(expected):
+        with pytest.raises(expected) as caught:
             client.get_usage_info()
+    assert type(caught.value) is expected
 
 
 def test_a_connect_timeout_is_still_a_connection_error() -> None:

@@ -109,6 +109,8 @@ def _translate_transport_errors(fn: Any, *args: Any, **kwargs: Any) -> Any:
         # requests.ConnectTimeout is both a ConnectionError and a Timeout; the
         # plain Timeout httpx implies would stop matching half the callers.
         raise requests.ConnectTimeout(str(e)) from e
+    except httpx.ReadTimeout as e:
+        raise requests.ReadTimeout(str(e)) from e
     except httpx.TimeoutException as e:
         raise requests.Timeout(str(e)) from e
     except httpx.ConnectError as e:
