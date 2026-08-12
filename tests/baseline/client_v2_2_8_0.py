@@ -1,5 +1,5 @@
-# Vendored from llm-whisperer-python-client 0e9fda3 (PR #34 head), the parity baseline.
-# DO NOT EDIT. Refresh with tools/refresh_baseline.sh when the baseline moves.
+# Vendored from the released llmwhisperer-client 2.8.0 wheel on PyPI. DO NOT EDIT.
+# Refresh with tools/refresh_baseline.sh when the parity baseline is intentionally moved.
 """This module provides a Python client for interacting with the LLMWhisperer
 API.
 

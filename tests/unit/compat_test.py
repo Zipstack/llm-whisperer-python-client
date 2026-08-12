@@ -12,6 +12,7 @@ instead of whatever the working tree currently says.
 """
 
 import ast
+import hashlib
 import importlib.util
 import inspect
 import io
@@ -35,8 +36,9 @@ from unstract.llmwhisperer.client_v2 import (
     LLMWhispererClientV2,
 )
 
-BASELINE_REF = "0e9fda3"
-BASELINE_PATH = Path(__file__).parents[1] / "baseline" / "client_v2_pr34.py"
+BASELINE_VERSION = "2.8.0"
+BASELINE_PATH = Path(__file__).parents[1] / "baseline" / "client_v2_2_8_0.py"
+BASELINE_SHA256 = "0c5c60d6c5bd6bab61ac9889b55764f692818badf0a8015f9bbfca022db75d0c"
 SPEC_PATH = Path(__file__).parents[2] / "specs" / "llmwhisperer.json"
 
 Call = Callable[[Any, str], Any]
@@ -762,6 +764,8 @@ def test_every_wrapped_operation_is_covered() -> None:
     assert declared - UNWRAPPED_OPERATIONS == set(_SEND_ONLY)
 
 
-def test_the_baseline_is_pinned() -> None:
-    assert BASELINE_REF in BASELINE_PATH.read_text(encoding="utf-8").splitlines()[0]
-    assert "DO NOT EDIT" in BASELINE_PATH.read_text(encoding="utf-8")
+def test_the_baseline_is_the_released_client_unmodified() -> None:
+    # A digest, not a version string in a comment: an edited baseline can claim
+    # any provenance it likes, and every parity test here would still pass.
+    assert BASELINE_PATH.name == f"client_v2_{BASELINE_VERSION.replace('.', '_')}.py"
+    assert hashlib.sha256(BASELINE_PATH.read_bytes()).hexdigest() == BASELINE_SHA256

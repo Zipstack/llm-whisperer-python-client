@@ -1,24 +1,31 @@
 #!/usr/bin/env bash
 # Refresh the vendored parity baseline in tests/baseline/.
 #
-# The compat suite compares this client against a fixed published one, not
+# The compat suite compares this client against the last RELEASED one, not
 # against the working tree — a baseline that moves with local edits measures
-# nothing. It is vendored rather than resolved at test time so the suite stays
-# offline, and refreshing it is a deliberate act with a reviewable diff.
+# nothing. It is taken from the published wheel rather than from a git ref
+# because the wheel is what callers actually have installed, and it is vendored
+# rather than downloaded at test time so the suite stays offline.
 #
-#   ./tools/refresh_baseline.sh 0e9fda3 pr34
+#   ./tools/refresh_baseline.sh 2.8.0
 set -euo pipefail
 
-REF="${1:?usage: refresh_baseline.sh <git-ref> <slug>}"
-SLUG="${2:?usage: refresh_baseline.sh <git-ref> <slug>}"
+VERSION="${1:?usage: refresh_baseline.sh <released-version>}"
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-OUT="$REPO/tests/baseline/client_v2_$SLUG.py"
+SLUG="${VERSION//./_}"
+WORK="$(mktemp -d)"
+trap 'rm -rf "$WORK"' EXIT
 
+(cd "$WORK" && pip download "llmwhisperer-client==$VERSION" --no-deps -q && unzip -o -q ./*.whl -d x)
+
+OUT="$REPO/tests/baseline/client_v2_$SLUG.py"
 {
-  echo "# Vendored from llm-whisperer-python-client $REF, the parity baseline."
-  echo "# DO NOT EDIT. Refresh with tools/refresh_baseline.sh when the baseline moves."
-  git -C "$REPO" show "$REF:src/unstract/llmwhisperer/client_v2.py"
+  echo "# Vendored from the released llmwhisperer-client $VERSION wheel on PyPI. DO NOT EDIT."
+  echo "# Refresh with tools/refresh_baseline.sh when the parity baseline is intentionally moved."
+  cat "$WORK/x/unstract/llmwhisperer/client_v2.py"
 } > "$OUT"
 
 echo "wrote $OUT"
-echo "update BASELINE_REF in tests/test_compat.py to match"
+echo "in tests/unit/compat_test.py set:"
+echo "  BASELINE_VERSION = \"$VERSION\""
+echo "  BASELINE_SHA256 = \"$(sha256sum "$OUT" | cut -d' ' -f1)\""
