@@ -10,6 +10,10 @@ set -euo pipefail
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 VENV="$REPO/.gen-venv"
+# The generator shells out to ruff for its own post-processing. Without this it
+# finds whatever ruff the caller happens to have, or none, and reports the miss
+# as a warning -- which the gate below reads as an unparsable spec.
+export PATH="$VENV/bin:$PATH"
 OUT="src/unstract/llmwhisperer/sdk_llmwhisperer"
 # Pinned: unpinned, a generator upgrade and a spec change produce the same diff,
 # and the drift gate can no longer tell them apart.
