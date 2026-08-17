@@ -289,6 +289,40 @@ def test_custom_headers_still_reach_the_request() -> None:
     assert request.headers["unstract-key"] == "override"
 
 
+def test_headers_changed_after_the_first_call_reach_the_next_one() -> None:
+    """The published client read `headers` on every call, so rotating a key
+    took effect immediately. A transport holding its own copy would keep
+    sending the old one until the client was rebuilt."""
+    client = _client()
+    with patch.object(LLMWhispererClientV2, "_send", return_value=_mock_response()) as send:
+        client.get_usage_info()
+        first = send.call_args[0][0].headers["unstract-key"]
+        client.headers["unstract-key"] = "rotated-key"
+        client.get_usage_info()
+        second = send.call_args[0][0].headers["unstract-key"]
+
+    assert first != "rotated-key"
+    assert second == "rotated-key"
+
+
+def test_the_transport_can_be_released_and_reused() -> None:
+    """Sockets are pooled, so there has to be a way to give them back."""
+    client = _client()
+    with patch.object(LLMWhispererClientV2, "_send", return_value=_mock_response()):
+        with client as entered:
+            assert entered is client
+            entered.get_usage_info()
+            opened = client._transport
+
+        assert opened.is_closed
+        assert client._transport is not opened
+        client.close()
+
+
+def test_closing_an_unused_client_is_not_an_error() -> None:
+    _client().close()
+
+
 def test_url_mode_does_not_put_the_url_on_the_query_string() -> None:
     """The URL travels in the body.
 

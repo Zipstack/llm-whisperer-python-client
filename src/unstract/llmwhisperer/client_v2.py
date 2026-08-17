@@ -298,15 +298,31 @@ class LLMWhispererClientV2:
 
         ``follow_redirects`` is on because the previous transport followed them
         by default; without it a 30x from a proxy or an http->https upgrade
-        surfaces as an empty response body. Timeouts are set per request.
+        surfaces as an empty response body. Timeouts and headers are set per
+        request.
         """
         if getattr(self, "_transport_client", None) is None:
             self._transport_client = httpx.Client(
-                headers={**_TRANSPORT_HEADERS, **self.headers},
                 follow_redirects=True,
                 timeout=httpx.Timeout(None),
             )
         return self._transport_client
+
+    def close(self) -> None:
+        """Release the pooled connections. Safe to call more than once, and the
+        client keeps working afterwards -- the next request opens a new pool."""
+        client = getattr(self, "_transport_client", None)
+        if client is not None:
+            client.close()
+            self._transport_client = None
+
+    def __enter__(self) -> "LLMWhispererClientV2":
+        """Enter a scope that closes the transport on the way out."""
+        return self
+
+    def __exit__(self, *exc_info: object) -> None:
+        """Close the transport, whether the scope ended well or badly."""
+        self.close()
 
     def _build_request(
         self, module: ModuleType, send_only: frozenset[str] | None = None, **kwargs: Any
@@ -321,6 +337,10 @@ class LLMWhispererClientV2:
 
         ``send_only`` narrows further for a call whose parameter set varies with
         its arguments; it must stay within the operation's declared set.
+
+        Headers are read per request rather than held by the transport, so
+        assigning ``headers`` or rotating the key reaches the next call the way
+        it did when every call passed them itself.
         """
         declared = _SEND_ONLY[module.__name__.rsplit(".", 1)[-1]]
         if send_only is None:
@@ -331,7 +351,13 @@ class LLMWhispererClientV2:
         params = {k: _wire_value(v) for k, v in built.pop("params", {}).items() if k in send_only}
         built.pop("headers", None)
         url = self.base_url + built.pop("url").removeprefix(_SPEC_PREFIX)
-        return self._transport.build_request(built.pop("method").upper(), url, params=params, **built)
+        return self._transport.build_request(
+            built.pop("method").upper(),
+            url,
+            params=params,
+            headers={**_TRANSPORT_HEADERS, **self.headers},
+            **built,
+        )
 
     @staticmethod
     def _is_retryable(exc: BaseException) -> bool:
