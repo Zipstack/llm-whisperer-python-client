@@ -209,9 +209,19 @@ def test_whisper_sends_corrected_param_names(mocker: MockerFixture, client_v2: L
     assert query["page_separator"] == ["---"]
     assert query["line_splitter_strategy"] == ["mid-priority"]
     assert query["file_name"] == ["invoice.pdf"]
-    assert "page_seperator" not in query
     assert "line_spitter_strategy" not in query
     assert "filename" not in query
+
+
+@pytest.mark.parametrize(("kwargs", "expected"), [({}, "<<<"), ({"page_separator": "---"}, "---")])
+def test_whisper_sends_page_separator_under_both_spellings(
+    mocker: MockerFixture, client_v2: LLMWhispererClientV2, kwargs: dict[str, str], expected: str
+) -> None:
+    """Older services read only the misspelled key, so both carry the value."""
+    query = _whisper_query(mocker, client_v2, **kwargs)
+
+    assert query["page_separator"] == [expected]
+    assert query["page_seperator"] == [expected]
 
 
 def test_whisper_defaults_when_no_param_passed(mocker: MockerFixture, client_v2: LLMWhispererClientV2) -> None:
@@ -224,11 +234,12 @@ def test_whisper_defaults_when_no_param_passed(mocker: MockerFixture, client_v2:
 
 
 def test_whisper_deprecated_page_seperator_is_forwarded(mocker: MockerFixture, client_v2: LLMWhispererClientV2) -> None:
-    """page_seperator still applies, under the corrected name."""
+    """page_seperator still applies, under both spellings on the wire."""
     with pytest.warns(DeprecationWarning, match="page_separator"):
         query = _whisper_query(mocker, client_v2, page_seperator="---")
 
     assert query["page_separator"] == ["---"]
+    assert query["page_seperator"] == ["---"]
 
 
 def test_whisper_deprecated_filename_is_forwarded(mocker: MockerFixture, client_v2: LLMWhispererClientV2) -> None:
