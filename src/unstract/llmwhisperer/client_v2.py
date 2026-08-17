@@ -224,6 +224,9 @@ class LLMWhispererClientV2:
     base_url: str = ""
     api_timeout: int = 120
 
+    #: Built on first use, and again after ``close()`` gives its sockets back.
+    _transport_client: httpx.Client | None = None
+
     def __init__(
         self,
         base_url: str = "",
@@ -301,7 +304,7 @@ class LLMWhispererClientV2:
         surfaces as an empty response body. Timeouts and headers are set per
         request.
         """
-        if getattr(self, "_transport_client", None) is None:
+        if self._transport_client is None:
             self._transport_client = httpx.Client(
                 follow_redirects=True,
                 timeout=httpx.Timeout(None),
@@ -311,9 +314,8 @@ class LLMWhispererClientV2:
     def close(self) -> None:
         """Release the pooled connections. Safe to call more than once, and the
         client keeps working afterwards -- the next request opens a new pool."""
-        client = getattr(self, "_transport_client", None)
-        if client is not None:
-            client.close()
+        if self._transport_client is not None:
+            self._transport_client.close()
             self._transport_client = None
 
     def __enter__(self) -> "LLMWhispererClientV2":
