@@ -36,6 +36,31 @@ jobs:
           git add -N -- src/unstract/llmwhisperer/sdk_llmwhisperer
           git diff --exit-code -- src/unstract/llmwhisperer/sdk_llmwhisperer
 
+  api-surface:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # griffe compares against the latest release tag, which the default
+          # shallow clone does not fetch.
+          fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.6.14"
+          python-version: 3.12.9
+
+      # Signatures only, against the latest release tag rather than a vendored
+      # file -- the one compat check whose reference point moves without anyone
+      # remembering to move it. It cannot see what goes out on the wire;
+      # tests/unit/compat_test.py owns that half and is not redundant with this.
+      - name: Check the public API against the last release
+        run: uvx griffe==2.2.0 check unstract.llmwhisperer -s src -f github -X
+
   test:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
