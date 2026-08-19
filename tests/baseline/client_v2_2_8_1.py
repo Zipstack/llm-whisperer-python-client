@@ -1,4 +1,4 @@
-# Vendored from the released llmwhisperer-client 2.8.0 wheel on PyPI. DO NOT EDIT.
+# Vendored from the released llmwhisperer-client 2.8.1 wheel on PyPI. DO NOT EDIT.
 # Refresh with tools/refresh_baseline.sh when the parity baseline is intentionally moved.
 """This module provides a Python client for interacting with the LLMWhisperer
 API.
@@ -519,7 +519,9 @@ class LLMWhispererClientV2:
         params = {
             "mode": mode,
             "output_mode": output_mode,
+            # Both spellings are sent: services older than v2.64.2 read only the misspelled one
             "page_separator": page_separator,
+            "page_seperator": page_separator,
             "pages_to_extract": pages_to_extract,
             "median_filter_size": median_filter_size,
             "gaussian_blur_radius": gaussian_blur_radius,

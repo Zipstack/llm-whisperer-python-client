@@ -7,7 +7,7 @@
 # because the wheel is what callers actually have installed, and it is vendored
 # rather than downloaded at test time so the suite stays offline.
 #
-#   ./tools/refresh_baseline.sh 2.8.0
+#   ./tools/refresh_baseline.sh 2.8.1
 set -euo pipefail
 
 VERSION="${1:?usage: refresh_baseline.sh <released-version>}"

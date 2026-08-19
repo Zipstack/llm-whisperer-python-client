@@ -37,9 +37,9 @@ from unstract.llmwhisperer.client_v2 import (
     LLMWhispererClientV2,
 )
 
-BASELINE_VERSION = "2.8.0"
-BASELINE_PATH = Path(__file__).parents[1] / "baseline" / "client_v2_2_8_0.py"
-BASELINE_SHA256 = "0c5c60d6c5bd6bab61ac9889b55764f692818badf0a8015f9bbfca022db75d0c"
+BASELINE_VERSION = "2.8.1"
+BASELINE_PATH = Path(__file__).parents[1] / "baseline" / "client_v2_2_8_1.py"
+BASELINE_SHA256 = "7da9e5530519dc08023ede4ad5a61739f397cca9bf61ccab04981fe641774f3c"
 SPEC_PATH = Path(__file__).parents[2] / "specs" / "llmwhisperer.json"
 
 Call = Callable[[Any, str], Any]
@@ -291,8 +291,11 @@ def test_custom_headers_still_reach_the_request() -> None:
 
 def test_headers_changed_after_the_first_call_reach_the_next_one() -> None:
     """The published client read `headers` on every call, so rotating a key
-    took effect immediately. A transport holding its own copy would keep
-    sending the old one until the client was rebuilt."""
+    took effect immediately.
+
+    A transport holding its own copy would keep sending the old one
+    until the client was rebuilt.
+    """
     client = _client()
     with patch.object(LLMWhispererClientV2, "_send", return_value=_mock_response()) as send:
         client.get_usage_info()
