@@ -36,6 +36,7 @@ def _get_kwargs(
     mode: ExtractMode | Unset = "form",
     output_mode: ExtractOutputMode | Unset = "layout_preserving",
     page_separator: str | Unset = "<<<",
+    page_seperator: str | Unset = "<<<",
     pages_to_extract: str | Unset = UNSET,
     tag: str | Unset = "default",
     url_query: str | Unset = UNSET,
@@ -98,6 +99,8 @@ def _get_kwargs(
     params["output_mode"] = json_output_mode
 
     params["page_separator"] = page_separator
+
+    params["page_seperator"] = page_seperator
 
     params["pages_to_extract"] = pages_to_extract
 
@@ -199,6 +202,7 @@ def sync_detailed(
     mode: ExtractMode | Unset = "form",
     output_mode: ExtractOutputMode | Unset = "layout_preserving",
     page_separator: str | Unset = "<<<",
+    page_seperator: str | Unset = "<<<",
     pages_to_extract: str | Unset = UNSET,
     tag: str | Unset = "default",
     url_query: str | Unset = UNSET,
@@ -230,6 +234,7 @@ def sync_detailed(
         mode (ExtractMode | Unset):  Default: 'form'.
         output_mode (ExtractOutputMode | Unset):  Default: 'layout_preserving'.
         page_separator (str | Unset):  Default: '<<<'.
+        page_seperator (str | Unset):  Default: '<<<'.
         pages_to_extract (str | Unset):
         tag (str | Unset):  Default: 'default'.
         url_query (str | Unset):
@@ -268,6 +273,7 @@ def sync_detailed(
         mode=mode,
         output_mode=output_mode,
         page_separator=page_separator,
+        page_seperator=page_seperator,
         pages_to_extract=pages_to_extract,
         tag=tag,
         url_query=url_query,
@@ -308,6 +314,7 @@ def sync(
     mode: ExtractMode | Unset = "form",
     output_mode: ExtractOutputMode | Unset = "layout_preserving",
     page_separator: str | Unset = "<<<",
+    page_seperator: str | Unset = "<<<",
     pages_to_extract: str | Unset = UNSET,
     tag: str | Unset = "default",
     url_query: str | Unset = UNSET,
@@ -339,6 +346,7 @@ def sync(
         mode (ExtractMode | Unset):  Default: 'form'.
         output_mode (ExtractOutputMode | Unset):  Default: 'layout_preserving'.
         page_separator (str | Unset):  Default: '<<<'.
+        page_seperator (str | Unset):  Default: '<<<'.
         pages_to_extract (str | Unset):
         tag (str | Unset):  Default: 'default'.
         url_query (str | Unset):
@@ -378,6 +386,7 @@ def sync(
         mode=mode,
         output_mode=output_mode,
         page_separator=page_separator,
+        page_seperator=page_seperator,
         pages_to_extract=pages_to_extract,
         tag=tag,
         url_query=url_query,
@@ -412,6 +421,7 @@ async def asyncio_detailed(
     mode: ExtractMode | Unset = "form",
     output_mode: ExtractOutputMode | Unset = "layout_preserving",
     page_separator: str | Unset = "<<<",
+    page_seperator: str | Unset = "<<<",
     pages_to_extract: str | Unset = UNSET,
     tag: str | Unset = "default",
     url_query: str | Unset = UNSET,
@@ -443,6 +453,7 @@ async def asyncio_detailed(
         mode (ExtractMode | Unset):  Default: 'form'.
         output_mode (ExtractOutputMode | Unset):  Default: 'layout_preserving'.
         page_separator (str | Unset):  Default: '<<<'.
+        page_seperator (str | Unset):  Default: '<<<'.
         pages_to_extract (str | Unset):
         tag (str | Unset):  Default: 'default'.
         url_query (str | Unset):
@@ -481,6 +492,7 @@ async def asyncio_detailed(
         mode=mode,
         output_mode=output_mode,
         page_separator=page_separator,
+        page_seperator=page_seperator,
         pages_to_extract=pages_to_extract,
         tag=tag,
         url_query=url_query,
@@ -519,6 +531,7 @@ async def asyncio(
     mode: ExtractMode | Unset = "form",
     output_mode: ExtractOutputMode | Unset = "layout_preserving",
     page_separator: str | Unset = "<<<",
+    page_seperator: str | Unset = "<<<",
     pages_to_extract: str | Unset = UNSET,
     tag: str | Unset = "default",
     url_query: str | Unset = UNSET,
@@ -550,6 +563,7 @@ async def asyncio(
         mode (ExtractMode | Unset):  Default: 'form'.
         output_mode (ExtractOutputMode | Unset):  Default: 'layout_preserving'.
         page_separator (str | Unset):  Default: '<<<'.
+        page_seperator (str | Unset):  Default: '<<<'.
         pages_to_extract (str | Unset):
         tag (str | Unset):  Default: 'default'.
         url_query (str | Unset):
@@ -590,6 +604,7 @@ async def asyncio(
             mode=mode,
             output_mode=output_mode,
             page_separator=page_separator,
+            page_seperator=page_seperator,
             pages_to_extract=pages_to_extract,
             tag=tag,
             url_query=url_query,

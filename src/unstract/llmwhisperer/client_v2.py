@@ -63,6 +63,7 @@ _SEND_ONLY: dict[str, frozenset[str]] = {
             "mode",
             "output_mode",
             "page_separator",
+            "page_seperator",
             "pages_to_extract",
             "median_filter_size",
             "gaussian_blur_radius",
@@ -312,8 +313,11 @@ class LLMWhispererClientV2:
         return self._transport_client
 
     def close(self) -> None:
-        """Release the pooled connections. Safe to call more than once, and the
-        client keeps working afterwards -- the next request opens a new pool."""
+        """Release the pooled connections.
+
+        Safe to call more than once, and the client keeps working
+        afterwards -- the next request opens a new pool.
+        """
         if self._transport_client is not None:
             self._transport_client.close()
             self._transport_client = None

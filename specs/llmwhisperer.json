@@ -1307,6 +1307,17 @@
             }
           },
           {
+            "deprecated": true,
+            "description": "Deprecated misspelling of `page_separator`, read only when that one is absent. Send both to stay compatible with older deployments.",
+            "in": "query",
+            "name": "page_seperator",
+            "required": false,
+            "schema": {
+              "default": "<<<",
+              "type": "string"
+            }
+          },
+          {
             "in": "query",
             "name": "pages_to_extract",
             "required": false,
