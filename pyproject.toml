@@ -18,7 +18,13 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 requires-python = ">=3.12"
-dependencies = ["requests>=2", "tenacity>=8.0"]
+# `requests` remains a dependency for its exception classes: callers catch
+# ConnectionError and Timeout by name, and the httpx equivalents are not
+# subclasses of them.
+# httpx is upper-bounded because the generated transport is written against
+# one minor series: a bump has to be regenerated and re-tested, not resolved
+# into.
+dependencies = ["httpx>=0.27,<0.29", "attrs>=23.2", "requests>=2", "tenacity>=8.0"]
 
 [dependency-groups]
 test = [
@@ -33,10 +39,14 @@ dev = [
     "mypy~=1.2.0",
     "pre-commit~=3.3.1",
     "yamllint>=1.35.1",
-    "ruff<1.0.0,>=0.2.2",
+    "ruff==0.11.9",
     "pytest>=8.0.1",
     "pycln>=2.5.0",
     "poethepoet>=0.34.0",
+    # Stub-only packages. Without them mypy reports the import itself as an
+    # error and cannot check any use of what it names.
+    "types-requests>=2.32",
+    "types-setuptools>=75",
 ]
 
 [tool.poe.tasks]
@@ -86,6 +96,10 @@ exclude = [
     "dist",
     "node_modules",
     "venv",
+    # Generated and vendored code is overwritten wholesale by its refresh
+    # script, so a lint finding there can never be fixed in place.
+    "src/unstract/llmwhisperer/sdk_llmwhisperer",
+    "tests/baseline",
 ]
 
 [tool.ruff.lint]
@@ -106,6 +120,11 @@ select = [
 fixable = ["ALL"]
 ignore = [
     "D205",
+    # docformatter pulls a closing quote back onto the last line and ruff moves
+    # it off again, so with both enabled every multi-line docstring flips on
+    # every run and pre-commit never converges. docformatter wins here because
+    # it is the one that also rewraps.
+    "D209",
     "D100",   # Missing docstring in public module
     "D101",   # Missing docstring in public class
     "D102",   # Missing docstring in public method
@@ -117,6 +136,13 @@ ignore = [
     "ANN102", # Missing type annotation for cls
     "N818",
 ]
+
+[tool.ruff.lint.per-file-ignores]
+# The client mirrors a service that takes and returns arbitrary JSON, and its
+# published signatures say so. Narrowing these annotations would describe an API
+# that is not the one callers have.
+"src/unstract/llmwhisperer/client_v2.py" = ["ANN401"]
+"tests/**" = ["ANN401"]
 
 [tool.ruff.format]
 quote-style = "double"
@@ -172,4 +198,6 @@ ignore_missing_imports = true
 pretty = true
 show_column_numbers = true
 show_error_codes = true
-exclude = ["venv", ".venv"]
+# Generated and vendored code is overwritten wholesale by its refresh script,
+# so a finding there can never be fixed in place.
+exclude = ["venv", ".venv", "src/unstract/llmwhisperer/sdk_llmwhisperer/", "tests/baseline/"]

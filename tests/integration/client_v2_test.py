@@ -4,6 +4,7 @@ from difflib import SequenceMatcher, unified_diff
 from pathlib import Path
 
 import pytest
+
 from unstract.llmwhisperer.client_v2 import (
     LLMWhispererClientException,
     LLMWhispererClientV2,
@@ -37,9 +38,9 @@ def test_get_usage_info(client_v2: LLMWhispererClientV2) -> None:
         "today_page_count",
         "current_page_count_table",
     ]
-    assert set(expected_keys).issubset(
-        usage_info.keys()
-    ), f"usage_info is missing expected keys: {set(expected_keys) - set(usage_info.keys())}"
+    assert set(expected_keys).issubset(usage_info.keys()), (
+        f"usage_info is missing expected keys: {set(expected_keys) - set(usage_info.keys())}"
+    )
 
 
 @pytest.mark.parametrize(
@@ -70,7 +71,7 @@ def test_whisper_v2(
         file_path=file_path,
         wait_for_completion=True,
     )
-    logger.debug(f"Result for '{output_mode}', '{mode}', " f"'{input_file}: {whisper_result}")
+    logger.debug(f"Result for '{output_mode}', '{mode}', '{input_file}: {whisper_result}")
 
     exp_basename = f"{Path(input_file).stem}.{mode}.{output_mode}.txt"
     exp_file = os.path.join(data_dir, "expected", exp_basename)
@@ -165,7 +166,7 @@ def test_whisper_v2_url_in_post(
 ) -> None:
     usage_before = client_v2.get_usage_info()
     whisper_result = client_v2.whisper(mode=mode, output_mode=output_mode, url=url, wait_for_completion=True)
-    logger.debug(f"Result for '{output_mode}', '{mode}', " f"'{input_file}: {whisper_result}")
+    logger.debug(f"Result for '{output_mode}', '{mode}', '{input_file}: {whisper_result}")
 
     exp_basename = f"{Path(input_file).stem}.{mode}.{output_mode}.txt"
     exp_file = os.path.join(data_dir, "expected", exp_basename)
@@ -243,7 +244,8 @@ def test_webhook(client_v2: LLMWhispererClientV2, url: str, token: str, webhook_
 
 
 def test_whisper_detail(client_v2: LLMWhispererClientV2, data_dir: str) -> None:
-    """Test whisper_detail returns extraction metadata after a whisper operation."""
+    """Test whisper_detail returns extraction metadata after a whisper
+    operation."""
     file_path = os.path.join(data_dir, "credit_card.pdf")
     whisper_result = client_v2.whisper(
         mode="native_text",
@@ -269,9 +271,9 @@ def test_whisper_detail(client_v2: LLMWhispererClientV2, data_dir: str) -> None:
         "upload_file_size_in_kb",
         "whisper_hash",
     ]
-    assert set(expected_keys).issubset(
-        detail.keys()
-    ), f"whisper_detail is missing expected keys: {set(expected_keys) - set(detail.keys())}"
+    assert set(expected_keys).issubset(detail.keys()), (
+        f"whisper_detail is missing expected keys: {set(expected_keys) - set(detail.keys())}"
+    )
     assert detail["mode"] == "native_text"
     assert detail["processed_pages"] > 0
     assert detail["total_pages"] > 0
@@ -287,10 +289,9 @@ def test_whisper_detail_not_found(client_v2: LLMWhispererClientV2) -> None:
     assert "message" in error
 
 
-def test_whisper_line_splitter_strategy_reaches_service(
-    client_v2: LLMWhispererClientV2, data_dir: str
-) -> None:
-    """An unknown strategy is rejected, which only happens if the param arrives."""
+def test_whisper_line_splitter_strategy_reaches_service(client_v2: LLMWhispererClientV2, data_dir: str) -> None:
+    """An unknown strategy is rejected, which only happens if the param
+    arrives."""
     file_path = os.path.join(data_dir, "credit_card.pdf")
 
     with pytest.raises(LLMWhispererClientException) as exc_info:
@@ -344,19 +345,19 @@ def assert_extracted_text(file_path: str, whisper_result: dict, mode: str, outpu
 def verify_usage(before_extract: dict, after_extract: dict, page_count: int, mode: str = "form") -> None:
     all_modes = ["form", "high_quality", "low_cost", "native_text"]
     all_modes.remove(mode)
-    assert (
-        after_extract["today_page_count"] == before_extract["today_page_count"] + page_count
-    ), "today_page_count calculation is wrong"
-    assert (
-        after_extract["current_page_count"] == before_extract["current_page_count"] + page_count
-    ), "current_page_count calculation is wrong"
+    assert after_extract["today_page_count"] == before_extract["today_page_count"] + page_count, (
+        "today_page_count calculation is wrong"
+    )
+    assert after_extract["current_page_count"] == before_extract["current_page_count"] + page_count, (
+        "current_page_count calculation is wrong"
+    )
     if after_extract["overage_page_count"] > 0:
-        assert (
-            after_extract["overage_page_count"] == before_extract["overage_page_count"] + page_count
-        ), "overage_page_count calculation is wrong"
-    assert (
-        after_extract[f"current_page_count_{mode}"] == before_extract[f"current_page_count_{mode}"] + page_count
-    ), f"{mode} mode calculation is wrong"
+        assert after_extract["overage_page_count"] == before_extract["overage_page_count"] + page_count, (
+            "overage_page_count calculation is wrong"
+        )
+    assert after_extract[f"current_page_count_{mode}"] == before_extract[f"current_page_count_{mode}"] + page_count, (
+        f"{mode} mode calculation is wrong"
+    )
     for i in range(len(all_modes)):
         assert (
             after_extract[f"current_page_count_{all_modes[i]}"] == before_extract[f"current_page_count_{all_modes[i]}"]

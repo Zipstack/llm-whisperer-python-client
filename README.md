@@ -15,6 +15,22 @@ This package provides **LLMWhispererClientV2**, the client for LLMWhisperer API 
 
 Documentation is available [here](https://docs.unstract.com/llmwhisperer/).
 
+### Covered surface
+
+`specs/llmwhisperer.json` describes the whole service, because it is generated
+from the service's own source. This client wraps a subset of it, unchanged from
+what it has always wrapped. The operations it deliberately does not expose are
+listed as `UNWRAPPED_OPERATIONS` in `tests/unit/compat_test.py`, which fails if
+the two disagree — so that list, not this paragraph, is what to read.
+
+### Service version note
+
+A custom `page_separator` needs LLMWhisperer **v2.64.2 or later**. The query
+parameter was renamed in that release; an older service reads only the previous
+spelling, so it falls back to the default `<<<` separator and reports no error.
+Check the service version before relying on a custom separator against a
+self-hosted deployment.
+
 ## Running Tests
 
 Install test dependencies and run all tests:
