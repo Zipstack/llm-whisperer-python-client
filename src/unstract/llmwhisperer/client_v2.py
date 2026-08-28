@@ -330,15 +330,23 @@ class LLMWhispererClientV2:
 
         The build is locked: unguarded, two threads racing the first call each
         open a pool and the loser is dropped without ever being closed.
+
+        What is returned is a local, never a re-read of the field: a concurrent
+        ``close()`` clears the field, and reading it twice can hand back the
+        ``None`` it was cleared to. Returning the client that was actually
+        acquired leaves the caller with a closed transport instead, which the
+        translation seam reports as the documented exception.
         """
-        if self._transport_client is None:
+        transport = self._transport_client
+        if transport is None:
             with self._transport_lock:
                 if self._transport_client is None:
                     self._transport_client = httpx.Client(
                         follow_redirects=True,
                         timeout=httpx.Timeout(None),
                     )
-        return self._transport_client
+                transport = self._transport_client
+        return transport
 
     def close(self) -> None:
         """Release the pooled connections.

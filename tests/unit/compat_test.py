@@ -760,6 +760,46 @@ def test_the_transport_is_built_once_under_concurrent_first_calls() -> None:
     client.close()
 
 
+class _ClearedAfterOneRead:
+    """A handle that a ``close()`` lands on between two reads.
+
+    Real thread interleaving cannot pin this: the window is a couple of
+    bytecodes wide. Reading the field a second time on the way out is the
+    defect, so the descriptor makes the second read return what ``close()``
+    would have left there.
+    """
+
+    def __init__(self, value: httpx.Client | None) -> None:
+        self.value = value
+        self.reads = 0
+
+    def __get__(self, obj: object, objtype: type | None = None) -> httpx.Client | None:
+        self.reads += 1
+        return self.value if self.reads == 1 else None
+
+    def __set__(self, obj: object, value: httpx.Client | None) -> None:
+        self.value = value  # pragma: no cover - present only to win over the instance dict
+
+
+def test_acquiring_the_transport_never_returns_a_cleared_handle() -> None:
+    """``close()`` clears the handle, so an accessor that reads it again on its
+    way out can hand back the ``None`` it was cleared to.
+
+    The caller then dereferences ``None`` and gets an
+    ``AttributeError``, which is in neither family this client promises.
+    Returning the handle that was actually acquired leaves them with a
+    closed transport instead, which is translated.
+    """
+    client = _client()
+    handle = _ClearedAfterOneRead(client._transport)
+    with patch.object(LLMWhispererClientV2, "_transport_client", handle):
+        acquired = client._transport
+    client.close()
+
+    assert isinstance(acquired, httpx.Client)
+    assert handle.reads == 1, "the handle is read more than once on the way out"
+
+
 def test_a_stream_upload_is_sent_streaming_and_read_back() -> None:
     """The streaming branch is the mode uploads use, and the only path that
     reads the body itself.
