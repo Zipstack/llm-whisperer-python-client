@@ -7,7 +7,7 @@ import httpx
 from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.error import Error
-from ...models.pdf_to_images_status_response_200 import PdfToImagesStatusResponse200
+from ...models.whisper_status import WhisperStatus
 from ...types import UNSET, Response
 
 
@@ -31,11 +31,9 @@ def _get_kwargs(
     return _kwargs
 
 
-def _parse_response(
-    *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Error | PdfToImagesStatusResponse200 | None:
+def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Error | WhisperStatus | None:
     if response.status_code == 200:
-        response_200 = PdfToImagesStatusResponse200.from_dict(response.json())
+        response_200 = WhisperStatus.from_dict(response.json())
 
         return response_200
 
@@ -49,6 +47,11 @@ def _parse_response(
 
         return response_401
 
+    if response.status_code == 402:
+        response_402 = Error.from_dict(response.json())
+
+        return response_402
+
     if response.status_code == 403:
         response_403 = Error.from_dict(response.json())
 
@@ -59,6 +62,21 @@ def _parse_response(
 
         return response_404
 
+    if response.status_code == 415:
+        response_415 = Error.from_dict(response.json())
+
+        return response_415
+
+    if response.status_code == 500:
+        response_500 = Error.from_dict(response.json())
+
+        return response_500
+
+    if response.status_code == 503:
+        response_503 = Error.from_dict(response.json())
+
+        return response_503
+
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
     else:
@@ -67,7 +85,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[Error | PdfToImagesStatusResponse200]:
+) -> Response[Error | WhisperStatus]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -80,7 +98,7 @@ def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
     whisper_hash: str,
-) -> Response[Error | PdfToImagesStatusResponse200]:
+) -> Response[Error | WhisperStatus]:
     """Poll PDF-to-images status
 
     Args:
@@ -91,7 +109,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Error | PdfToImagesStatusResponse200]
+        Response[Error | WhisperStatus]
     """
     kwargs = _get_kwargs(
         whisper_hash=whisper_hash,
@@ -108,7 +126,7 @@ def sync(
     *,
     client: AuthenticatedClient | Client,
     whisper_hash: str,
-) -> Error | PdfToImagesStatusResponse200 | None:
+) -> Error | WhisperStatus | None:
     """Poll PDF-to-images status
 
     Args:
@@ -119,7 +137,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Error | PdfToImagesStatusResponse200
+        Error | WhisperStatus
     """
     return sync_detailed(
         client=client,
@@ -131,7 +149,7 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
     whisper_hash: str,
-) -> Response[Error | PdfToImagesStatusResponse200]:
+) -> Response[Error | WhisperStatus]:
     """Poll PDF-to-images status
 
     Args:
@@ -142,7 +160,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Error | PdfToImagesStatusResponse200]
+        Response[Error | WhisperStatus]
     """
     kwargs = _get_kwargs(
         whisper_hash=whisper_hash,
@@ -157,7 +175,7 @@ async def asyncio(
     *,
     client: AuthenticatedClient | Client,
     whisper_hash: str,
-) -> Error | PdfToImagesStatusResponse200 | None:
+) -> Error | WhisperStatus | None:
     """Poll PDF-to-images status
 
     Args:
@@ -168,7 +186,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Error | PdfToImagesStatusResponse200
+        Error | WhisperStatus
     """
     return (
         await asyncio_detailed(

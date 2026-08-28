@@ -1,4 +1,5 @@
 import time
+from typing import Any
 from unittest.mock import MagicMock
 from urllib.parse import parse_qs, urlparse
 
@@ -77,7 +78,7 @@ def test_whisper_detail_not_found(mocker: MockerFixture, client_v2: LLMWhisperer
         client_v2.whisper_detail("nonexistent_hash")
 
     error = exc_info.value.error_message()
-    assert error["message"] == "Record not found"
+    assert error["message"] == "Record not found"  # type: ignore[index]
     assert exc_info.value.status_code == 400
     mock_send.assert_called_once()
 
@@ -163,7 +164,7 @@ def test_whisper_default_word_confidence_threshold(mocker: MockerFixture, client
     client_v2.whisper(url="https://example.com/test.pdf", wait_for_completion=False)
 
     prepared_request = mock_send.call_args[0][0]
-    query = parse_qs(urlparse(str(prepared_request.url)).query)
+    query = parse_qs(urlparse(str(prepared_request.url)).query, keep_blank_values=True)
     assert query["word_confidence_threshold"] == ["0.3"]
 
 
@@ -180,14 +181,14 @@ def test_whisper_custom_word_confidence_threshold(mocker: MockerFixture, client_
     )
 
     prepared_request = mock_send.call_args[0][0]
-    query = parse_qs(urlparse(str(prepared_request.url)).query)
+    query = parse_qs(urlparse(str(prepared_request.url)).query, keep_blank_values=True)
     assert query["word_confidence_threshold"] == ["0.75"]
 
 
 # --- Deprecated parameter tests ---
 
 
-def _whisper_query(mocker: MockerFixture, client_v2: LLMWhispererClientV2, **kwargs: object) -> dict[str, list[str]]:
+def _whisper_query(mocker: MockerFixture, client_v2: LLMWhispererClientV2, **kwargs: Any) -> dict[str, list[str]]:
     """Calls whisper() with a mocked transport and returns the query params
     sent."""
     mock_send = mocker.patch.object(LLMWhispererClientV2, "_send")
@@ -195,7 +196,7 @@ def _whisper_query(mocker: MockerFixture, client_v2: LLMWhispererClientV2, **kwa
 
     client_v2.whisper(url="https://example.com/test.pdf", wait_for_completion=False, **kwargs)
 
-    return parse_qs(urlparse(str(mock_send.call_args[0][0].url)).query)
+    return parse_qs(urlparse(str(mock_send.call_args[0][0].url)).query, keep_blank_values=True)
 
 
 def test_whisper_sends_corrected_param_names(mocker: MockerFixture, client_v2: LLMWhispererClientV2) -> None:
@@ -232,7 +233,9 @@ def test_whisper_defaults_when_no_param_passed(mocker: MockerFixture, client_v2:
 
     assert query["page_separator"] == ["<<<"]
     assert query["line_splitter_strategy"] == ["left-priority"]
-    assert "file_name" not in query  # sent blank, and parse_qs drops blank values
+    # Present and empty, not absent: the published client sent it that way, and
+    # the service reads the two differently.
+    assert query["file_name"] == [""]
 
 
 def test_whisper_deprecated_page_seperator_is_forwarded(mocker: MockerFixture, client_v2: LLMWhispererClientV2) -> None:
@@ -305,7 +308,7 @@ def llm_whisperer_no_retry_client() -> LLMWhispererClientV2:
 
 
 def _mock_response(status_code: int = 200, text: str = '{"status": "ok"}') -> MagicMock:
-    resp = MagicMock(spec=requests.Response)
+    resp = MagicMock(spec=httpx.Response)
     resp.status_code = status_code
     resp.text = text
     resp.headers = {}

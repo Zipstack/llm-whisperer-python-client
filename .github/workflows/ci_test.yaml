@@ -58,8 +58,16 @@ jobs:
       # file -- the one compat check whose reference point moves without anyone
       # remembering to move it. It cannot see what goes out on the wire;
       # tests/unit/compat_test.py owns that half and is not redundant with this.
+      #
+      # Named module by module rather than by package: the generated subpackage
+      # is public to griffe, so a spec change that drops a field would report as
+      # a breakage of this client's own surface -- and the drift gate above
+      # simultaneously requires the generated tree to follow the spec.
       - name: Check the public API against the last release
-        run: uvx griffe==2.2.0 check unstract.llmwhisperer -s src -f github -X
+        run: |
+          for module in unstract.llmwhisperer.client_v2 unstract.llmwhisperer.utils; do
+            uvx griffe==2.2.0 check "$module" -s src -f github -X
+          done
 
   test:
     if: github.event.pull_request.draft == false

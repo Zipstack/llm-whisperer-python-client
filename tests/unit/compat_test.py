@@ -188,7 +188,7 @@ def test_request_matches_the_published_client(name: str, sample_file: str) -> No
         theirs_url.netloc,
         theirs_url.path,
     )
-    assert parse_qs(ours_url.query) == parse_qs(theirs_url.query)
+    assert parse_qs(ours_url.query, keep_blank_values=True) == parse_qs(theirs_url.query, keep_blank_values=True)
 
     their_body = theirs.body.encode() if isinstance(theirs.body, str) else theirs.body
     if ours.headers.get("content-type") == "application/json":
@@ -204,8 +204,11 @@ def test_the_auth_header_is_unchanged(sample_file: str) -> None:
     assert ours.headers["unstract-key"] == theirs.headers["unstract-key"] == "test-key"
 
 
-def _wire_heads(*calls: Callable[[str], Any]) -> list[dict[str, str]]:
+def _wire_header_pairs(*calls: Callable[[str], Any]) -> list[list[tuple[str, str]]]:
     """Run each call against a loopback server and return its request headers.
+
+    Pairs rather than a mapping, so a header sent twice under two casings is
+    visible instead of collapsing into whichever came last.
 
     Below the client, the transport adds headers of its own -- and drops none
     of them into any object the client can be asked for. A socket is the only
@@ -245,12 +248,18 @@ def _wire_heads(*calls: Callable[[str], Any]) -> list[dict[str, str]]:
         server.close()
 
     return [
-        {
-            name.lower(): value.strip()
+        [
+            (name.lower(), value.strip())
             for name, _, value in (line.partition(":") for line in head.decode().split("\r\n")[1:])
-        }
+        ]
         for head in heads
     ]
+
+
+def _wire_heads(*calls: Callable[[str], Any]) -> list[dict[str, str]]:
+    """The same headers as a mapping, for the comparisons duplicates cannot
+    affect."""
+    return [dict(pairs) for pairs in _wire_header_pairs(*calls)]
 
 
 def test_wire_headers_match_the_published_client() -> None:
@@ -278,6 +287,33 @@ def test_custom_headers_override_the_transport_defaults() -> None:
         lambda url: _client(base_url=url, custom_headers={"Accept-Encoding": "gzip"}).get_usage_info()
     )
     assert ours["accept-encoding"] == "gzip"
+
+
+def test_a_case_variant_custom_header_overrides_rather_than_duplicates() -> None:
+    """The published client merged headers case-insensitively, so casing was
+    never part of the override contract.
+
+    A plain dict merge sends both, and PEP 3333 has the server join
+    them -- so neither value is the one asked for.
+    """
+    (ours,) = _wire_header_pairs(
+        lambda url: _client(base_url=url, custom_headers={"accept-encoding": "gzip"}).get_usage_info()
+    )
+    assert [value for name, value in ours if name == "accept-encoding"] == ["gzip"]
+
+
+def test_a_case_variant_key_override_does_not_also_send_the_real_key() -> None:
+    """Overriding the credential must replace it.
+
+    Sending the configured key alongside the override widens where it is
+    seen, and leaves the service reading neither.
+    """
+    (ours,) = _wire_header_pairs(
+        lambda url: _client(
+            base_url=url, api_key="real-key", custom_headers={"Unstract-Key": "override"}
+        ).get_usage_info()
+    )
+    assert [value for name, value in ours if name == "unstract-key"] == ["override"]
 
 
 def test_custom_headers_still_reach_the_request() -> None:
@@ -336,7 +372,7 @@ def test_url_mode_does_not_put_the_url_on_the_query_string() -> None:
     with patch.object(LLMWhispererClientV2, "_send", return_value=_mock_response(200, _WHISPER_OK)) as send:
         client.whisper(url="https://e.test/a.pdf", wait_for_completion=False)
     request = send.call_args[0][0]
-    assert "url" not in parse_qs(urlparse(str(request.url)).query)
+    assert "url" not in parse_qs(urlparse(str(request.url)).query, keep_blank_values=True)
     assert request.read() == b"https://e.test/a.pdf"
 
 
@@ -346,7 +382,7 @@ def test_upload_mode_does_not_send_url_in_post(sample_file: str) -> None:
     client = _client()
     with patch.object(LLMWhispererClientV2, "_send", return_value=_mock_response(200, _WHISPER_OK)) as send:
         client.whisper(file_path=sample_file, wait_for_completion=False)
-    assert "url_in_post" not in parse_qs(urlparse(str(send.call_args[0][0].url)).query)
+    assert "url_in_post" not in parse_qs(urlparse(str(send.call_args[0][0].url)).query, keep_blank_values=True)
 
 
 def test_booleans_are_sent_the_way_the_previous_transport_sent_them() -> None:
@@ -355,7 +391,7 @@ def test_booleans_are_sent_the_way_the_previous_transport_sent_them() -> None:
     client = _client()
     with patch.object(LLMWhispererClientV2, "_send", return_value=_mock_response(200, _WHISPER_OK)) as send:
         client.whisper(url="https://e.test/a.pdf", wait_for_completion=False, add_line_nos=True)
-    query = parse_qs(urlparse(str(send.call_args[0][0].url)).query)
+    query = parse_qs(urlparse(str(send.call_args[0][0].url)).query, keep_blank_values=True)
     assert query["add_line_nos"] == ["True"]
     assert query["url_in_post"] == ["True"]
     assert query["mark_vertical_lines"] == ["False"]
@@ -367,24 +403,27 @@ def test_send_only_covers_every_parameter_whisper_builds(sample_file: str) -> No
     client = _client()
     with patch.object(LLMWhispererClientV2, "_send", return_value=_mock_response(200, _WHISPER_OK)) as send:
         client.whisper(url="https://e.test/a.pdf", wait_for_completion=False)
-    query = set(parse_qs(urlparse(str(send.call_args[0][0].url)).query))
+    query = set(parse_qs(urlparse(str(send.call_args[0][0].url)).query, keep_blank_values=True))
     assert query <= _SEND_ONLY["extract"]
 
 
+# Every value is falsy on purpose, and a seventh parameter added here must be
+# too: that is what makes the test below fail if the filter that decides what to
+# send is ever written as a truthiness check.
 _ADDED_PARAMS = {
     "allow_rotated_text": (False, "False"),
     "watermark_angle_threshold": (0.0, "0.0"),
-    "ignore_vertical_text": (True, "True"),
+    "ignore_vertical_text": (False, "False"),
     "derotate_threshold": (0, "0"),
     "checkbox_confidence_threshold": (0.0, "0.0"),
-    "min_table_width": (0.5, "0.5"),
+    "min_table_width": (0.0, "0.0"),
 }
 
 
 def _whisper_query(client: Any, **kwargs: Any) -> dict[str, list[str]]:
     with patch.object(LLMWhispererClientV2, "_send", return_value=_mock_response(200, _WHISPER_OK)) as send:
         client.whisper(url="https://e.test/a.pdf", wait_for_completion=False, **kwargs)
-    return parse_qs(urlparse(str(send.call_args[0][0].url)).query)
+    return parse_qs(urlparse(str(send.call_args[0][0].url)).query, keep_blank_values=True)
 
 
 def test_an_unrequested_parameter_is_not_sent() -> None:
@@ -395,9 +434,8 @@ def test_an_unrequested_parameter_is_not_sent() -> None:
 
 @pytest.mark.parametrize(("name", "value", "expected"), [(n, v, e) for n, (v, e) in _ADDED_PARAMS.items()])
 def test_a_requested_parameter_is_sent(name: str, value: Any, expected: str) -> None:
-    """Every value here is falsy or off: a truthiness filter would drop them and
-    hand the decision back to the service without saying so.
-    """
+    """A truthiness filter would drop every one of these and hand the decision
+    back to the service without saying so."""
     assert _whisper_query(_client(), **{name: value})[name] == [expected]
 
 
@@ -515,6 +553,7 @@ def test_whisper_poll_loop_matches_the_published_client(sample_file: str) -> Non
         (httpx.UnsupportedProtocol("no scheme"), requests.exceptions.MissingSchema),
         (httpx.TooManyRedirects("looping"), requests.TooManyRedirects),
         (httpx.DecodingError("bad gzip"), requests.exceptions.ContentDecodingError),
+        (httpx.LocalProtocolError("Illegal header value"), requests.exceptions.InvalidHeader),
     ],
 )
 def test_transport_errors_are_translated(raised: Exception, expected: type[Exception]) -> None:
@@ -564,10 +603,12 @@ def test_no_httpx_failure_escapes_untranslated(cls: type[Exception]) -> None:
         (httpx.PoolTimeout("pool timed out"), True),
         (httpx.ProxyError("proxy exploded"), True),
         # Retrying these cannot start working: the URL stays malformed, the
-        # redirect chain stays a loop, the body stays undecodable.
+        # redirect chain stays a loop, the body stays undecodable, and a header
+        # the transport refuses to write stays illegal.
         (httpx.UnsupportedProtocol("no scheme"), False),
         (httpx.TooManyRedirects("looping"), False),
         (httpx.DecodingError("bad gzip"), False),
+        (httpx.LocalProtocolError("Illegal header value"), False),
     ],
 )
 def test_translation_decides_what_gets_retried(raised: Exception, retried: bool) -> None:
@@ -619,8 +660,13 @@ def test_redirects_are_followed() -> None:
 
 
 def test_the_request_timeout_reaches_the_transport() -> None:
-    """Unlike the other client's ``api_timeout``, this one is a real socket
-    timeout and must not be dropped on the way down."""
+    """``api_timeout`` was a real socket timeout in the published client, and
+    has to stay one here.
+
+    The generated transport carries a ``timeout`` of its own that this
+    client does not use, so the value has to be attached to the
+    request or it is silently dropped.
+    """
     client = _client()
     with patch.object(client._transport, "send", return_value=_mock_response()) as send:
         client.get_usage_info()
@@ -643,6 +689,112 @@ def test_the_deadline_still_stops_retries() -> None:
         response = client._send_request(request, timeout=1, deadline=time.time() + 0.3)
     assert response.status_code == 500
     assert send.call_count < 11
+
+
+def test_a_malformed_api_key_is_not_reported_as_a_network_failure() -> None:
+    """A key carrying a stray newline can never be written to the wire.
+
+    Treating that as a connection problem retries the identical broken
+    request until the backoff is spent and then blames the network.
+    """
+    server = socket.socket()
+    server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    server.bind(("127.0.0.1", 0))
+    server.listen(4)
+    try:
+        client = _client(
+            base_url=f"http://127.0.0.1:{server.getsockname()[1]}/api/v2",
+            api_key="sk-secret\n",
+            max_retries=2,
+            retry_min_wait=0,
+            retry_max_wait=0,
+        )
+        with patch.object(client._transport, "send", wraps=client._transport.send) as send:
+            with pytest.raises(requests.exceptions.InvalidHeader) as caught:
+                client.get_usage_info()
+    finally:
+        server.close()
+    assert send.call_count == 1
+    # httpx quotes the rejected value, and here that value is the credential.
+    assert "sk-secret" not in str(caught.value)
+
+
+def test_a_malformed_base_url_is_translated() -> None:
+    """The URL is rejected while the request is being built, which is outside
+    the send this client wraps."""
+    client = _client(base_url="http://[::1/api/v2")
+    with pytest.raises(requests.exceptions.InvalidURL):
+        client.get_usage_info()
+
+
+def test_a_call_on_a_closed_transport_raises_the_documented_exception() -> None:
+    """``close()`` can land while a call is in flight; httpx signals that with
+    a bare ``RuntimeError``, which is in neither family a caller handles."""
+    client = _client()
+    client._transport.close()
+    with pytest.raises(LLMWhispererClientException):
+        client.get_usage_info()
+
+
+def test_the_transport_is_built_once_under_concurrent_first_calls() -> None:
+    """An unguarded lazy build opens one pool per racing thread and drops all
+    but one of them without ever closing it."""
+    client = _client()
+    built: list[httpx.Client] = []
+    real = httpx.Client
+
+    def slow_build(**kwargs: Any) -> httpx.Client:
+        time.sleep(0.01)
+        made = real(**kwargs)
+        built.append(made)
+        return made
+
+    with patch("httpx.Client", slow_build):
+        threads = [threading.Thread(target=lambda: client._transport) for _ in range(8)]
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join(timeout=10)
+
+    assert len(built) == 1
+    client.close()
+
+
+def test_a_stream_upload_is_sent_streaming_and_read_back() -> None:
+    """The streaming branch is the mode uploads use, and the only path that
+    reads the body itself.
+
+    Every other test stops one layer above it.
+    """
+    client = _client()
+    response = httpx.Response(200, content=_WHISPER_OK.encode())
+    with patch.object(client._transport, "send", return_value=response) as send:
+        with patch.object(response, "read", wraps=response.read) as read:
+            client.whisper(stream=io.BytesIO(b"STREAM"), wait_for_completion=False)
+    assert send.call_args.kwargs["stream"] is True
+    assert read.called
+    assert send.call_args[0][0].read() == b"STREAM"
+
+
+def test_a_body_with_no_declared_charset_is_read_as_utf_8() -> None:
+    """The methods that do not pin an ``encoding`` read ``text`` off a real
+    response.
+
+    The published client sniffed an undeclared charset; httpx assumes
+    UTF-8, which is what RFC 8259 requires of JSON. UTF-8 is the stance
+    taken here: a body that is neither UTF-8 nor declared is a service
+    out of contract, and decodes lossily rather than silently as
+    something else.
+    """
+    client = _client()
+    payload = json.dumps({"message": "café"}, ensure_ascii=False)
+    with patch.object(LLMWhispererClientV2, "_send", return_value=httpx.Response(200, content=payload.encode())):
+        assert client.get_usage_info()["message"] == "café"
+
+    undeclared = httpx.Response(200, content=payload.encode("latin-1"))
+    assert undeclared.charset_encoding is None
+    with patch.object(LLMWhispererClientV2, "_send", return_value=undeclared):
+        assert client.get_usage_info()["message"] == "caf�"
 
 
 def test_encoding_is_applied_to_a_real_response(sample_file: str) -> None:
@@ -801,8 +953,26 @@ def test_every_wrapped_operation_is_covered() -> None:
     assert declared - UNWRAPPED_OPERATIONS == set(_SEND_ONLY)
 
 
+def test_every_operation_declares_the_failures_callers_actually_hit() -> None:
+    """An undeclared status makes the generated client return ``None``, which
+    is indistinguishable from a documented result.
+
+    402 and 415 -- quota exhausted and unsupported file type -- are the
+    two most likely failures on a document API.
+    """
+    spec = json.loads(SPEC_PATH.read_text())
+    for path, operations in spec["paths"].items():
+        for method, operation in operations.items():
+            if method not in {"get", "post", "put", "patch", "delete"}:
+                continue
+            missing = {"402", "415", "500", "503"} - set(operation["responses"])
+            assert not missing, f"{method.upper()} {path} declares no {sorted(missing)}"
+
+
 def test_the_baseline_is_the_released_client_unmodified() -> None:
-    # A digest, not a version string in a comment: an edited baseline can claim
-    # any provenance it likes, and every parity test here would still pass.
+    # A change detector, not a provenance check: the digest is computed from the
+    # vendored file, so it cannot tell what the wheel held. What it does is force
+    # an edit to the baseline to show up as a changed line in the diff, instead
+    # of quietly moving what every parity test here compares against.
     assert BASELINE_PATH.name == f"client_v2_{BASELINE_VERSION.replace('.', '_')}.py"
     assert hashlib.sha256(BASELINE_PATH.read_bytes()).hexdigest() == BASELINE_SHA256

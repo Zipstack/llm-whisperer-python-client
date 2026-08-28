@@ -14,8 +14,7 @@ from ...types import UNSET, Response, Unset
 def _get_kwargs(
     *,
     extract_all_lines: bool | Unset = False,
-    lines: str,
-    mode: str | Unset = "form",
+    lines: str | Unset = UNSET,
     whisper_hash: str,
 ) -> dict[str, Any]:
 
@@ -24,8 +23,6 @@ def _get_kwargs(
     params["extract_all_lines"] = extract_all_lines
 
     params["lines"] = lines
-
-    params["mode"] = mode
 
     params["whisper_hash"] = whisper_hash
 
@@ -58,6 +55,11 @@ def _parse_response(
 
         return response_401
 
+    if response.status_code == 402:
+        response_402 = Error.from_dict(response.json())
+
+        return response_402
+
     if response.status_code == 403:
         response_403 = Error.from_dict(response.json())
 
@@ -67,6 +69,21 @@ def _parse_response(
         response_404 = Error.from_dict(response.json())
 
         return response_404
+
+    if response.status_code == 415:
+        response_415 = Error.from_dict(response.json())
+
+        return response_415
+
+    if response.status_code == 500:
+        response_500 = Error.from_dict(response.json())
+
+        return response_500
+
+    if response.status_code == 503:
+        response_503 = Error.from_dict(response.json())
+
+        return response_503
 
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
@@ -89,16 +106,14 @@ def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
     extract_all_lines: bool | Unset = False,
-    lines: str,
-    mode: str | Unset = "form",
+    lines: str | Unset = UNSET,
     whisper_hash: str,
 ) -> Response[Error | HighlightsResponse200]:
     """Line-level highlight geometry for an extraction
 
     Args:
         extract_all_lines (bool | Unset):  Default: False.
-        lines (str):
-        mode (str | Unset):  Default: 'form'.
+        lines (str | Unset):
         whisper_hash (str):
 
     Raises:
@@ -111,7 +126,6 @@ def sync_detailed(
     kwargs = _get_kwargs(
         extract_all_lines=extract_all_lines,
         lines=lines,
-        mode=mode,
         whisper_hash=whisper_hash,
     )
 
@@ -126,16 +140,14 @@ def sync(
     *,
     client: AuthenticatedClient | Client,
     extract_all_lines: bool | Unset = False,
-    lines: str,
-    mode: str | Unset = "form",
+    lines: str | Unset = UNSET,
     whisper_hash: str,
 ) -> Error | HighlightsResponse200 | None:
     """Line-level highlight geometry for an extraction
 
     Args:
         extract_all_lines (bool | Unset):  Default: False.
-        lines (str):
-        mode (str | Unset):  Default: 'form'.
+        lines (str | Unset):
         whisper_hash (str):
 
     Raises:
@@ -149,7 +161,6 @@ def sync(
         client=client,
         extract_all_lines=extract_all_lines,
         lines=lines,
-        mode=mode,
         whisper_hash=whisper_hash,
     ).parsed
 
@@ -158,16 +169,14 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
     extract_all_lines: bool | Unset = False,
-    lines: str,
-    mode: str | Unset = "form",
+    lines: str | Unset = UNSET,
     whisper_hash: str,
 ) -> Response[Error | HighlightsResponse200]:
     """Line-level highlight geometry for an extraction
 
     Args:
         extract_all_lines (bool | Unset):  Default: False.
-        lines (str):
-        mode (str | Unset):  Default: 'form'.
+        lines (str | Unset):
         whisper_hash (str):
 
     Raises:
@@ -180,7 +189,6 @@ async def asyncio_detailed(
     kwargs = _get_kwargs(
         extract_all_lines=extract_all_lines,
         lines=lines,
-        mode=mode,
         whisper_hash=whisper_hash,
     )
 
@@ -193,16 +201,14 @@ async def asyncio(
     *,
     client: AuthenticatedClient | Client,
     extract_all_lines: bool | Unset = False,
-    lines: str,
-    mode: str | Unset = "form",
+    lines: str | Unset = UNSET,
     whisper_hash: str,
 ) -> Error | HighlightsResponse200 | None:
     """Line-level highlight geometry for an extraction
 
     Args:
         extract_all_lines (bool | Unset):  Default: False.
-        lines (str):
-        mode (str | Unset):  Default: 'form'.
+        lines (str | Unset):
         whisper_hash (str):
 
     Raises:
@@ -217,7 +223,6 @@ async def asyncio(
             client=client,
             extract_all_lines=extract_all_lines,
             lines=lines,
-            mode=mode,
             whisper_hash=whisper_hash,
         )
     ).parsed

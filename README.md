@@ -17,19 +17,24 @@ Documentation is available [here](https://docs.unstract.com/llmwhisperer/).
 
 ### Covered surface
 
-`specs/llmwhisperer.json` describes the whole service, because it is generated
-from the service's own source. This client wraps a subset of it, unchanged from
-what it has always wrapped. The operations it deliberately does not expose are
-listed as `UNWRAPPED_OPERATIONS` in `tests/unit/compat_test.py`, which fails if
-the two disagree — so that list, not this paragraph, is what to read.
+`specs/llmwhisperer.json` describes the whole service. It is a copy of the
+service's own published spec, taken at the revision `tools/gen_sdk.sh` records —
+never edited here, because an edit is reverted by the next refresh. A fix goes
+upstream first and comes back through a re-copy.
 
-### Service version note
+This client wraps a subset of that surface, unchanged from what it has always
+wrapped. The operations it deliberately does not expose are listed as
+`UNWRAPPED_OPERATIONS` in `tests/unit/compat_test.py`, which fails if the two
+disagree — so that list, not this paragraph, is what to read.
 
-A custom `page_separator` needs LLMWhisperer **v2.64.2 or later**. The query
-parameter was renamed in that release; an older service reads only the previous
-spelling, so it falls back to the default `<<<` separator and reports no error.
-Check the service version before relying on a custom separator against a
-self-hosted deployment.
+### Page separator
+
+The query parameter carrying the page separator was renamed in LLMWhisperer
+v2.64.2; before that release the service read only the earlier, misspelled
+spelling. The client sends the value under **both** spellings, so a custom
+`page_separator` applies whatever version the service is on, and no version
+check is needed against a self-hosted deployment. The behaviour is pinned by
+`tests/unit/client_v2_test.py`; do not drop either spelling as redundant.
 
 ## Running Tests
 

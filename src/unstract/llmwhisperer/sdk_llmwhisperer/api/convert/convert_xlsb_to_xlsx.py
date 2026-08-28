@@ -14,15 +14,12 @@ from ...types import UNSET, File, Response, Unset
 def _get_kwargs(
     *,
     body: File | Unset = UNSET,
-    mode: str | Unset = "form",
     url_query: str | Unset = UNSET,
     url_in_post: bool | Unset = False,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     params: dict[str, Any] = {}
-
-    params["mode"] = mode
 
     params["url"] = url_query
 
@@ -60,6 +57,11 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
 
         return response_401
 
+    if response.status_code == 402:
+        response_402 = Error.from_dict(response.json())
+
+        return response_402
+
     if response.status_code == 403:
         response_403 = Error.from_dict(response.json())
 
@@ -69,6 +71,21 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
         response_404 = Error.from_dict(response.json())
 
         return response_404
+
+    if response.status_code == 415:
+        response_415 = Error.from_dict(response.json())
+
+        return response_415
+
+    if response.status_code == 500:
+        response_500 = Error.from_dict(response.json())
+
+        return response_500
+
+    if response.status_code == 503:
+        response_503 = Error.from_dict(response.json())
+
+        return response_503
 
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
@@ -89,14 +106,12 @@ def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
     body: File | Unset = UNSET,
-    mode: str | Unset = "form",
     url_query: str | Unset = UNSET,
     url_in_post: bool | Unset = False,
 ) -> Response[Error | File]:
     """Convert an XLSB workbook to XLSX
 
     Args:
-        mode (str | Unset):  Default: 'form'.
         url_query (str | Unset):
         url_in_post (bool | Unset):  Default: False.
         body (File | Unset):
@@ -110,7 +125,6 @@ def sync_detailed(
     """
     kwargs = _get_kwargs(
         body=body,
-        mode=mode,
         url_query=url_query,
         url_in_post=url_in_post,
     )
@@ -126,14 +140,12 @@ def sync(
     *,
     client: AuthenticatedClient | Client,
     body: File | Unset = UNSET,
-    mode: str | Unset = "form",
     url_query: str | Unset = UNSET,
     url_in_post: bool | Unset = False,
 ) -> Error | File | None:
     """Convert an XLSB workbook to XLSX
 
     Args:
-        mode (str | Unset):  Default: 'form'.
         url_query (str | Unset):
         url_in_post (bool | Unset):  Default: False.
         body (File | Unset):
@@ -148,7 +160,6 @@ def sync(
     return sync_detailed(
         client=client,
         body=body,
-        mode=mode,
         url_query=url_query,
         url_in_post=url_in_post,
     ).parsed
@@ -158,14 +169,12 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
     body: File | Unset = UNSET,
-    mode: str | Unset = "form",
     url_query: str | Unset = UNSET,
     url_in_post: bool | Unset = False,
 ) -> Response[Error | File]:
     """Convert an XLSB workbook to XLSX
 
     Args:
-        mode (str | Unset):  Default: 'form'.
         url_query (str | Unset):
         url_in_post (bool | Unset):  Default: False.
         body (File | Unset):
@@ -179,7 +188,6 @@ async def asyncio_detailed(
     """
     kwargs = _get_kwargs(
         body=body,
-        mode=mode,
         url_query=url_query,
         url_in_post=url_in_post,
     )
@@ -193,14 +201,12 @@ async def asyncio(
     *,
     client: AuthenticatedClient | Client,
     body: File | Unset = UNSET,
-    mode: str | Unset = "form",
     url_query: str | Unset = UNSET,
     url_in_post: bool | Unset = False,
 ) -> Error | File | None:
     """Convert an XLSB workbook to XLSX
 
     Args:
-        mode (str | Unset):  Default: 'form'.
         url_query (str | Unset):
         url_in_post (bool | Unset):  Default: False.
         body (File | Unset):
@@ -216,7 +222,6 @@ async def asyncio(
         await asyncio_detailed(
             client=client,
             body=body,
-            mode=mode,
             url_query=url_query,
             url_in_post=url_in_post,
         )

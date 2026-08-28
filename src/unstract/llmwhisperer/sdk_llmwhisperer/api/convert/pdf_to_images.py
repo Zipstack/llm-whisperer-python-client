@@ -7,6 +7,7 @@ import httpx
 from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.error import Error
+from ...models.pdf_to_images_format import PdfToImagesFormat
 from ...models.whisper_accepted import WhisperAccepted
 from ...types import UNSET, File, Response, Unset
 
@@ -15,8 +16,7 @@ def _get_kwargs(
     *,
     body: File | Unset = UNSET,
     file_name: str | Unset = "sample.pdf",
-    format_: str | Unset = "png",
-    mode: str | Unset = "form",
+    format_: PdfToImagesFormat | Unset = "png",
     tag: str | Unset = "default",
     url_query: str | Unset = UNSET,
     url_in_post: bool | Unset = False,
@@ -27,9 +27,11 @@ def _get_kwargs(
 
     params["file_name"] = file_name
 
-    params["format"] = format_
+    json_format_: str | Unset = UNSET
+    if not isinstance(format_, Unset):
+        json_format_ = format_
 
-    params["mode"] = mode
+    params["format"] = json_format_
 
     params["tag"] = tag
 
@@ -71,6 +73,11 @@ def _parse_response(
 
         return response_401
 
+    if response.status_code == 402:
+        response_402 = Error.from_dict(response.json())
+
+        return response_402
+
     if response.status_code == 403:
         response_403 = Error.from_dict(response.json())
 
@@ -80,6 +87,21 @@ def _parse_response(
         response_404 = Error.from_dict(response.json())
 
         return response_404
+
+    if response.status_code == 415:
+        response_415 = Error.from_dict(response.json())
+
+        return response_415
+
+    if response.status_code == 500:
+        response_500 = Error.from_dict(response.json())
+
+        return response_500
+
+    if response.status_code == 503:
+        response_503 = Error.from_dict(response.json())
+
+        return response_503
 
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
@@ -103,8 +125,7 @@ def sync_detailed(
     client: AuthenticatedClient | Client,
     body: File | Unset = UNSET,
     file_name: str | Unset = "sample.pdf",
-    format_: str | Unset = "png",
-    mode: str | Unset = "form",
+    format_: PdfToImagesFormat | Unset = "png",
     tag: str | Unset = "default",
     url_query: str | Unset = UNSET,
     url_in_post: bool | Unset = False,
@@ -113,8 +134,7 @@ def sync_detailed(
 
     Args:
         file_name (str | Unset):  Default: 'sample.pdf'.
-        format_ (str | Unset):  Default: 'png'.
-        mode (str | Unset):  Default: 'form'.
+        format_ (PdfToImagesFormat | Unset):  Default: 'png'.
         tag (str | Unset):  Default: 'default'.
         url_query (str | Unset):
         url_in_post (bool | Unset):  Default: False.
@@ -131,7 +151,6 @@ def sync_detailed(
         body=body,
         file_name=file_name,
         format_=format_,
-        mode=mode,
         tag=tag,
         url_query=url_query,
         url_in_post=url_in_post,
@@ -149,8 +168,7 @@ def sync(
     client: AuthenticatedClient | Client,
     body: File | Unset = UNSET,
     file_name: str | Unset = "sample.pdf",
-    format_: str | Unset = "png",
-    mode: str | Unset = "form",
+    format_: PdfToImagesFormat | Unset = "png",
     tag: str | Unset = "default",
     url_query: str | Unset = UNSET,
     url_in_post: bool | Unset = False,
@@ -159,8 +177,7 @@ def sync(
 
     Args:
         file_name (str | Unset):  Default: 'sample.pdf'.
-        format_ (str | Unset):  Default: 'png'.
-        mode (str | Unset):  Default: 'form'.
+        format_ (PdfToImagesFormat | Unset):  Default: 'png'.
         tag (str | Unset):  Default: 'default'.
         url_query (str | Unset):
         url_in_post (bool | Unset):  Default: False.
@@ -178,7 +195,6 @@ def sync(
         body=body,
         file_name=file_name,
         format_=format_,
-        mode=mode,
         tag=tag,
         url_query=url_query,
         url_in_post=url_in_post,
@@ -190,8 +206,7 @@ async def asyncio_detailed(
     client: AuthenticatedClient | Client,
     body: File | Unset = UNSET,
     file_name: str | Unset = "sample.pdf",
-    format_: str | Unset = "png",
-    mode: str | Unset = "form",
+    format_: PdfToImagesFormat | Unset = "png",
     tag: str | Unset = "default",
     url_query: str | Unset = UNSET,
     url_in_post: bool | Unset = False,
@@ -200,8 +215,7 @@ async def asyncio_detailed(
 
     Args:
         file_name (str | Unset):  Default: 'sample.pdf'.
-        format_ (str | Unset):  Default: 'png'.
-        mode (str | Unset):  Default: 'form'.
+        format_ (PdfToImagesFormat | Unset):  Default: 'png'.
         tag (str | Unset):  Default: 'default'.
         url_query (str | Unset):
         url_in_post (bool | Unset):  Default: False.
@@ -218,7 +232,6 @@ async def asyncio_detailed(
         body=body,
         file_name=file_name,
         format_=format_,
-        mode=mode,
         tag=tag,
         url_query=url_query,
         url_in_post=url_in_post,
@@ -234,8 +247,7 @@ async def asyncio(
     client: AuthenticatedClient | Client,
     body: File | Unset = UNSET,
     file_name: str | Unset = "sample.pdf",
-    format_: str | Unset = "png",
-    mode: str | Unset = "form",
+    format_: PdfToImagesFormat | Unset = "png",
     tag: str | Unset = "default",
     url_query: str | Unset = UNSET,
     url_in_post: bool | Unset = False,
@@ -244,8 +256,7 @@ async def asyncio(
 
     Args:
         file_name (str | Unset):  Default: 'sample.pdf'.
-        format_ (str | Unset):  Default: 'png'.
-        mode (str | Unset):  Default: 'form'.
+        format_ (PdfToImagesFormat | Unset):  Default: 'png'.
         tag (str | Unset):  Default: 'default'.
         url_query (str | Unset):
         url_in_post (bool | Unset):  Default: False.
@@ -264,7 +275,6 @@ async def asyncio(
             body=body,
             file_name=file_name,
             format_=format_,
-            mode=mode,
             tag=tag,
             url_query=url_query,
             url_in_post=url_in_post,

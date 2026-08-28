@@ -8,7 +8,7 @@ from .extract_line_splitter_strategy import ExtractLineSplitterStrategy
 from .extract_mode import ExtractMode
 from .extract_output_mode import ExtractOutputMode
 from .highlights_response_200 import HighlightsResponse200
-from .pdf_to_images_status_response_200 import PdfToImagesStatusResponse200
+from .pdf_to_images_format import PdfToImagesFormat
 from .test_connection_response_200 import TestConnectionResponse200
 from .usage_info_response_200 import UsageInfoResponse200
 from .usage_response_200 import UsageResponse200
@@ -34,7 +34,7 @@ __all__ = (
     "ExtractMode",
     "ExtractOutputMode",
     "HighlightsResponse200",
-    "PdfToImagesStatusResponse200",
+    "PdfToImagesFormat",
     "TestConnectionResponse200",
     "UsageInfoResponse200",
     "UsageResponse200",

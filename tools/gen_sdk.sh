@@ -9,6 +9,14 @@
 set -euo pipefail
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+# Where specs/llmwhisperer.json came from. It is a copy, not a fork: refresh it
+# by re-copying from upstream at a newer revision and recording that revision
+# here, so the next refresher can tell what they are replacing.
+SPEC_SOURCE_REPO="Zipstack/unstract-llm-whisperer"
+SPEC_SOURCE_PATH="specs/llmwhisperer.json"
+SPEC_SOURCE_REV="750f941ee229e12cc05d8bd85edaab6a337a8758"
+
 VENV="$REPO/.gen-venv"
 # The generator shells out to ruff for its own post-processing. Without this it
 # finds whatever ruff the caller happens to have, or none, and reports the miss
@@ -54,3 +62,4 @@ find "$REPO/$OUT" -name '*.py' -print0 | while IFS= read -r -d '' f; do
 done
 
 echo "generated $OUT ($(find "$REPO/$OUT" -name '*.py' | wc -l) files)"
+echo "from $SPEC_SOURCE_REPO $SPEC_SOURCE_PATH @ $SPEC_SOURCE_REV"

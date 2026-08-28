@@ -239,8 +239,8 @@ def test_webhook(client_v2: LLMWhispererClientV2, url: str, token: str, webhook_
     try:
         client_v2.get_webhook_details(webhook_name)
     except LLMWhispererClientException as e:
-        assert e.error_message()["message"] == "Webhook details not found"
-        assert e.error_message()["status_code"] == 404
+        assert e.error_message()["message"] == "Webhook details not found"  # type: ignore[index]
+        assert e.error_message()["status_code"] == 404  # type: ignore[index]
 
 
 def test_whisper_detail(client_v2: LLMWhispererClientV2, data_dir: str) -> None:
@@ -303,7 +303,7 @@ def test_whisper_line_splitter_strategy_reaches_service(client_v2: LLMWhispererC
             wait_for_completion=True,
         )
 
-    assert exc_info.value.error_message()["status_code"] == 400
+    assert exc_info.value.error_message()["status_code"] == 400  # type: ignore[index]
 
 
 def assert_error_message(whisper_result: dict) -> None:

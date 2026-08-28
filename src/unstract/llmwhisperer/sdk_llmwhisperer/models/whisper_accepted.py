@@ -16,17 +16,21 @@ T = TypeVar("T", bound="WhisperAccepted")
 class WhisperAccepted:
     """
     Attributes:
+        format_ (str | Unset):
         message (str | Unset):
         status (str | Unset):
         whisper_hash (str | Unset):
     """
 
+    format_: str | Unset = UNSET
     message: str | Unset = UNSET
     status: str | Unset = UNSET
     whisper_hash: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
+        format_ = self.format_
+
         message = self.message
 
         status = self.status
@@ -36,6 +40,8 @@ class WhisperAccepted:
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update({})
+        if format_ is not UNSET:
+            field_dict["format"] = format_
         if message is not UNSET:
             field_dict["message"] = message
         if status is not UNSET:
@@ -48,6 +54,8 @@ class WhisperAccepted:
     @classmethod
     def from_dict(cls, src_dict: Mapping[str, Any]) -> Self:
         d = dict(src_dict)
+        format_ = d.pop("format", UNSET)
+
         message = d.pop("message", UNSET)
 
         status = d.pop("status", UNSET)
@@ -55,6 +63,7 @@ class WhisperAccepted:
         whisper_hash = d.pop("whisper_hash", UNSET)
 
         whisper_accepted = cls(
+            format_=format_,
             message=message,
             status=status,
             whisper_hash=whisper_hash,

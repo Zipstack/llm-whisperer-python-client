@@ -17,4 +17,4 @@ def test_redact_key_different_reveal_length() -> None:
 
 def test_redact_key_non_string_input() -> None:
     with pytest.raises(ValueError, match="API key must be a string"):
-        LLMWhispererUtils.redact_key(12345)
+        LLMWhispererUtils.redact_key(12345)  # type: ignore[arg-type]

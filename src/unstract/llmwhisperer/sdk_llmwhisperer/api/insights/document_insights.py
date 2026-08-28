@@ -15,7 +15,6 @@ def _get_kwargs(
     *,
     body: File | Unset = UNSET,
     file_name: str | Unset = "sample.pdf",
-    mode: str | Unset = "form",
     pages_to_extract: str | Unset = UNSET,
     tag: str | Unset = "default",
     url_query: str | Unset = UNSET,
@@ -28,8 +27,6 @@ def _get_kwargs(
     params: dict[str, Any] = {}
 
     params["file_name"] = file_name
-
-    params["mode"] = mode
 
     params["pages_to_extract"] = pages_to_extract
 
@@ -77,6 +74,11 @@ def _parse_response(
 
         return response_401
 
+    if response.status_code == 402:
+        response_402 = Error.from_dict(response.json())
+
+        return response_402
+
     if response.status_code == 403:
         response_403 = Error.from_dict(response.json())
 
@@ -86,6 +88,21 @@ def _parse_response(
         response_404 = Error.from_dict(response.json())
 
         return response_404
+
+    if response.status_code == 415:
+        response_415 = Error.from_dict(response.json())
+
+        return response_415
+
+    if response.status_code == 500:
+        response_500 = Error.from_dict(response.json())
+
+        return response_500
+
+    if response.status_code == 503:
+        response_503 = Error.from_dict(response.json())
+
+        return response_503
 
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
@@ -109,7 +126,6 @@ def sync_detailed(
     client: AuthenticatedClient | Client,
     body: File | Unset = UNSET,
     file_name: str | Unset = "sample.pdf",
-    mode: str | Unset = "form",
     pages_to_extract: str | Unset = UNSET,
     tag: str | Unset = "default",
     url_query: str | Unset = UNSET,
@@ -121,7 +137,6 @@ def sync_detailed(
 
     Args:
         file_name (str | Unset):  Default: 'sample.pdf'.
-        mode (str | Unset):  Default: 'form'.
         pages_to_extract (str | Unset):
         tag (str | Unset):  Default: 'default'.
         url_query (str | Unset):
@@ -140,7 +155,6 @@ def sync_detailed(
     kwargs = _get_kwargs(
         body=body,
         file_name=file_name,
-        mode=mode,
         pages_to_extract=pages_to_extract,
         tag=tag,
         url_query=url_query,
@@ -161,7 +175,6 @@ def sync(
     client: AuthenticatedClient | Client,
     body: File | Unset = UNSET,
     file_name: str | Unset = "sample.pdf",
-    mode: str | Unset = "form",
     pages_to_extract: str | Unset = UNSET,
     tag: str | Unset = "default",
     url_query: str | Unset = UNSET,
@@ -173,7 +186,6 @@ def sync(
 
     Args:
         file_name (str | Unset):  Default: 'sample.pdf'.
-        mode (str | Unset):  Default: 'form'.
         pages_to_extract (str | Unset):
         tag (str | Unset):  Default: 'default'.
         url_query (str | Unset):
@@ -193,7 +205,6 @@ def sync(
         client=client,
         body=body,
         file_name=file_name,
-        mode=mode,
         pages_to_extract=pages_to_extract,
         tag=tag,
         url_query=url_query,
@@ -208,7 +219,6 @@ async def asyncio_detailed(
     client: AuthenticatedClient | Client,
     body: File | Unset = UNSET,
     file_name: str | Unset = "sample.pdf",
-    mode: str | Unset = "form",
     pages_to_extract: str | Unset = UNSET,
     tag: str | Unset = "default",
     url_query: str | Unset = UNSET,
@@ -220,7 +230,6 @@ async def asyncio_detailed(
 
     Args:
         file_name (str | Unset):  Default: 'sample.pdf'.
-        mode (str | Unset):  Default: 'form'.
         pages_to_extract (str | Unset):
         tag (str | Unset):  Default: 'default'.
         url_query (str | Unset):
@@ -239,7 +248,6 @@ async def asyncio_detailed(
     kwargs = _get_kwargs(
         body=body,
         file_name=file_name,
-        mode=mode,
         pages_to_extract=pages_to_extract,
         tag=tag,
         url_query=url_query,
@@ -258,7 +266,6 @@ async def asyncio(
     client: AuthenticatedClient | Client,
     body: File | Unset = UNSET,
     file_name: str | Unset = "sample.pdf",
-    mode: str | Unset = "form",
     pages_to_extract: str | Unset = UNSET,
     tag: str | Unset = "default",
     url_query: str | Unset = UNSET,
@@ -270,7 +277,6 @@ async def asyncio(
 
     Args:
         file_name (str | Unset):  Default: 'sample.pdf'.
-        mode (str | Unset):  Default: 'form'.
         pages_to_extract (str | Unset):
         tag (str | Unset):  Default: 'default'.
         url_query (str | Unset):
@@ -291,7 +297,6 @@ async def asyncio(
             client=client,
             body=body,
             file_name=file_name,
-            mode=mode,
             pages_to_extract=pages_to_extract,
             tag=tag,
             url_query=url_query,

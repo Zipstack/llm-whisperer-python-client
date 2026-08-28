@@ -31,6 +31,9 @@
       },
       "WhisperAccepted": {
         "properties": {
+          "format": {
+            "type": "string"
+          },
           "message": {
             "type": "string"
           },
@@ -116,15 +119,6 @@
         "parameters": [
           {
             "in": "query",
-            "name": "mode",
-            "required": false,
-            "schema": {
-              "default": "form",
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
             "name": "url",
             "required": false,
             "schema": {
@@ -184,6 +178,16 @@
             },
             "description": "The API key is missing or not valid."
           },
+          "402": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Quota exhausted, or the licence does not cover this request."
+          },
           "403": {
             "content": {
               "application/json": {
@@ -203,6 +207,36 @@
               }
             },
             "description": "No such resource."
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The uploaded file's type is not supported."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unhandled server error."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "A dependency this operation needs is not configured or reachable."
           }
         },
         "summary": "Convert a document to PDF",
@@ -215,15 +249,6 @@
       "post": {
         "operationId": "convert_xlsb_to_xlsx",
         "parameters": [
-          {
-            "in": "query",
-            "name": "mode",
-            "required": false,
-            "schema": {
-              "default": "form",
-              "type": "string"
-            }
-          },
           {
             "in": "query",
             "name": "url",
@@ -285,6 +310,16 @@
             },
             "description": "The API key is missing or not valid."
           },
+          "402": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Quota exhausted, or the licence does not cover this request."
+          },
           "403": {
             "content": {
               "application/json": {
@@ -304,6 +339,36 @@
               }
             },
             "description": "No such resource."
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The uploaded file's type is not supported."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unhandled server error."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "A dependency this operation needs is not configured or reachable."
           }
         },
         "summary": "Convert an XLSB workbook to XLSX",
@@ -322,15 +387,6 @@
             "required": false,
             "schema": {
               "default": "sample.pdf",
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "mode",
-            "required": false,
-            "schema": {
-              "default": "form",
               "type": "string"
             }
           },
@@ -427,6 +483,16 @@
             },
             "description": "The API key is missing or not valid."
           },
+          "402": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Quota exhausted, or the licence does not cover this request."
+          },
           "403": {
             "content": {
               "application/json": {
@@ -446,6 +512,36 @@
               }
             },
             "description": "No such resource."
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The uploaded file's type is not supported."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unhandled server error."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "A dependency this operation needs is not configured or reachable."
           }
         },
         "summary": "Run document insights over a file",
@@ -499,6 +595,16 @@
             },
             "description": "The API key is missing or not valid."
           },
+          "402": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Quota exhausted, or the licence does not cover this request."
+          },
           "403": {
             "content": {
               "application/json": {
@@ -518,6 +624,36 @@
               }
             },
             "description": "No such resource."
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The uploaded file's type is not supported."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unhandled server error."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "A dependency this operation needs is not configured or reachable."
           }
         },
         "summary": "Retrieve document insights result (destructive \u2014 one shot)",
@@ -562,6 +698,16 @@
             },
             "description": "The API key is missing or not valid."
           },
+          "402": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Quota exhausted, or the licence does not cover this request."
+          },
           "403": {
             "content": {
               "application/json": {
@@ -581,6 +727,36 @@
               }
             },
             "description": "No such resource."
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The uploaded file's type is not supported."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unhandled server error."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "A dependency this operation needs is not configured or reachable."
           }
         },
         "summary": "Subscription usage summary",
@@ -603,20 +779,11 @@
             }
           },
           {
-            "description": "Line numbers or ranges, e.g. `1-5,9`. Not required when `extract_all_lines=true`.",
+            "description": "Line numbers or ranges, e.g. `1-5,9`. Required unless `extract_all_lines=true`.",
             "in": "query",
             "name": "lines",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "mode",
             "required": false,
             "schema": {
-              "default": "form",
               "type": "string"
             }
           },
@@ -661,6 +828,16 @@
             },
             "description": "The API key is missing or not valid."
           },
+          "402": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Quota exhausted, or the licence does not cover this request."
+          },
           "403": {
             "content": {
               "application/json": {
@@ -680,6 +857,36 @@
               }
             },
             "description": "No such resource."
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The uploaded file's type is not supported."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unhandled server error."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "A dependency this operation needs is not configured or reachable."
           }
         },
         "summary": "Line-level highlight geometry for an extraction",
@@ -707,15 +914,10 @@
             "required": false,
             "schema": {
               "default": "png",
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "mode",
-            "required": false,
-            "schema": {
-              "default": "form",
+              "enum": [
+                "png",
+                "jpeg"
+              ],
               "type": "string"
             }
           },
@@ -788,6 +990,16 @@
             },
             "description": "The API key is missing or not valid."
           },
+          "402": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Quota exhausted, or the licence does not cover this request."
+          },
           "403": {
             "content": {
               "application/json": {
@@ -807,6 +1019,36 @@
               }
             },
             "description": "No such resource."
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The uploaded file's type is not supported."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unhandled server error."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "A dependency this operation needs is not configured or reachable."
           }
         },
         "summary": "Render a PDF's pages as images",
@@ -860,6 +1102,16 @@
             },
             "description": "The API key is missing or not valid."
           },
+          "402": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Quota exhausted, or the licence does not cover this request."
+          },
           "403": {
             "content": {
               "application/json": {
@@ -879,6 +1131,36 @@
               }
             },
             "description": "No such resource."
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The uploaded file's type is not supported."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unhandled server error."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "A dependency this operation needs is not configured or reachable."
           }
         },
         "summary": "Retrieve rendered images as a zip (destructive \u2014 one shot)",
@@ -905,8 +1187,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "type": "object"
+                  "$ref": "#/components/schemas/WhisperStatus"
                 }
               }
             },
@@ -932,6 +1213,16 @@
             },
             "description": "The API key is missing or not valid."
           },
+          "402": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Quota exhausted, or the licence does not cover this request."
+          },
           "403": {
             "content": {
               "application/json": {
@@ -951,6 +1242,36 @@
               }
             },
             "description": "No such resource."
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The uploaded file's type is not supported."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unhandled server error."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "A dependency this operation needs is not configured or reachable."
           }
         },
         "summary": "Poll PDF-to-images status",
@@ -995,6 +1316,16 @@
             },
             "description": "The API key is missing or not valid."
           },
+          "402": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Quota exhausted, or the licence does not cover this request."
+          },
           "403": {
             "content": {
               "application/json": {
@@ -1014,6 +1345,36 @@
               }
             },
             "description": "No such resource."
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The uploaded file's type is not supported."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unhandled server error."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "A dependency this operation needs is not configured or reachable."
           }
         },
         "summary": "Verify credentials",
@@ -1083,6 +1444,16 @@
             },
             "description": "The API key is missing or not valid."
           },
+          "402": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Quota exhausted, or the licence does not cover this request."
+          },
           "403": {
             "content": {
               "application/json": {
@@ -1102,6 +1473,36 @@
               }
             },
             "description": "No such resource."
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The uploaded file's type is not supported."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unhandled server error."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "A dependency this operation needs is not configured or reachable."
           }
         },
         "summary": "Detailed usage statistics",
@@ -1276,7 +1677,6 @@
                 "high_quality",
                 "low_cost",
                 "native_text",
-                "pdf_to_images",
                 "table"
               ],
               "type": "string"
@@ -1380,6 +1780,7 @@
             }
           },
           {
+            "description": "Minimum per-word OCR confidence to report. Defaults to 0.05 unless the deployment overrides it.",
             "in": "query",
             "name": "word_confidence_threshold",
             "required": false,
@@ -1430,6 +1831,16 @@
             },
             "description": "The API key is missing or not valid."
           },
+          "402": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Quota exhausted, or the licence does not cover this request."
+          },
           "403": {
             "content": {
               "application/json": {
@@ -1449,6 +1860,36 @@
               }
             },
             "description": "No such resource."
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The uploaded file's type is not supported."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unhandled server error."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "A dependency this operation needs is not configured or reachable."
           }
         },
         "summary": "Submit a document for text extraction",
@@ -1502,6 +1943,16 @@
             },
             "description": "The API key is missing or not valid."
           },
+          "402": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Quota exhausted, or the licence does not cover this request."
+          },
           "403": {
             "content": {
               "application/json": {
@@ -1521,6 +1972,36 @@
               }
             },
             "description": "No such resource."
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The uploaded file's type is not supported."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unhandled server error."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "A dependency this operation needs is not configured or reachable."
           }
         },
         "summary": "Metadata about a whisper job",
@@ -1574,6 +2055,16 @@
             },
             "description": "The API key is missing or not valid."
           },
+          "402": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Quota exhausted, or the licence does not cover this request."
+          },
           "403": {
             "content": {
               "application/json": {
@@ -1593,6 +2084,36 @@
               }
             },
             "description": "No such resource."
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The uploaded file's type is not supported."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unhandled server error."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "A dependency this operation needs is not configured or reachable."
           }
         },
         "summary": "Manage extraction webhooks",
@@ -1644,6 +2165,16 @@
             },
             "description": "The API key is missing or not valid."
           },
+          "402": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Quota exhausted, or the licence does not cover this request."
+          },
           "403": {
             "content": {
               "application/json": {
@@ -1663,6 +2194,36 @@
               }
             },
             "description": "No such resource."
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The uploaded file's type is not supported."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unhandled server error."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "A dependency this operation needs is not configured or reachable."
           }
         },
         "summary": "Manage extraction webhooks",
@@ -1715,6 +2276,16 @@
             },
             "description": "The API key is missing or not valid."
           },
+          "402": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Quota exhausted, or the licence does not cover this request."
+          },
           "403": {
             "content": {
               "application/json": {
@@ -1734,6 +2305,36 @@
               }
             },
             "description": "No such resource."
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The uploaded file's type is not supported."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unhandled server error."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "A dependency this operation needs is not configured or reachable."
           }
         },
         "summary": "Manage extraction webhooks",
@@ -1786,6 +2387,16 @@
             },
             "description": "The API key is missing or not valid."
           },
+          "402": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Quota exhausted, or the licence does not cover this request."
+          },
           "403": {
             "content": {
               "application/json": {
@@ -1805,6 +2416,36 @@
               }
             },
             "description": "No such resource."
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The uploaded file's type is not supported."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unhandled server error."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "A dependency this operation needs is not configured or reachable."
           }
         },
         "summary": "Manage extraction webhooks",
@@ -1871,6 +2512,16 @@
             },
             "description": "The API key is missing or not valid."
           },
+          "402": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Quota exhausted, or the licence does not cover this request."
+          },
           "403": {
             "content": {
               "application/json": {
@@ -1890,6 +2541,36 @@
               }
             },
             "description": "No such resource."
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The uploaded file's type is not supported."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unhandled server error."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "A dependency this operation needs is not configured or reachable."
           }
         },
         "summary": "Retrieve extraction result (destructive \u2014 one shot)",
@@ -1942,6 +2623,16 @@
             },
             "description": "The API key is missing or not valid."
           },
+          "402": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Quota exhausted, or the licence does not cover this request."
+          },
           "403": {
             "content": {
               "application/json": {
@@ -1961,6 +2652,36 @@
               }
             },
             "description": "No such resource."
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The uploaded file's type is not supported."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unhandled server error."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "A dependency this operation needs is not configured or reachable."
           }
         },
         "summary": "Poll extraction status",
