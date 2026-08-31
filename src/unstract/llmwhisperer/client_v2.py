@@ -18,7 +18,6 @@ Classes:
     LLMWhispererClientException: Exception raised for errors in the LLMWhispererClient.
 """
 
-import io
 import json
 import logging
 import os
@@ -26,7 +25,7 @@ import threading
 import time
 import warnings
 from types import ModuleType
-from typing import IO, Any
+from typing import IO, Any, BinaryIO, cast
 
 import httpx
 
@@ -868,7 +867,15 @@ class LLMWhispererClientV2:
         # The wire carries exactly the parameters assembled above — url_in_post
         # only exists in URL mode, and the generated default would otherwise
         # send it on every upload.
-        prepared = self._build_request(extract, frozenset(params), body=File(payload=io.BytesIO(data)), **params)
+        # The payload stays raw bytes: httpx makes those a replayable stream,
+        # while a file object is drained by the first attempt and a retry would
+        # re-send the declared Content-Length with an empty body.
+        prepared = self._build_request(
+            extract,
+            frozenset(params),
+            body=File(payload=cast("BinaryIO", data)),
+            **params,
+        )
         start_time = time.time()
         deadline = start_time + wait_timeout
         post_timeout = min(self.api_timeout, wait_timeout)

@@ -21,6 +21,7 @@ import socket
 import threading
 import time
 from collections.abc import Callable
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from types import ModuleType
 from typing import Any
@@ -649,6 +650,76 @@ def test_transport_failures_are_still_retried() -> None:
         with pytest.raises(requests.ConnectionError):
             client.get_usage_info()
     assert send.call_count == 3
+
+
+def _replay_server(attempts: list[tuple[int, int]]) -> ThreadingHTTPServer:
+    """A loopback server that fails once, recording declared vs received bytes.
+
+    A mock transport cannot stand in here: it reads the request before handing
+    it over, which caches the body and replaces the very stream under test.
+    """
+
+    class Handler(BaseHTTPRequestHandler):
+        protocol_version = "HTTP/1.1"
+
+        def log_message(self, *args: Any) -> None:
+            pass
+
+        def do_POST(self) -> None:  # noqa: N802 -- the name BaseHTTPRequestHandler dispatches to
+            declared = int(self.headers.get("Content-Length") or 0)
+            attempts.append((declared, len(self.rfile.read(declared))))
+            first = len(attempts) == 1
+            payload = json.dumps(
+                {"message": "upstream unavailable"} if first else {"status_code": 202, "whisper_hash": "hash"}
+            ).encode()
+            self.send_response(502 if first else 202)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(payload)))
+            self.end_headers()
+            self.wfile.write(payload)
+
+    server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+    server.daemon_threads = True
+    return server
+
+
+@pytest.mark.parametrize(
+    "upload",
+    [
+        pytest.param(lambda path: {"file_path": path}, id="file"),
+        pytest.param(lambda path: {"stream": io.BytesIO(Path(path).read_bytes())}, id="stream"),
+        pytest.param(lambda path: {"url": "https://example.com/sample.pdf"}, id="url"),
+    ],
+)
+def test_a_retried_upload_replays_the_whole_body(sample_file: str, upload: Callable[[str], dict[str, Any]]) -> None:
+    """A retry re-sends the request object that was already sent once.
+
+    The body has to survive that. Held as a file object it is drained by
+    the first attempt, so the second goes out with the full declared
+    length and no bytes behind it: a truncated upload that no retry test
+    keyed on status codes can see, and a protocol error outside the
+    exception family every caller catches.
+    """
+    attempts: list[tuple[int, int]] = []
+    server = _replay_server(attempts)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    client = _client(
+        base_url=f"http://127.0.0.1:{server.server_address[1]}/api/v2",
+        max_retries=2,
+        retry_min_wait=0,
+        retry_max_wait=0,
+    )
+    try:
+        client.whisper(**upload(sample_file))
+    finally:
+        client.close()
+        server.shutdown()
+        server.server_close()
+
+    assert len(attempts) == 2, "the 502 was not retried, so nothing was replayed"
+    declared, _received = attempts[0]
+    assert declared > 0
+    assert attempts == [(declared, declared)] * 2
 
 
 def test_redirects_are_followed() -> None:
