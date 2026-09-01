@@ -97,7 +97,7 @@ exclude = [
     "venv",
     # Generated and vendored code is overwritten wholesale by its refresh
     # script, so a lint finding there can never be fixed in place.
-    "src/unstract/llmwhisperer/sdk_llmwhisperer",
+    "src/unstract/llmwhisperer/_sdk_llmwhisperer",
     "tests/baseline",
 ]
 
@@ -209,5 +209,5 @@ explicit_package_bases = true
 # also stops mypy resolving its types for the facade, which is where the calls
 # into it -- by keyword names the spec owns -- most need checking.
 [[tool.mypy.overrides]]
-module = "unstract.llmwhisperer.sdk_llmwhisperer.*"
+module = "unstract.llmwhisperer._sdk_llmwhisperer.*"
 ignore_errors = true

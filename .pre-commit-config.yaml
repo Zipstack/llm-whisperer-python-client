@@ -10,7 +10,7 @@ repos:
       # or vendored code is lost on the next refresh, but the security hooks
       # below have to read every file in the tree.
       - id: trailing-whitespace
-        exclude: &generated "^(src/unstract/llmwhisperer/sdk_llmwhisperer/|tests/baseline/)"
+        exclude: &generated "^(src/unstract/llmwhisperer/_sdk_llmwhisperer/|tests/baseline/)"
         exclude_types:
           - "markdown"
       - id: end-of-file-fixer

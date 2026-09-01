@@ -36,16 +36,16 @@ import requests
 import tenacity
 from tenacity import retry_if_exception, stop_after_attempt, stop_after_delay, wait_exponential_jitter
 
-from unstract.llmwhisperer.sdk_llmwhisperer.api.account import usage_info
-from unstract.llmwhisperer.sdk_llmwhisperer.api.webhook import (
+from unstract.llmwhisperer._sdk_llmwhisperer.api.account import usage_info
+from unstract.llmwhisperer._sdk_llmwhisperer.api.webhook import (
     webhook_delete,
     webhook_get,
     webhook_post,
     webhook_put,
 )
-from unstract.llmwhisperer.sdk_llmwhisperer.api.whisper import detail, extract, highlights, retrieve, status
-from unstract.llmwhisperer.sdk_llmwhisperer.models import WebhookConfig
-from unstract.llmwhisperer.sdk_llmwhisperer.types import File
+from unstract.llmwhisperer._sdk_llmwhisperer.api.whisper import detail, extract, highlights, retrieve, status
+from unstract.llmwhisperer._sdk_llmwhisperer.models import WebhookConfig
+from unstract.llmwhisperer._sdk_llmwhisperer.types import File
 
 BASE_URL_V2 = "https://llmwhisperer-api.us-central.unstract.com/api/v2"
 

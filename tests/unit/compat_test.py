@@ -441,7 +441,7 @@ def test_a_requested_parameter_is_sent(name: str, value: Any, expected: str) -> 
 
 
 def test_undeclared_parameters_are_refused() -> None:
-    from unstract.llmwhisperer.sdk_llmwhisperer.api.whisper import status as status_module
+    from unstract.llmwhisperer._sdk_llmwhisperer.api.whisper import status as status_module
 
     client = _client()
     with pytest.raises(LLMWhispererClientException):
@@ -451,7 +451,7 @@ def test_undeclared_parameters_are_refused() -> None:
 def test_no_operation_sends_a_spec_default_the_client_never_set() -> None:
     """The generated builder writes every declared parameter; each call must
     narrow that to what it asked for."""
-    from unstract.llmwhisperer.sdk_llmwhisperer.api.whisper import extract, retrieve
+    from unstract.llmwhisperer._sdk_llmwhisperer.api.whisper import extract, retrieve
 
     assert "text_only" in inspect.signature(retrieve._get_kwargs).parameters
     assert "text_only" not in _SEND_ONLY["retrieve"]

@@ -33,8 +33,8 @@ jobs:
       # newly created, which is exactly what a spec growing an endpoint does.
       - name: Fail if the committed SDK is not what the spec generates
         run: |
-          git add -N -- src/unstract/llmwhisperer/sdk_llmwhisperer
-          git diff --exit-code -- src/unstract/llmwhisperer/sdk_llmwhisperer
+          git add -N -- src/unstract/llmwhisperer/_sdk_llmwhisperer
+          git diff --exit-code -- src/unstract/llmwhisperer/_sdk_llmwhisperer
 
   api-surface:
     if: github.event.pull_request.draft == false

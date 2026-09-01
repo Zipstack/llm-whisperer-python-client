@@ -5,7 +5,7 @@
 # it wholesale, so a fix applied there is lost on the next run. Fixes belong in
 # the facade (client_v2.py) or upstream in the spec.
 #
-#   ./tools/gen_sdk.sh && git diff --stat src/unstract/llmwhisperer/sdk_llmwhisperer
+#   ./tools/gen_sdk.sh && git diff --stat src/unstract/llmwhisperer/_sdk_llmwhisperer
 set -euo pipefail
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -22,7 +22,7 @@ VENV="$REPO/.gen-venv"
 # finds whatever ruff the caller happens to have, or none, and reports the miss
 # as a warning -- which the gate below reads as an unparsable spec.
 export PATH="$VENV/bin:$PATH"
-OUT="src/unstract/llmwhisperer/sdk_llmwhisperer"
+OUT="src/unstract/llmwhisperer/_sdk_llmwhisperer"
 # Pinned: unpinned, a generator upgrade and a spec change produce the same diff,
 # and the drift gate can no longer tell them apart.
 GENERATOR="openapi-python-client==0.29.0"
