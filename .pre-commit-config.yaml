@@ -6,16 +6,22 @@ repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
+      # Excluded per hook rather than globally: a formatter's fix to generated
+      # or vendored code is lost on the next refresh, but the security hooks
+      # below have to read every file in the tree.
       - id: trailing-whitespace
+        exclude: &generated "^(src/unstract/llmwhisperer/_sdk_llmwhisperer/|tests/baseline/)"
         exclude_types:
           - "markdown"
       - id: end-of-file-fixer
+        exclude: *generated
       - id: check-yaml
         args: [--unsafe]
       - id: check-added-large-files
         args: ["--maxkb=10240"]
       - id: check-case-conflict
       - id: check-docstring-first
+        exclude: *generated
       - id: check-ast
       - id: check-json
         exclude: ".vscode/launch.json"
@@ -29,13 +35,18 @@ repos:
       - id: destroyed-symlinks
       - id: forbid-new-submodules
       - id: mixed-line-ending
+        exclude: *generated
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.3.4
+    # Kept in step with the pinned ruff in the dev group: two versions disagree
+    # on import order and docstrings, and each undoes the other's fixes.
+    rev: v0.11.9
     hooks:
       - id: ruff
         args: [--fix]
+        exclude: *generated
       - id: ruff-format
+        exclude: *generated
 
   - repo: https://github.com/hadialqattan/pycln
     rev: v2.4.0
@@ -43,18 +54,21 @@ repos:
       - id: pycln
         entry: uv run pycln
         args: [--config=pyproject.toml]
+        exclude: *generated
 
   - repo: https://github.com/pycqa/docformatter
     rev: v1.7.5
     hooks:
       - id: docformatter
         language: python
+        exclude: *generated
 
   - repo: https://github.com/asottile/pyupgrade
     rev: v3.17.0
     hooks:
       - id: pyupgrade
         entry: pyupgrade --py39-plus --keep-runtime-typing
+        exclude: *generated
         types:
           - python
 
