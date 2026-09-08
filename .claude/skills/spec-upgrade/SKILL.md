@@ -67,7 +67,10 @@ copy here, not a fork.
    upstream in the spec, never in the generated tree — regeneration overwrites
    that wholesale.
 
-6. **Run the tests:** `tox` (or `uv run pytest tests/unit`). `tests/unit/compat_test.py`
+6. **Run the tests:** `tox`, which collects all of `tests/` — the integration
+   tier included, so it needs `LLMWHISPERER_API_KEY` in `.env`. `uv run pytest
+   tests/unit` is the offline subset for a fast loop, not a substitute: it
+   cannot catch an integration regression. `tests/unit/compat_test.py`
    compares this client against the last released one, vendored under
    `tests/baseline/`. Refresh that baseline only when you mean to move the parity
    reference point, with `tools/refresh_baseline.sh <released-version>`; a spec
@@ -95,8 +98,10 @@ wire. Two things about it are worth knowing before you fight it:
 
 ## Versioning and release
 
-Choose the bump by what changed for callers: **minor** for new endpoints or new
-behaviour, **patch** for fixes that keep the surface identical.
+Choose the bump by what changed for callers: **major** when the spec removed or
+renamed something callers depend on, **minor** for new endpoints or new
+behaviour, **patch** for fixes that keep the surface identical. A red
+`api-surface` gate is the signal for major.
 
 Do not touch `__version__` in `src/unstract/llmwhisperer/__init__.py` in your PR.
 The in-repo value is the *last released* version; `main.yml` reads it, applies the
