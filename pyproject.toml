@@ -4,13 +4,13 @@ dynamic = ["version"]
 description = "Client library for LLM Whisperer"
 readme = "README.md"
 urls = { Homepage = "https://unstract.com/llmwhisperer/", Source = "https://github.com/Zipstack/llm-whisperer-python-client" }
-license = { text = "AGPL v3" }
+license = { text = "MIT" }
 authors = [{ name = "Zipstack Inc", email = "devsupport@zipstack.com" }]
 keywords = ["llmwhisperer tools-development-kit apps development-kit sdk"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: GNU Affero General Public License v3",
+    "License :: OSI Approved :: MIT License",
     "Operating System :: POSIX :: Linux",
     "Operating System :: MacOS :: MacOS X",
     "Operating System :: Microsoft :: Windows",
