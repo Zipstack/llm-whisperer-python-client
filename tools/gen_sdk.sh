@@ -15,7 +15,7 @@ REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # here, so the next refresher can tell what they are replacing.
 SPEC_SOURCE_REPO="Zipstack/unstract-llm-whisperer"
 SPEC_SOURCE_PATH="specs/llmwhisperer.json"
-SPEC_SOURCE_REV="750f941ee229e12cc05d8bd85edaab6a337a8758"
+SPEC_SOURCE_REV="c4cc7f1426612a5489f40c5948bb198f89f19c9f"
 
 VENV="$REPO/.gen-venv"
 # The generator shells out to ruff for its own post-processing. Without this it
