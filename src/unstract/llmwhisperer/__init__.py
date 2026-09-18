@@ -1,4 +1,4 @@
-__version__ = "2.9.0"
+__version__ = "2.9.1"
 
 from .client_v2 import LLMWhispererClientV2  # noqa: F401
 
