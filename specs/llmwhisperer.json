@@ -1549,7 +1549,8 @@
             "schema": {
               "default": 10.0,
               "type": "number"
-            }
+            },
+            "x-internal": true
           },
           {
             "in": "query",
@@ -1585,7 +1586,8 @@
             "schema": {
               "default": false,
               "type": "boolean"
-            }
+            },
+            "x-internal": true
           },
           {
             "in": "query",
@@ -1662,7 +1664,8 @@
             "schema": {
               "default": 0.0,
               "type": "number"
-            }
+            },
+            "x-internal": true
           },
           {
             "in": "query",
@@ -1671,8 +1674,6 @@
             "schema": {
               "default": "form",
               "enum": [
-                "document_insights",
-                "excel",
                 "form",
                 "high_quality",
                 "low_cost",
@@ -1689,9 +1690,7 @@
             "schema": {
               "default": "layout_preserving",
               "enum": [
-                "dump-text",
                 "layout_preserving",
-                "line-printer",
                 "text"
               ],
               "type": "string"
