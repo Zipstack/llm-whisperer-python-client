@@ -15,9 +15,7 @@ REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # here, so the next refresher can tell what they are replacing.
 SPEC_SOURCE_REPO="Zipstack/unstract-llm-whisperer"
 SPEC_SOURCE_PATH="specs/llmwhisperer.json"
-# The head of PR #810, which is approved but not merged yet, so this revision is
-# not on main. Same as the #756 sync before it.
-SPEC_SOURCE_REV="db4cb15cb1c9f5227a220b5900423471498bf0a8"
+SPEC_SOURCE_REV="9fe7085b44da6ca37e635fba3ab082c725ef8aef"
 
 VENV="$REPO/.gen-venv"
 # The generator shells out to ruff for its own post-processing. Without this it
