@@ -15,7 +15,12 @@ REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # here, so the next refresher can tell what they are replacing.
 SPEC_SOURCE_REPO="Zipstack/unstract-llm-whisperer"
 SPEC_SOURCE_PATH="specs/llmwhisperer.json"
-SPEC_SOURCE_REV="c4cc7f1426612a5489f40c5948bb198f89f19c9f"
+# Provisional: this is the head of the still-open upstream PR #810, which adds
+# `include_cell_borders` to the controller but has not regenerated its own spec
+# yet -- its spec-drift gate is red for exactly that reason. So the spec here was
+# produced by running that revision's own tools/gen_spec.py, not copied from the
+# file committed there. Re-sync byte-for-byte once #810 regenerates and lands.
+SPEC_SOURCE_REV="23b6df511efb3892f7810ff75204d2b5446c9e54"
 
 VENV="$REPO/.gen-venv"
 # The generator shells out to ruff for its own post-processing. Without this it

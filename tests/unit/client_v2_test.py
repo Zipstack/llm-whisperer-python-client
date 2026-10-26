@@ -282,6 +282,27 @@ def test_whisper_rejects_both_spellings(
         _whisper_query(mocker, client_v2, **{deprecated_name: "x", name: "y"})
 
 
+# --- include_cell_borders tests ---
+
+
+def test_whisper_omits_include_cell_borders_by_default(mocker: MockerFixture, client_v2: LLMWhispererClientV2) -> None:
+    """Unset means absent, so the service picks, and a deployment that predates
+    the parameter is unaffected."""
+    query = _whisper_query(mocker, client_v2)
+
+    assert "include_cell_borders" not in query
+
+
+@pytest.mark.parametrize(("value", "expected"), [(False, "False"), (True, "True")])
+def test_whisper_sends_include_cell_borders_when_set(
+    mocker: MockerFixture, client_v2: LLMWhispererClientV2, value: bool, expected: str
+) -> None:
+    """Either value reaches the query string once the caller asks for it."""
+    query = _whisper_query(mocker, client_v2, include_cell_borders=value)
+
+    assert query["include_cell_borders"] == [expected]
+
+
 # --- Retry behavior tests ---
 
 
