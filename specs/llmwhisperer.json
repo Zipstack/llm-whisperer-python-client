@@ -1591,6 +1591,15 @@
           },
           {
             "in": "query",
+            "name": "include_cell_borders",
+            "required": false,
+            "schema": {
+              "default": true,
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
             "name": "include_line_confidence",
             "required": false,
             "schema": {

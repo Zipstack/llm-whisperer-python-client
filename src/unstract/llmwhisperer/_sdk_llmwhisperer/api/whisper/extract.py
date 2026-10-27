@@ -25,6 +25,7 @@ def _get_kwargs(
     gaussian_blur_radius: float | Unset = 0.0,
     horizontal_stretch_factor: float | Unset = 1.0,
     ignore_vertical_text: bool | Unset = False,
+    include_cell_borders: bool | Unset = True,
     include_line_confidence: bool | Unset = False,
     lang: str | Unset = "eng",
     line_splitter_strategy: ExtractLineSplitterStrategy | Unset = "left-priority",
@@ -65,6 +66,8 @@ def _get_kwargs(
     params["horizontal_stretch_factor"] = horizontal_stretch_factor
 
     params["ignore_vertical_text"] = ignore_vertical_text
+
+    params["include_cell_borders"] = include_cell_borders
 
     params["include_line_confidence"] = include_line_confidence
 
@@ -211,6 +214,7 @@ def sync_detailed(
     gaussian_blur_radius: float | Unset = 0.0,
     horizontal_stretch_factor: float | Unset = 1.0,
     ignore_vertical_text: bool | Unset = False,
+    include_cell_borders: bool | Unset = True,
     include_line_confidence: bool | Unset = False,
     lang: str | Unset = "eng",
     line_splitter_strategy: ExtractLineSplitterStrategy | Unset = "left-priority",
@@ -243,6 +247,7 @@ def sync_detailed(
         gaussian_blur_radius (float | Unset):  Default: 0.0.
         horizontal_stretch_factor (float | Unset):  Default: 1.0.
         ignore_vertical_text (bool | Unset):  Default: False.
+        include_cell_borders (bool | Unset):  Default: True.
         include_line_confidence (bool | Unset):  Default: False.
         lang (str | Unset):  Default: 'eng'.
         line_splitter_strategy (ExtractLineSplitterStrategy | Unset):  Default: 'left-priority'.
@@ -282,6 +287,7 @@ def sync_detailed(
         gaussian_blur_radius=gaussian_blur_radius,
         horizontal_stretch_factor=horizontal_stretch_factor,
         ignore_vertical_text=ignore_vertical_text,
+        include_cell_borders=include_cell_borders,
         include_line_confidence=include_line_confidence,
         lang=lang,
         line_splitter_strategy=line_splitter_strategy,
@@ -323,6 +329,7 @@ def sync(
     gaussian_blur_radius: float | Unset = 0.0,
     horizontal_stretch_factor: float | Unset = 1.0,
     ignore_vertical_text: bool | Unset = False,
+    include_cell_borders: bool | Unset = True,
     include_line_confidence: bool | Unset = False,
     lang: str | Unset = "eng",
     line_splitter_strategy: ExtractLineSplitterStrategy | Unset = "left-priority",
@@ -355,6 +362,7 @@ def sync(
         gaussian_blur_radius (float | Unset):  Default: 0.0.
         horizontal_stretch_factor (float | Unset):  Default: 1.0.
         ignore_vertical_text (bool | Unset):  Default: False.
+        include_cell_borders (bool | Unset):  Default: True.
         include_line_confidence (bool | Unset):  Default: False.
         lang (str | Unset):  Default: 'eng'.
         line_splitter_strategy (ExtractLineSplitterStrategy | Unset):  Default: 'left-priority'.
@@ -395,6 +403,7 @@ def sync(
         gaussian_blur_radius=gaussian_blur_radius,
         horizontal_stretch_factor=horizontal_stretch_factor,
         ignore_vertical_text=ignore_vertical_text,
+        include_cell_borders=include_cell_borders,
         include_line_confidence=include_line_confidence,
         lang=lang,
         line_splitter_strategy=line_splitter_strategy,
@@ -430,6 +439,7 @@ async def asyncio_detailed(
     gaussian_blur_radius: float | Unset = 0.0,
     horizontal_stretch_factor: float | Unset = 1.0,
     ignore_vertical_text: bool | Unset = False,
+    include_cell_borders: bool | Unset = True,
     include_line_confidence: bool | Unset = False,
     lang: str | Unset = "eng",
     line_splitter_strategy: ExtractLineSplitterStrategy | Unset = "left-priority",
@@ -462,6 +472,7 @@ async def asyncio_detailed(
         gaussian_blur_radius (float | Unset):  Default: 0.0.
         horizontal_stretch_factor (float | Unset):  Default: 1.0.
         ignore_vertical_text (bool | Unset):  Default: False.
+        include_cell_borders (bool | Unset):  Default: True.
         include_line_confidence (bool | Unset):  Default: False.
         lang (str | Unset):  Default: 'eng'.
         line_splitter_strategy (ExtractLineSplitterStrategy | Unset):  Default: 'left-priority'.
@@ -501,6 +512,7 @@ async def asyncio_detailed(
         gaussian_blur_radius=gaussian_blur_radius,
         horizontal_stretch_factor=horizontal_stretch_factor,
         ignore_vertical_text=ignore_vertical_text,
+        include_cell_borders=include_cell_borders,
         include_line_confidence=include_line_confidence,
         lang=lang,
         line_splitter_strategy=line_splitter_strategy,
@@ -540,6 +552,7 @@ async def asyncio(
     gaussian_blur_radius: float | Unset = 0.0,
     horizontal_stretch_factor: float | Unset = 1.0,
     ignore_vertical_text: bool | Unset = False,
+    include_cell_borders: bool | Unset = True,
     include_line_confidence: bool | Unset = False,
     lang: str | Unset = "eng",
     line_splitter_strategy: ExtractLineSplitterStrategy | Unset = "left-priority",
@@ -572,6 +585,7 @@ async def asyncio(
         gaussian_blur_radius (float | Unset):  Default: 0.0.
         horizontal_stretch_factor (float | Unset):  Default: 1.0.
         ignore_vertical_text (bool | Unset):  Default: False.
+        include_cell_borders (bool | Unset):  Default: True.
         include_line_confidence (bool | Unset):  Default: False.
         lang (str | Unset):  Default: 'eng'.
         line_splitter_strategy (ExtractLineSplitterStrategy | Unset):  Default: 'left-priority'.
@@ -613,6 +627,7 @@ async def asyncio(
             gaussian_blur_radius=gaussian_blur_radius,
             horizontal_stretch_factor=horizontal_stretch_factor,
             ignore_vertical_text=ignore_vertical_text,
+            include_cell_borders=include_cell_borders,
             include_line_confidence=include_line_confidence,
             lang=lang,
             line_splitter_strategy=line_splitter_strategy,

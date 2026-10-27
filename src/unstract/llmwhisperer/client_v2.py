@@ -87,6 +87,7 @@ _SEND_ONLY: dict[str, frozenset[str]] = {
             "derotate_threshold",
             "checkbox_confidence_threshold",
             "min_table_width",
+            "include_cell_borders",
             # In URL mode the URL travels in the body; it is not also a query
             # parameter, so `url` is deliberately absent here.
             "url_in_post",
@@ -703,6 +704,7 @@ class LLMWhispererClientV2:
         derotate_threshold: float | None = None,
         checkbox_confidence_threshold: float | None = None,
         min_table_width: float | None = None,
+        include_cell_borders: bool | None = None,
     ) -> Any:
         """Sends a request to the LLMWhisperer API to process a document.
         Refer to https://docs.unstract.com/llm_whisperer/apis/llm_whisperer_text_extraction_api.
@@ -770,6 +772,12 @@ class LLMWhispererClientV2:
               [0.0, 1.0]. Defaults to 0.3.
             min_table_width (float, optional): The minimum width a table must span, as a
               fraction of the page width, to be extracted as a table. Defaults to 0.
+            include_cell_borders (bool, optional): Whether an Excel workbook's own cell borders
+              are drawn into the extracted text as box-drawing characters. Turning it off drops
+              every border, leaving columns aligned and no cell value lost, which costs fewer
+              tokens downstream. This keys off the uploaded file type, not the mode: it applies
+              to any XLS or XLSX upload whatever mode was requested, the default "form" mode
+              included, and is ignored for every other kind of document. Defaults to True.
 
         Returns:
             Dict[Any, Any]: The response from the API as a dictionary.
@@ -834,6 +842,7 @@ class LLMWhispererClientV2:
                     ("derotate_threshold", derotate_threshold),
                     ("checkbox_confidence_threshold", checkbox_confidence_threshold),
                     ("min_table_width", min_table_width),
+                    ("include_cell_borders", include_cell_borders),
                 )
                 if value is not None
             }
