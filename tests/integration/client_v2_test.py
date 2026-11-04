@@ -17,6 +17,11 @@ COORDINATE_TOLERANCE = 2
 PERCENTAGE_TOLERANCE = 0.05
 PAGE_HEIGHT_TOLERANCE = 5
 OCR_SIMILARITY_THRESHOLD = 0.90
+# What the service returns in place of a stored, non-empty webhook auth_token.
+# A token longer than WEBHOOK_AUTH_TOKEN_VISIBLE_CHARS characters also shows its
+# last WEBHOOK_AUTH_TOKEN_VISIBLE_CHARS characters after the mask.
+WEBHOOK_AUTH_TOKEN_MASK = "********"
+WEBHOOK_AUTH_TOKEN_VISIBLE_CHARS = 4
 
 
 def test_get_usage_info(client_v2: LLMWhispererClientV2) -> None:
@@ -221,7 +226,7 @@ def test_webhook(client_v2: LLMWhispererClientV2, url: str, token: str, webhook_
     result = client_v2.get_webhook_details(webhook_name)
     assert isinstance(result, dict)
     assert result["url"] == url
-    assert result["auth_token"] == token
+    assert_webhook_auth_token(result["auth_token"], token)
     assert result["webhook_name"] == webhook_name
 
     result = client_v2.update_webhook_details(webhook_name, url, "new_token")
@@ -230,7 +235,7 @@ def test_webhook(client_v2: LLMWhispererClientV2, url: str, token: str, webhook_
 
     result = client_v2.get_webhook_details(webhook_name)
     assert isinstance(result, dict)
-    assert result["auth_token"] == "new_token"
+    assert_webhook_auth_token(result["auth_token"], "new_token")
 
     result = client_v2.delete_webhook(webhook_name)
     assert isinstance(result, dict)
@@ -304,6 +309,24 @@ def test_whisper_line_splitter_strategy_reaches_service(client_v2: LLMWhispererC
         )
 
     assert exc_info.value.error_message()["status_code"] == 400  # type: ignore[index]
+
+
+def masked_webhook_auth_token(token: str) -> str:
+    """Returns the auth_token as the service shows it on read."""
+    if not token:
+        return ""
+    if len(token) <= WEBHOOK_AUTH_TOKEN_VISIBLE_CHARS:
+        return WEBHOOK_AUTH_TOKEN_MASK
+    return WEBHOOK_AUTH_TOKEN_MASK + token[-WEBHOOK_AUTH_TOKEN_VISIBLE_CHARS:]
+
+
+def assert_webhook_auth_token(returned: str, sent: str) -> None:
+    """Checks the auth_token read back from a registered webhook.
+
+    The service masks a stored token on read, and an empty token stays empty.
+    Environments that do not mask yet echo the token, so both are accepted.
+    """
+    assert returned in (sent, masked_webhook_auth_token(sent))
 
 
 def assert_error_message(whisper_result: dict) -> None:
